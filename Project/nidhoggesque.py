@@ -2,23 +2,27 @@ import pygame
 pygame.init()
 
 #Set the window size and title
-win = pygame.display.set_mode((500,480))
+win = pygame.display.set_mode((800,480))
 pygame.display.set_caption("Nidhoggesque Fighter")
+SCREEN_WIDTH = 800
+SCREEN_HEIGHT = 480
 
 #Make a list of sprites animations
-char = [pygame.image.load('standing0.png'), pygame.image.load('standing1.png'), pygame.image.load('standing2.png'), pygame.image.load('standing3.png')]
-walkRight = [pygame.image.load('right0.png'), pygame.image.load('right1.png'), pygame.image.load('right2.png'), pygame.image.load('right3.png'), pygame.image.load('right4.png'), pygame.image.load('right5.png')]
-walkLeft = [pygame.image.load('left0.png'), pygame.image.load('left1.png'), pygame.image.load('left2.png'), pygame.image.load('left3.png'), pygame.image.load('left4.png'), pygame.image.load('left5.png')]
-atkleft = [pygame.image.load('atkleft0.png'), pygame.image.load('atkleft1.png'), pygame.image.load('atkleft2.png')]
-atkright = [pygame.image.load('atkright0.png'), pygame.image.load('atkright1.png'), pygame.image.load('atkright2.png')]
+char = [pygame.image.load('Images/standing0.png'), pygame.image.load('Images/standing1.png'), pygame.image.load('Images/standing2.png'), pygame.image.load('Images/standing3.png')]
+walkRight = [pygame.image.load('Images/right0.png'), pygame.image.load('Images/right1.png'), pygame.image.load('Images/right2.png'), pygame.image.load('Images/right3.png'), pygame.image.load('Images/right4.png'), pygame.image.load('Images/right5.png')]
+walkLeft = [pygame.image.load('Images/left0.png'), pygame.image.load('Images/left1.png'), pygame.image.load('Images/left2.png'), pygame.image.load('Images/left3.png'), pygame.image.load('Images/left4.png'), pygame.image.load('Images/left5.png')]
+atkleft = [pygame.image.load('Images/atkleft0.png'), pygame.image.load('Images/atkleft1.png'), pygame.image.load('Images/atkleft2.png')]
+atkright = [pygame.image.load('Images/atkright0.png'), pygame.image.load('Images/atkright1.png'), pygame.image.load('Images/atkright2.png')]
 
 clock = pygame.time.Clock()
 score = 0
 
 #Set the background image and music
-bg = pygame.image.load('bg.jpg')
-music = pygame.mixer.music.load('music.mp3')
+bg = pygame.image.load('Images/bg.jpg')
+music = pygame.mixer.music.load('Music/music.mp3')
 pygame.mixer.music.play(-1)
+
+# =========================================================================== #
 
 # A class to represent a player
 class player(object):
@@ -93,6 +97,54 @@ class player(object):
                     i = 201
                     pygame.quit()
 
+    def getAction(self):
+        attackLoop = 0
+        keys = pygame.key.get_pressed()
+
+        if keys[pygame.K_SPACE] and attackLoop == 0:
+            man.attacking = True
+            if man.left:
+                facing = -1
+            else:
+                facing = 1
+                
+            if len(swipes) < 1:
+                swipes.append(projectile(round(man.x + man.width // 2), round(man.y + man.height // 2), 6, (0,0,0), facing))
+
+            attackLoop = 1
+
+        if keys[pygame.K_LEFT] and man.x > man.vel:
+            man.x -= man.vel
+            man.left = True
+            man.right = False
+            man.standing = False
+        elif keys[pygame.K_RIGHT] and man.x < 800 - man.width - man.vel:
+            man.x += man.vel
+            man.right = True
+            man.left = False
+            man.standing = False
+        else:
+            man.standing = True
+            man.walkCount = 0
+            
+        if not(man.isJump):
+            if keys[pygame.K_UP]:
+                man.isJump = True
+                man.right = False
+                man.left = False
+                man.walkCount = 0
+        else:
+            if man.jumpCount >= -10:
+                neg = 1
+                if man.jumpCount < 0:
+                    neg = -1
+                man.y -= (man.jumpCount ** 2) * 0.5 * neg
+                man.jumpCount -= 1
+            else:
+                man.isJump = False
+                man.jumpCount = 10
+        
+
 # =========================================================================== #
 
 class projectile(object):
@@ -111,9 +163,8 @@ class projectile(object):
 
 #A class to represent an enemy
 class enemy(object):
-    #walk = [pygame.image.load('ewalk0.png'), pygame.image.load('ewalk1.png'), pygame.image.load('ewalk2.png'), pygame.image.load('ewalk3.png')]
-    walkRight = [pygame.image.load('right0.png'), pygame.image.load('right1.png'), pygame.image.load('right2.png'), pygame.image.load('right3.png'), pygame.image.load('right4.png'), pygame.image.load('right5.png')]
-    walkLeft = [pygame.image.load('left0.png'), pygame.image.load('left1.png'), pygame.image.load('left2.png'), pygame.image.load('left3.png'), pygame.image.load('left4.png'), pygame.image.load('left5.png')]
+    walkRight = [pygame.image.load('Images/right0.png'), pygame.image.load('Images/right1.png'), pygame.image.load('Images/right2.png'), pygame.image.load('Images/right3.png'), pygame.image.load('Images/right4.png'), pygame.image.load('Images/right5.png')]
+    walkLeft = [pygame.image.load('Images/left0.png'), pygame.image.load('Images/left1.png'), pygame.image.load('Images/left2.png'), pygame.image.load('Images/left3.png'), pygame.image.load('Images/left4.png'), pygame.image.load('Images/left5.png')]
 
     def __init__(self, x, y, width, height, end):
         self.x = x
@@ -175,18 +226,17 @@ def redrawGameWindow():
     win.blit(text, (350, 10))
     man.draw(win)
     opponent.draw(win)
-    for bullet in swipes:
-        bullet.draw(win)
+    for attack in swipes:
+        attack.draw(win)
     
     pygame.display.update()
 
 # =========================================================================== #
 
-#def main():
 #mainloop
 font = pygame.font.SysFont('comicsans', 30, True)
 man = player(200, 410, 64,64)
-opponent = enemy(100, 410, 64, 64, 450)
+opponent = enemy(100, 410, 64, 64, 650)
 attackLoop = 0
 swipes = []
 run = True
@@ -209,76 +259,21 @@ while run:
             run = False
 
        
-    for bullet in swipes:
-        if bullet.y - bullet.radius < opponent.hitbox[1] + opponent.hitbox[3] and bullet.y + bullet.radius > opponent.hitbox[1]:
-            if bullet.x + bullet.radius > opponent.hitbox[0] and bullet.x - bullet.radius < opponent.hitbox[0] + opponent.hitbox[2]:
+    for attack in swipes:
+        if attack.y - attack.radius < opponent.hitbox[1] + opponent.hitbox[3] and attack.y + attack.radius > opponent.hitbox[1]:
+            if attack.x + attack.radius > opponent.hitbox[0] and attack.x - attack.radius < opponent.hitbox[0] + opponent.hitbox[2]:
                 #hitSound.play()
                 opponent.hit()
                 score += 1
-                swipes.pop(swipes.index(bullet))
+                swipes.pop(swipes.index(attack))
                 
-        if bullet.x < 500 and bullet.x > 0:
-            bullet.x += bullet.vel
+        if attack.x < SCREEN_WIDTH and attack.x > 0:
+            attack.x += attack.vel
         else:
-            swipes.pop(swipes.index(bullet))
+            swipes.pop(swipes.index(attack))
     
-
-    keys = pygame.key.get_pressed()
-
-    if keys[pygame.K_SPACE] and attackLoop == 0:
-        man.attacking = True
-        if man.left:
-            facing = -1
-        else:
-            facing = 1
-            
-        if len(swipes) < 1:
-            swipes.append(projectile(round(man.x + man.width // 2), round(man.y + man.height // 2), 6, (0,0,0), facing))
-
-        attackLoop = 1
-
-    if keys[pygame.K_LEFT] and man.x > man.vel:
-        man.x -= man.vel
-        man.left = True
-        man.right = False
-        man.standing = False
-    elif keys[pygame.K_RIGHT] and man.x < 500 - man.width - man.vel:
-        man.x += man.vel
-        man.right = True
-        man.left = False
-        man.standing = False
-    else:
-        man.standing = True
-        man.walkCount = 0
-        
-    if not(man.isJump):
-        if keys[pygame.K_UP]:
-            man.isJump = True
-            man.right = False
-            man.left = False
-            man.walkCount = 0
-    else:
-        if man.jumpCount >= -10:
-            neg = 1
-            if man.jumpCount < 0:
-                neg = -1
-            man.y -= (man.jumpCount ** 2) * 0.5 * neg
-            man.jumpCount -= 1
-        else:
-            man.isJump = False
-            man.jumpCount = 10
+    man.getAction()
             
     redrawGameWindow()
 
 pygame.quit()
-
-#if __name__ == "__main__":
-#    main()
-
-
-
-
-
-
-
-        
