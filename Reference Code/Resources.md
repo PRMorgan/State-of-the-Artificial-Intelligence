@@ -3,3 +3,7 @@
 https://medium.com/acing-ai/how-i-build-an-ai-to-play-dino-run-e37f37bdf153
 
 https://github.com/aymericdamien/TensorFlow-Examples/tree/master/
+
+Dino Run Machine Learning using Python
+
+* https://github.com/utay/dino-ml
