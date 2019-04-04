@@ -4,18 +4,6 @@ Simpson College Computer Science
 http://programarcadegames.com/
 http://simpson.edu/computer-science/
  
-From:
-http://programarcadegames.com/python_examples/f.php?file=platform_jumper.py
- 
-Explanation video: http://youtu.be/BCxWJgN4Nnc
- 
-Part of a series:
-http://programarcadegames.com/python_examples/f.php?file=move_with_walls_example.py
-http://programarcadegames.com/python_examples/f.php?file=maze_runner.py
-http://programarcadegames.com/python_examples/f.php?file=platform_jumper.py
-http://programarcadegames.com/python_examples/f.php?file=platform_scroller.py
-http://programarcadegames.com/python_examples/f.php?file=platform_moving.py
-http://programarcadegames.com/python_examples/sprite_sheets/
 """
  
 import pygame
@@ -38,7 +26,7 @@ RosyBrown = (188,143,143)
 PaleViolet = (219,112,147)
 
 
-colors = [BLACK, WHITE, GREEN, RED, BLUE, DarkSlateBlue, RosyBrown, PaleGreen, DeepSkyBlue, PaleViolet]
+colors = [WHITE, GREEN, RED, BLUE, DarkSlateBlue, RosyBrown, PaleGreen, DeepSkyBlue, PaleViolet]
 
 # Screen dimensions
 SCREEN_WIDTH = 800
@@ -52,27 +40,24 @@ def main():
     size = [SCREEN_WIDTH, SCREEN_HEIGHT]
     screen = pygame.display.set_mode(size)
  
-    pygame.display.set_caption("Platformer Jumper")
- 
-    # Create the player
-    # player = Player(BLUE)
-    # player2 = Player(RED)
+    pygame.display.set_caption("Really dumb AI right now")
 
     # Create all the levels
     level_list = []
  
     # Set the current level
     current_level_no = 0
-    
- 
+
+    #create an active sprite list to update collectively
     active_sprite_list = pygame.sprite.Group()
 
     players = []
 
-    for player in range(5):
+    for player in range(10):
         color_index = random.randint(0,len(colors) - 1)
         x_start_pos = random.randint(0,500)
-        player = Player(colors[color_index])
+        playerID = player
+        player = Player(playerID, colors[color_index], (700,500), screen)
         players.append(player)
 
         level_list.append( Level_01(player) )
@@ -84,61 +69,74 @@ def main():
         player.rect.y = SCREEN_HEIGHT - player.rect.height - 200
         active_sprite_list.add(player)
         possibleActions = [player.go_left, player.go_right, player.jump, player.stop]
- 
-    # Loop until the user clicks the close button.
+
+    # # Loop until the user clicks the close button.
     done = False
  
     # Used to manage how fast the screen updates
     clock = pygame.time.Clock()
 
-    possibleActions = [player.go_left, player.go_right, player.jump, player.stop]
     # -------- Main Program Loop -----------
     while not done:
-        for event in pygame.event.get():
-            if event.type == pygame.QUIT:
-                done = True
- 
-            if event.type == pygame.KEYDOWN:
-                if event.key == pygame.K_LEFT:
-                    player.direction = "left"
-                    player.go_left()
-                if event.key == pygame.K_RIGHT:
-                    player.direction = "right"
-                    player.go_right()
-                if event.key == pygame.K_UP:
-                    player.jump()
-                if event.key == pygame.K_f:
-                    player.boost()
-  
-            if event.type == pygame.KEYUP:
-                if event.key == pygame.K_LEFT and player.change_x < 0:
-                    player.stop()
-                if event.key == pygame.K_RIGHT and player.change_x > 0:
-                    player.stop()
-
-
-        for player in players:
-            action1 = random.randint(0,100)
-            # action2 = random.randint(0,100)
-            player.executeAction(action1)
-            # player.executeAction(action2)
-        
 
         # Update the player.
         active_sprite_list.update()
- 
+        
+        # update players --> in update() tell players to think()
+        #in the think(), they should run the neural net once
+        for event in pygame.event.get():
+            if event.type == pygame.QUIT:
+                done = True
+            
+            if event.type == pygame.USEREVENT:
+                for player in players:
+                    if player.playerID == event.id:
+                        eventPlayer = player
+                if event.action == "kill":
+                    print("Just killed player: ", eventPlayer.playerID, "... removing now")
+                    active_sprite_list.remove(eventPlayer)
+                    players.remove(eventPlayer)
+                    print("players left: ", len(players))
+                elif event.action == "moveLeft":
+                    eventPlayer.executeAction(0)
+                    eventPlayer.direction = "left"
+                elif event.action == "moveRight":
+                    eventPlayer.executeAction(1)
+                    eventPlayer.direction = "right"
+                elif event.action == "jump":
+                    eventPlayer.executeAction(2)
+                elif event.action == "stop":
+                    eventPlayer.executeAction(3)
+                    eventPlayer.direction = "none"
+                elif event.action == "damage":
+                    eventPlayer.health -= 2
+                else:
+                    print("unkown event: ", event)
+
+       
+        for player in players:
+            action = random.randint(0,4)
+            player.executeAction(action)
+        
         # Update items in the level
         current_level.update()
 
- 
         # ALL CODE TO DRAW SHOULD GO BELOW THIS COMMENT
         current_level.draw(screen)
         active_sprite_list.draw(screen)
+
+        mouse_pos = pygame.mouse.get_pos()
+
+        for player in players:
+            # draw the lines between point
+            # player.distanceToPoint(mouse_pos, True, BLUE)
+            # player.distanceToPoint((800,500),True, RED, "X")
+            player.updateHealth()
  
         # ALL CODE TO DRAW SHOULD GO ABOVE THIS COMMENT
  
         # Limit to 60 frames per second
-        clock.tick(100)
+        clock.tick(60)
  
         # Go ahead and update the screen with what we've drawn.
         pygame.display.flip()
