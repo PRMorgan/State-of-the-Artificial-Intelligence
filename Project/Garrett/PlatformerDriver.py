@@ -76,6 +76,19 @@ def main():
     # Used to manage how fast the screen updates
     clock = pygame.time.Clock()
 
+
+    """
+    Creating players brains:
+    pop = Population(30)
+
+    for person in pop:
+        pop.add(new Player());
+        person.brain.generateNetwork();
+        person.brain.mutate(innovationHistory);
+
+
+    """
+
     # -------- Main Program Loop -----------
     while not done:
 
@@ -129,8 +142,8 @@ def main():
 
         for player in players:
             # draw the lines between point
-            # player.distanceToPoint(mouse_pos, True, BLUE)
-            # player.distanceToPoint((800,500),True, RED, "X")
+            player.distanceToPoint(mouse_pos, True, BLUE)
+            #player.distanceToPoint((800,500),True, RED, "X")
             player.updateHealth()
  
         # ALL CODE TO DRAW SHOULD GO ABOVE THIS COMMENT
