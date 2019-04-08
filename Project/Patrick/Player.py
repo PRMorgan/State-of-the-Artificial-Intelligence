@@ -24,6 +24,8 @@ class Player(pygame.sprite.Sprite):
         self.width = width
         self.height = height
 
+        self.color = color
+
         self.direction = "none"
 
         self.sideJumpCount = 0
@@ -32,6 +34,8 @@ class Player(pygame.sprite.Sprite):
  
         # Set a referance to the image rect.
         self.rect = self.image.get_rect()
+
+        self.hitbox = self.image.get_rect()
 
         # Set speed vector of player
         self.change_x = 0
@@ -43,6 +47,12 @@ class Player(pygame.sprite.Sprite):
         # Which way is the sprite facing
         self.left = False
         self.right = False
+        """Player facing: 
+                left = -1
+                right = 1
+                standing = 0
+        """
+        self.facing = 0
 
         # Is the sprite attacking
         self.attacking = False
@@ -57,6 +67,8 @@ class Player(pygame.sprite.Sprite):
         self.rect.x += self.change_x
 
         # See if we hit anything
+        pygame.sprite.spritecollide(self, self.level.attackList, True)
+
         block_hit_list = pygame.sprite.spritecollide(self, self.level.platform_list, False)
         for block in block_hit_list:
             # If we are moving right,
@@ -108,7 +120,7 @@ class Player(pygame.sprite.Sprite):
             self.rect.y = SCREEN_HEIGHT - self.rect.height
 
     def getAction(self, event):
-        keys = pygame.key.get_pressed()
+        #keys = pygame.key.get_pressed()
         attackLoop = 0
         # Get the player's action and act accordingly.
         
@@ -117,10 +129,12 @@ class Player(pygame.sprite.Sprite):
                 self.go_left()
                 self.left = True
                 self.right = False
+                self.facing = -1
             if event.key == pygame.K_RIGHT:
                 self.go_right()
                 self.left = False
                 self.right = True
+                self.facing = 1
             if event.key == pygame.K_UP:
                 self.jump()
             if event.key == pygame.K_SPACE and attackLoop == 0:
@@ -133,14 +147,17 @@ class Player(pygame.sprite.Sprite):
                 self.stop()
 
     def attack(self):
-        print("HYAHHH!")
+        print(str(self.color) + "HYAHHH!")
         self.attacking = True
         if self.left:
             facing = -1
         else:
             facing = 1
         if len(self.swipes) < 2:
-            self.swipes.append(projectile(round(self.rect.x + self.width // 2), round(self.rect.y + self.height // 2), 6, (0,0,0), facing))
+            #self.swipes.append(projectile(round(self.rect.x + self.width // 2), round(self.rect.y + self.height // 2), 6, (0,255,0), facing))
+            swordAttack = Sword(self.rect.x, self.rect.y, 20, 60, (0,255,0), self.facing)
+            #self.swipes.append(Sword(self.rect.x, self.rect.y, 20, 60, (0,255,0), self.facing))
+            self.swipes.append(swordAttack)
  
     def jump(self):
         """ Called when user hits 'jump' button. """
@@ -194,6 +211,21 @@ class Player(pygame.sprite.Sprite):
             self.stop()
         # time.sleep(.04)
         # actions[action]()
+
+class Sword(pygame.sprite.Sprite):
+    def __init__(self,x,y,height,width,color,facing):
+
+        super().__init__()
+        self.x = x
+        self.y = y
+        self.height = height
+        self.width = width
+        self.color = color
+        self.facing = facing
+        self.vel = 8 * facing
+
+    def draw(self,win):
+        pygame.draw.rect(win, self.color, pygame.Rect(self.x, self.y, 60, 20))
 
 class projectile(object):
     def __init__(self,x,y,radius,color,facing):
