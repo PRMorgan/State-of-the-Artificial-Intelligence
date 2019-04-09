@@ -1,4 +1,5 @@
 import pygame
+from Level import *
 import time
 import math
 
@@ -16,29 +17,12 @@ ROSYBROWN = (188,143,143)
 PALEVIOLET = (219,112,147)
 YELLOW = (255,255,0)
 
-# class PainBox(pygame.sprite.Sprite):
-
-#     # Constructor. Pass in the color of the block,
-#     # and its x and y position
-#     def __init__(self, color, damage, position, player):
-#        # Call the parent class (Sprite) constructor
-#        pygame.sprite.Sprite.__init__(self)
-
-#        # Create an image of the block, and fill it with a color.
-#        # This could also be an image loaded from the disk.
-#        self.image = pygame.Surface([width, height])
-#        self.image.fill(color)
-
-#        # Fetch the rectangle object that has the dimensions of the image
-#        # Update the position of this object by setting the values of rect.x and rect.y
-#        self.rect = self.image.get_rect()
-
 class Player(pygame.sprite.Sprite):
     """ This class represents the bar at the bottom that the player
         controls. """
  
     # -- Methods
-    def __init__(self, playerID, color, goal_point, screen):
+    def __init__(self, playerID, color, screen, AI = True):
         """ Constructor function """
  
         # Call the parent's constructor
@@ -46,8 +30,8 @@ class Player(pygame.sprite.Sprite):
  
         # Create an image of the block, and fill it with a color.
         # This could also be an image loaded from the disk.
-        self.width = 20
-        self.height = 20
+        self.width = 40
+        self.height = 60
 
         # genomeInputs = 3;
         # genomeOutputs = 3;
@@ -69,15 +53,19 @@ class Player(pygame.sprite.Sprite):
         self.color = color 
         self.playerID = playerID
 
+        self.sword = None
+        self.isAI = AI
+        self.isAttacking = False
+
         self.direction = "none"
         self.moveLeftEvent = pygame.event.Event(pygame.USEREVENT, action = "moveLeft", id = playerID)
         self.moveRightEvent = pygame.event.Event(pygame.USEREVENT, action = "moveRight", id = playerID)
         self.jumpEvent = pygame.event.Event(pygame.USEREVENT, action = "jump", id = playerID)
         self.stopEvent = pygame.event.Event(pygame.USEREVENT, action = "stop", id = playerID)
         self.killEvent = pygame.event.Event(pygame.USEREVENT, action = "kill", id = playerID)
+        self.attackEvent = pygame.event.Event(pygame.USEREVENT, action = "attack", id = playerID)
 
         self.damage = pygame.event.Event(pygame.USEREVENT, action = "damage", id= playerID)
-        self.goal_point = goal_point
         self.sideJumpCount = 0
         self.image = pygame.Surface([self.width, self.height])
         self.image.fill(color)
@@ -98,6 +86,85 @@ class Player(pygame.sprite.Sprite):
         # List of sprites we can bump against
         self.level = None
 
+    def update(self):
+        #update neural network
+        mouse_pos = pygame.mouse.get_pos()
+        
+        #helps determine fitness
+        # self.framesAlive += 1
+
+
+        #pass outputs to think
+        if self.isAI:
+          self.think(mouse_pos)
+
+        """ Move the player. """
+        # Gravity
+        self.calc_grav()
+
+        # Move left/right
+        self.rect.x += self.change_x
+
+
+        if self.isAttacking == True:
+          print("Player: ", self.playerID, " is looking ", self.direction)
+          if self.direction == "left":
+            self.sword.rect.x = self.rect.x - 50
+            self.sword.rect.y = self.rect.y + 30
+          elif self.direction == "right":
+            self.sword.rect.x = self.rect.x + self.width + 50
+            self.sword.rect.y = self.rect.y + 30
+          else:
+            self.sword.rect.x = self.rect.x + self.width/2
+            self.sword.rect.y = self.rect.y -30
+          self.level.attack_list.remove(self.sword)
+        self.isAttacking = False
+      
+
+        # hit_box_list = pygame.sprite.spritecollide(self, self.level.danger_list, False)
+        # See if we hit anything
+        attack_hit_list = pygame.sprite.spritecollide(self, self.level.attack_list, False)
+        if len(attack_hit_list) > 0:
+          pygame.event.post(self.damage)
+          
+        
+        block_hit_list = pygame.sprite.spritecollide(self, self.level.platform_list, False)
+        for block in block_hit_list:
+            # If we are moving right,
+            # set our right side to the left side of the item we hit
+            if self.change_x > 0:
+                self.rect.right = block.rect.left
+            elif self.change_x < 0:
+                # Otherwise if we are moving left, do the opposite.
+                self.rect.left = block.rect.right
+ 
+        # Move up/down
+        self.rect.y += self.change_y
+        # If the player gets near the right side, shift the world left (-x)
+        if self.rect.right > SCREEN_WIDTH:
+            self.rect.right = SCREEN_WIDTH
+ 
+        # If the player gets near the left side, shift the world right (+x)
+        if self.rect.left < 0:
+            self.rect.left = 0
+ 
+        # Check and see if we hit anything
+        block_hit_list = pygame.sprite.spritecollide(self, self.level.platform_list, False)
+        
+        if len(block_hit_list) > 0 or self.rect.bottom >= SCREEN_HEIGHT:
+            self.sideJumpCount = 0
+        
+        for block in block_hit_list:
+ 
+            # Reset our position based on the top/bottom of the object.
+            if self.change_y > 0:
+                self.rect.bottom = block.rect.top
+            elif self.change_y < 0:
+                self.rect.top = block.rect.bottom
+            # Stop our vertical movement
+            self.change_y = 0
+ 
+
     #once neural net is established, send in the output nodes
     #as parameters
     def think(self, point):
@@ -109,7 +176,8 @@ class Player(pygame.sprite.Sprite):
 
         if (self.rect.x < point[0] and self.rect.x + self.width > point[0]) and (self.rect.y < point[1] and self.rect.y + self.height > point[1]):
             # print("Player ", self.playerID, " has ", self.health)
-            pygame.event.post(self.damage)
+            # pygame.event.post(self.damage)
+            pygame.event.post(self.attackEvent)
 
         if self.rect.x > point[0]:
             pygame.event.post(self.moveRightEvent)
@@ -133,7 +201,6 @@ class Player(pygame.sprite.Sprite):
       return self.runningFitness / self.totalFtinessCalculations
 
     # def look(self)
-
     def updateHealth(self):
         healthBarLength = (self.health/self.maxHealth) * self.width
         if self.health <= 0:
@@ -149,9 +216,7 @@ class Player(pygame.sprite.Sprite):
                 healthBarLength = (self.health/self.maxHealth) * self.width
                 pygame.draw.line(self.screen, YELLOW, (self.rect.x, self.rect.y - 10), (self.rect.x + healthBarLength, self.rect.y - 10), 4)
             else: 
-                pygame.draw.line(self.screen, RED, (self.rect.x, self.rect.y - 10), (self.rect.x + healthBarLength, self.rect.y - 10), 4)
-
-    
+                pygame.draw.line(self.screen, RED, (self.rect.x, self.rect.y - 10), (self.rect.x + healthBarLength, self.rect.y - 10), 4)  
     def distanceToPoint(self, point, drawFlag = False, color = WHITE, axis = "BOTH"):
         x_goal = point[0]
         y_goal = point[1]
@@ -196,69 +261,6 @@ class Player(pygame.sprite.Sprite):
             self.screen.blit(distanceText, midPoint)
 
         return total_distance
-    
-
-    def update(self):
-
-        #update neural network
-        mouse_pos = pygame.mouse.get_pos()
-
-        #helps determine fitness
-        # self.framesAlive += 1
-
-        #pass outputs to think
-        self.think(mouse_pos)
-
-        """ Move the player. """
-        # Gravity
-        self.calc_grav()
-
-        # Move left/right
-        self.rect.x += self.change_x
-
-        # hit_box_list = pygame.sprite.spritecollide(self, self.level.danger_list, False)
-
-        # See if we hit anything
-        block_hit_list = pygame.sprite.spritecollide(self, self.level.platform_list, False)
-        for block in block_hit_list:
-            # If we are moving right,
-            # set our right side to the left side of the item we hit
-            if self.change_x > 0:
-                self.rect.right = block.rect.left
-            elif self.change_x < 0:
-                # Otherwise if we are moving left, do the opposite.
-                self.rect.left = block.rect.right
- 
-        # Move up/down
-        self.rect.y += self.change_y
-
-         
-        # If the player gets near the right side, shift the world left (-x)
-        if self.rect.right > SCREEN_WIDTH:
-            self.rect.right = SCREEN_WIDTH
- 
-        # If the player gets near the left side, shift the world right (+x)
-        if self.rect.left < 0:
-            self.rect.left = 0
- 
-        # Check and see if we hit anything
-        block_hit_list = pygame.sprite.spritecollide(self, self.level.platform_list, False)
-        
-        if len(block_hit_list) > 0 or self.rect.bottom >= SCREEN_HEIGHT:
-            self.sideJumpCount = 0
-        
-
-        for block in block_hit_list:
- 
-            # Reset our position based on the top/bottom of the object.
-            if self.change_y > 0:
-                self.rect.bottom = block.rect.top
-            elif self.change_y < 0:
-                self.rect.top = block.rect.bottom
- 
-            # Stop our vertical movement
-            self.change_y = 0
- 
     def calc_grav(self):
         """ Calculate effect of gravity. """
         if self.change_y == 0:
@@ -270,7 +272,6 @@ class Player(pygame.sprite.Sprite):
         if self.rect.y >= SCREEN_HEIGHT - self.rect.height and self.change_y >= 0:
             self.change_y = 0
             self.rect.y = SCREEN_HEIGHT - self.rect.height
- 
     def jump(self):
         """ Called when user hits 'jump' button. """
  
@@ -288,29 +289,39 @@ class Player(pygame.sprite.Sprite):
         # If it is ok to jump, set our speed upwards
         if len(platform_hit_list) > 0 or self.rect.bottom >= SCREEN_HEIGHT:
                 self.change_y = -10
-
-        
- 
-    # Player-controlled movement:
     def boost(self):
-        """Fires a look vector"""
+        """Moves faster!"""
         if self.direction == "left":
             self.change_x -= 10
         elif self.direction == "right":
-            self.change_x += 10
-        
+            self.change_x += 10        
     def go_left(self):
         """ Called when the user hits the left arrow. """
         self.change_x = -4
- 
     def go_right(self):
         """ Called when the user hits the right arrow. """
         self.change_x = 4
- 
     def stop(self):
         """ Called when the user lets off the keyboard. """
         self.direction = "none"
         self.change_x = 0
+    def attack(self):
+      if self.isAttacking == True:
+        pass
+      else:
+        print(self.playerID, " is attacking!")
+        if self.direction == "left":
+          facing = -1
+        if self.direction == "right":
+          facing = 1
+        if self.direction == "none":
+          facing = 0
+        
+        self.sword = Sword(self.rect.x, self.rect.y, 50, 50, self.color, facing, time)
+      
+        self.level.attack_list.add(self.sword)
+        print(self.level.attack_list)
+        self.isAttacking = True
 
     def executeAction(self, action):
         if action == 0:
@@ -321,9 +332,21 @@ class Player(pygame.sprite.Sprite):
             self.jump()
         elif action == 3:
             self.stop()
+        elif action == 4:
+            self.attack()
 
 
-
+"""
+    def attack(self):
+        print("HYAHHH!")
+        self.attacking = True
+        if self.left:
+            facing = -1
+        else:
+            facing = 1
+        if len(self.swipes) < 2:
+            self.swipes.append(projectile(round(self.rect.x + self.width // 2), round(self.rect.y + self.height // 2), 6, (0,0,0), facing))
+"""
 
 """ ADD TO PLAYER CLASS
 
