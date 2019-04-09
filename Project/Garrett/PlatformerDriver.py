@@ -40,7 +40,7 @@ def main():
     size = [SCREEN_WIDTH, SCREEN_HEIGHT]
     screen = pygame.display.set_mode(size)
  
-    pygame.display.set_caption("Really dumb AI right now")
+    pygame.display.set_caption("Nidhog")
 
     # Create all the levels
     level_list = []
@@ -53,11 +53,19 @@ def main():
 
     players = []
 
-    for player in range(10):
+    #create a player controlled by the keyboard
+    user_player = Player(69, (255,255,0), screen, False)
+    level_list.append( Level_01(user_player))
+    user_player.level = level_list[0]
+    user_player.rect.x = 200
+    user_player.rect.y = 200
+    active_sprite_list.add(user_player)
+
+    for player in range(40):
         color_index = random.randint(0,len(colors) - 1)
         x_start_pos = random.randint(0,500)
         playerID = player
-        player = Player(playerID, colors[color_index], (700,500), screen)
+        player = Player(playerID, colors[color_index], screen)
         players.append(player)
 
         level_list.append( Level_01(player) )
@@ -68,9 +76,9 @@ def main():
         player.rect.x = x_start_pos
         player.rect.y = SCREEN_HEIGHT - player.rect.height - 200
         active_sprite_list.add(player)
-        possibleActions = [player.go_left, player.go_right, player.jump, player.stop]
+        # possibleActions = [player.go_left, player.go_right, player.jump, player.stop]
 
-    # # Loop until the user clicks the close button.
+    # Loop until the user clicks the close button.
     done = False
  
     # Used to manage how fast the screen updates
@@ -101,6 +109,22 @@ def main():
             if event.type == pygame.QUIT:
                 done = True
             
+            if event.type == pygame.KEYDOWN:
+                if event.key == pygame.K_LEFT:
+                    user_player.executeAction(0)
+                if event.key == pygame.K_RIGHT:
+                    user_player.executeAction(1)
+                if event.key == pygame.K_UP:
+                    user_player.executeAction(2)
+                if event.key == pygame.K_SPACE:
+                    user_player.executeAction(4)
+ 
+            if event.type == pygame.KEYUP:
+                if event.key == pygame.K_LEFT and player.change_x < 0:
+                    user_player.executeAction(3)
+                if event.key == pygame.K_RIGHT and player.change_x > 0:
+                    user_player.executeAction(3)
+            
             if event.type == pygame.USEREVENT:
                 for player in players:
                     if player.playerID == event.id:
@@ -110,6 +134,8 @@ def main():
                     active_sprite_list.remove(eventPlayer)
                     players.remove(eventPlayer)
                     print("players left: ", len(players))
+                elif event.action == "attack":
+                    eventPlayer.executeAction(4)
                 elif event.action == "moveLeft":
                     eventPlayer.executeAction(0)
                     eventPlayer.direction = "left"
@@ -138,11 +164,11 @@ def main():
         current_level.draw(screen)
         active_sprite_list.draw(screen)
 
-        mouse_pos = pygame.mouse.get_pos()
+        # mouse_pos = pygame.mouse.get_pos()
 
         for player in players:
             # draw the lines between point
-            player.distanceToPoint(mouse_pos, True, BLUE)
+            # player.distanceToPoint(mouse_pos, True, BLUE)
             #player.distanceToPoint((800,500),True, RED, "X")
             player.updateHealth()
  
