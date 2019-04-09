@@ -20,6 +20,7 @@ class Level(object):
         """ Constructor. Pass in a handle to player. Needed for when moving platforms
             collide with the player. """
         self.platform_list = pygame.sprite.Group()
+        self.attack_list = pygame.sprite.Group()
         self.enemy_list = pygame.sprite.Group()
         self.player = player
          
@@ -31,6 +32,7 @@ class Level(object):
         """ Update everything in this level."""
         self.platform_list.update()
         self.enemy_list.update()
+        self.attack_list.update()
  
     def draw(self, screen):
         """ Draw everything on this level. """
@@ -41,7 +43,7 @@ class Level(object):
         # Draw all the sprite lists that we have
         self.platform_list.draw(screen)
         self.enemy_list.draw(screen)
- 
+        self.attack_list.draw(screen) 
  
 # Create platforms for the level
 class Level_01(Level):
@@ -54,9 +56,9 @@ class Level_01(Level):
         Level.__init__(self, player)
  
         # Array with width, height, x, and y of platform
-        level = [[400, 20, 0, SCREEN_HEIGHT - 20],
-                 [400, 20, 200, SCREEN_HEIGHT - 40],
-                 [400, 20, 400, SCREEN_HEIGHT - 60],
+        level = [[100, 20, 0, SCREEN_HEIGHT - 20],
+                 [100, 40, 100, SCREEN_HEIGHT - 40],
+                 [100, 60, 200, SCREEN_HEIGHT - 60],
                  ]
  
         # Go through the array above and add platforms
@@ -66,6 +68,7 @@ class Level_01(Level):
             block.rect.y = platform[3]
             block.player = self.player
             self.platform_list.add(block)
+
 
 
 class Platform(pygame.sprite.Sprite):
@@ -78,6 +81,36 @@ class Platform(pygame.sprite.Sprite):
         super().__init__()
  
         self.image = pygame.Surface([width, height])
-        self.image.fill(BLUE)
+        self.image.fill(GREEN)
  
         self.rect = self.image.get_rect()
+
+
+
+class Sword(pygame.sprite.Sprite):
+    def __init__(self,x,y,width,height,color,facing):
+
+        super().__init__()
+        self.facing = facing
+
+        self.image = pygame.Surface([width, height])
+        self.image.fill(color)
+        self.rect = self.image.get_rect()
+
+        if facing == -1:
+            self.rect.x = x - 50
+            self.rect.y = y + 30
+        elif facing == 1:
+            self.rect.x = x + 50
+            self.rect.y = y + 30
+        else:
+            self.rect.x = x + width
+            self.rect.y = y - 20
+
+        # for sword in attack_list:
+        #     sword.rect.x = self.x
+        #     sword.rect.y = self.y
+        # self.attack_list.add(sword)
+
+    # def draw(self, win):
+    #     pygame.draw.rect(win, self.color, pygame.Rect(self.x, self.y, 60, 20))

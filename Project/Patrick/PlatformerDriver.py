@@ -4,18 +4,6 @@ Simpson College Computer Science
 http://programarcadegames.com/
 http://simpson.edu/computer-science/
  
-From:
-http://programarcadegames.com/python_examples/f.php?file=platform_jumper.py
- 
-Explanation video: http://youtu.be/BCxWJgN4Nnc
- 
-Part of a series:
-http://programarcadegames.com/python_examples/f.php?file=move_with_walls_example.py
-http://programarcadegames.com/python_examples/f.php?file=maze_runner.py
-http://programarcadegames.com/python_examples/f.php?file=platform_jumper.py
-http://programarcadegames.com/python_examples/f.php?file=platform_scroller.py
-http://programarcadegames.com/python_examples/f.php?file=platform_moving.py
-http://programarcadegames.com/python_examples/sprite_sheets/
 """
  
 import pygame
@@ -37,18 +25,12 @@ PaleGreen = (152,251,152)
 RosyBrown = (188,143,143)
 PaleViolet = (219,112,147)
 
-colors = [BLACK, WHITE, GREEN, RED, BLUE, DarkSlateBlue, RosyBrown, PaleGreen, DeepSkyBlue, PaleViolet]
+
+colors = [WHITE, GREEN, RED, BLUE, DarkSlateBlue, RosyBrown, PaleGreen, DeepSkyBlue, PaleViolet]
 
 # Screen dimensions
 SCREEN_WIDTH = 800
 SCREEN_HEIGHT = 600
-
-swipes = []
-
-def redrawGameWindow():
-    for attack in swipes:
-        attack.draw(screen)
-    pygame.display.flip()
 
 def main():
     """ Main Program """
@@ -58,11 +40,7 @@ def main():
     size = [SCREEN_WIDTH, SCREEN_HEIGHT]
     screen = pygame.display.set_mode(size)
  
-    pygame.display.set_caption("Platformer Jumper")
- 
-    # Create the player
-    #player = Player(BLUE)
-    #player2 = Player(RED)
+    pygame.display.set_caption("Nidhog")
 
     # Create all the levels
     level_list = []
@@ -70,18 +48,24 @@ def main():
     # Set the current level
     current_level_no = 0
 
-    # Attack variables
-    #swipes = []
-    attackLoop = 0
- 
+    #create an active sprite list to update collectively
     active_sprite_list = pygame.sprite.Group()
 
     players = []
 
-    for player in range(2):
+    #create a player controlled by the keyboard
+    user_player = Player(69, (255,255,0), screen, False)
+    level_list.append( Level_01(user_player))
+    user_player.level = level_list[0]
+    user_player.rect.x = 200
+    user_player.rect.y = 200
+    active_sprite_list.add(user_player)
+
+    for player in range(1):
         color_index = random.randint(0,len(colors) - 1)
         x_start_pos = random.randint(0,500)
-        player = Player(colors[color_index])
+        playerID = player
+        player = Player(playerID, colors[color_index], screen)
         players.append(player)
 
         level_list.append( Level_01(player) )
@@ -92,50 +76,100 @@ def main():
         player.rect.x = x_start_pos
         player.rect.y = SCREEN_HEIGHT - player.rect.height - 200
         active_sprite_list.add(player)
-        possibleActions = [player.go_left, player.go_right, player.jump, player.stop]
- 
+        # possibleActions = [player.go_left, player.go_right, player.jump, player.stop]
+
     # Loop until the user clicks the close button.
     done = False
  
     # Used to manage how fast the screen updates
     clock = pygame.time.Clock()
 
-    possibleActions = [player.go_left, player.go_right, player.jump, player.stop]
+
+    """
+    Creating players brains:
+    pop = Population(30)
+    for person in pop:
+        pop.add(new Player());
+        person.brain.generateNetwork();
+        person.brain.mutate(innovationHistory);
+    """
+
     # -------- Main Program Loop -----------
     while not done:
+
+        # Update the player.
+        active_sprite_list.update()
+        
+        # update players --> in update() tell players to think()
+        #in the think(), they should run the neural net once
         for event in pygame.event.get():
             if event.type == pygame.QUIT:
                 done = True
-            player.getAction(event)
-
-        if attackLoop > 0:
-            attackLoop += 1
-        if attackLoop > 3:
-            attackLoop = 0
-
-        for attack in player.swipes:
-            if attack.y - attack.radius < opponent.hitbox[1] + opponent.hitbox[3] and attack.y + attack.radius > opponent.hitbox[1]:
-                if attack.x + attack.radius > opponent.hitbox[0] and attack.x - attack.radius < opponent.hitbox[0] + opponent.hitbox[2]:
-                    #hitSound.play()
-                    opponent.hit()
-                    score += 1
-                    player.swipes.pop(player.swipes.index(attack))
-                    
-            if attack.x < SCREEN_WIDTH and attack.x > 0:
-                attack.x += attack.vel
-            else:
-                player.swipes.pop(player.swipes.index(attack))
-        
-        # Update the player.
-        active_sprite_list.update()
+            
+            if event.type == pygame.KEYDOWN:
+                if event.key == pygame.K_LEFT:
+                    user_player.direction = "left"
+                    user_player.executeAction(0) 
+                if event.key == pygame.K_RIGHT:
+                    user_player.direction = "right"
+                    user_player.executeAction(1)
+                if event.key == pygame.K_UP:
+                    user_player.executeAction(2)
+                if event.key == pygame.K_SPACE:
+                    user_player.executeAction(4)
  
+            if event.type == pygame.KEYUP:
+                if event.key == pygame.K_LEFT:
+                    user_player.executeAction(3)
+                if event.key == pygame.K_RIGHT:
+                    user_player.executeAction(3)
+                        
+            if event.type == pygame.USEREVENT:
+                for player in players:
+                    if player.playerID == event.id:
+                        eventPlayer = player
+                if event.action == "kill":
+                    print("Just killed player: ", eventPlayer.playerID, "... removing now")
+                    active_sprite_list.remove(eventPlayer)
+                    players.remove(eventPlayer)
+                    print("players left: ", len(players))
+                elif event.action == "attack":
+                    eventPlayer.executeAction(4)
+                elif event.action == "moveLeft":
+                    eventPlayer.executeAction(0)
+                    eventPlayer.direction = "left"
+                elif event.action == "moveRight":
+                    eventPlayer.executeAction(1)
+                    eventPlayer.direction = "right"
+                elif event.action == "jump":
+                    eventPlayer.executeAction(2)
+                elif event.action == "stop":
+                    eventPlayer.executeAction(3)
+                    eventPlayer.direction = "none"
+                elif event.action == "damage":
+                    eventPlayer.health -= 2
+                else:
+                    print("unkown event: ", event)
+
+       
+        for player in players:
+            action = random.randint(0,4)
+            player.executeAction(action)
+        
         # Update items in the level
         current_level.update()
 
- 
         # ALL CODE TO DRAW SHOULD GO BELOW THIS COMMENT
         current_level.draw(screen)
         active_sprite_list.draw(screen)
+
+        # mouse_pos = pygame.mouse.get_pos()
+
+        for player in players:
+            # draw the lines between point
+            # player.distanceToPoint(mouse_pos, True, BLUE)
+            #player.distanceToPoint((800,500),True, RED, "X")
+            player.updateHealth()
  
         # ALL CODE TO DRAW SHOULD GO ABOVE THIS COMMENT
  
@@ -143,8 +177,7 @@ def main():
         clock.tick(60)
  
         # Go ahead and update the screen with what we've drawn.
-        #pygame.display.flip()
-        redrawGameWindow()
+        pygame.display.flip()
  
     # Be IDLE friendly. If you forget this line, the program will 'hang'
     # on exit.
