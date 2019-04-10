@@ -10,6 +10,8 @@ import pygame
 from Player import *
 from Level import *
 import random
+import os
+os.environ['SDL_VIDEO_CENTERED'] = '1'
  
 # Global constants
  
@@ -54,29 +56,51 @@ def main():
     players = []
 
     #create a player controlled by the keyboard
+    """
     user_player = Player(69, (255,255,0), screen, False)
     level_list.append( Level_01(user_player))
     user_player.level = level_list[0]
     user_player.rect.x = 200
     user_player.rect.y = 200
     active_sprite_list.add(user_player)
+    """
 
-    for player in range(40):
+    playerOne = Player(1, RED, screen, True)
+    playerTwo = Player(2, BLUE, screen, True)
+    active_sprite_list.add(playerOne)
+    active_sprite_list.add(playerTwo)
+    level_list.append( Level_01(playerOne))
+    playerOne.level = level_list[0]
+    level_list.append( Level_01(playerTwo))
+    playerTwo.level = level_list[0]
+    players.append(playerOne)
+    players.append(playerTwo)
+    current_level = level_list[current_level_no]
+
+    playerOne.rect.x = SCREEN_WIDTH - (SCREEN_WIDTH - 10)
+    playerOne.rect.y = SCREEN_HEIGHT - playerOne.rect.height - 200
+
+    playerTwo.rect.x = SCREEN_WIDTH - 10
+    playerTwo.rect.y = SCREEN_HEIGHT - playerTwo.rect.height - 200
+
+    playerOne.setEnemy(playerTwo)
+    playerTwo.setEnemy(playerOne)
+
+    """
+    for player in range(1):
         color_index = random.randint(0,len(colors) - 1)
         x_start_pos = random.randint(0,500)
         playerID = player
         player = Player(playerID, colors[color_index], screen)
         players.append(player)
-
         level_list.append( Level_01(player) )
         current_level = level_list[current_level_no]
-
         player.level = current_level 
-
         player.rect.x = x_start_pos
         player.rect.y = SCREEN_HEIGHT - player.rect.height - 200
         active_sprite_list.add(player)
         # possibleActions = [player.go_left, player.go_right, player.jump, player.stop]
+    """
 
     # Loop until the user clicks the close button.
     done = False
@@ -84,17 +108,13 @@ def main():
     # Used to manage how fast the screen updates
     clock = pygame.time.Clock()
 
-
     """
     Creating players brains:
     pop = Population(30)
-
     for person in pop:
         pop.add(new Player());
         person.brain.generateNetwork();
         person.brain.mutate(innovationHistory);
-
-
     """
 
     # -------- Main Program Loop -----------
@@ -109,10 +129,13 @@ def main():
             if event.type == pygame.QUIT:
                 done = True
             
+            """
             if event.type == pygame.KEYDOWN:
                 if event.key == pygame.K_LEFT:
-                    user_player.executeAction(0)
+                    user_player.direction = "left"
+                    user_player.executeAction(0) 
                 if event.key == pygame.K_RIGHT:
+                    user_player.direction = "right"
                     user_player.executeAction(1)
                 if event.key == pygame.K_UP:
                     user_player.executeAction(2)
@@ -120,11 +143,12 @@ def main():
                     user_player.executeAction(4)
  
             if event.type == pygame.KEYUP:
-                if event.key == pygame.K_LEFT and player.change_x < 0:
+                if event.key == pygame.K_LEFT:
                     user_player.executeAction(3)
-                if event.key == pygame.K_RIGHT and player.change_x > 0:
+                if event.key == pygame.K_RIGHT:
                     user_player.executeAction(3)
-            
+            """
+                        
             if event.type == pygame.USEREVENT:
                 for player in players:
                     if player.playerID == event.id:
@@ -151,7 +175,6 @@ def main():
                     eventPlayer.health -= 2
                 else:
                     print("unkown event: ", event)
-
        
         for player in players:
             action = random.randint(0,4)
@@ -169,7 +192,7 @@ def main():
         for player in players:
             # draw the lines between point
             # player.distanceToPoint(mouse_pos, True, BLUE)
-            #player.distanceToPoint((800,500),True, RED, "X")
+            # player.distanceToPoint((800,500),True, RED, "X")
             player.updateHealth()
  
         # ALL CODE TO DRAW SHOULD GO ABOVE THIS COMMENT
