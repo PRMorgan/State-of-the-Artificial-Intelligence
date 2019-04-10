@@ -54,13 +54,28 @@ def main():
     players = []
 
     #create a player controlled by the keyboard
+    """
     user_player = Player(69, (255,255,0), screen, False)
     level_list.append( Level_01(user_player))
     user_player.level = level_list[0]
     user_player.rect.x = 200
     user_player.rect.y = 200
     active_sprite_list.add(user_player)
+    """
 
+    playerOne = Player(69, RED, screen, True)
+    playerTwo = Player(420, BLUE, screen, True)
+    active_sprite_list.add(playerOne)
+    active_sprite_list.add(playerTwo)
+    level_list.append( Level_01(playerOne))
+    playerOne.level = level_list[0]
+    level_list.append( Level_01(playerTwo))
+    playerTwo.level = level_list[0]
+    players.append(playerOne)
+    players.append(playerTwo)
+    current_level = level_list[current_level_no]
+
+    """
     for player in range(1):
         color_index = random.randint(0,len(colors) - 1)
         x_start_pos = random.randint(0,500)
@@ -77,13 +92,13 @@ def main():
         player.rect.y = SCREEN_HEIGHT - player.rect.height - 200
         active_sprite_list.add(player)
         # possibleActions = [player.go_left, player.go_right, player.jump, player.stop]
+    """
 
     # Loop until the user clicks the close button.
     done = False
  
     # Used to manage how fast the screen updates
     clock = pygame.time.Clock()
-
 
     """
     Creating players brains:
@@ -106,6 +121,7 @@ def main():
             if event.type == pygame.QUIT:
                 done = True
             
+            """
             if event.type == pygame.KEYDOWN:
                 if event.key == pygame.K_LEFT:
                     user_player.direction = "left"
@@ -123,6 +139,7 @@ def main():
                     user_player.executeAction(3)
                 if event.key == pygame.K_RIGHT:
                     user_player.executeAction(3)
+            """
                         
             if event.type == pygame.USEREVENT:
                 for player in players:
@@ -150,7 +167,6 @@ def main():
                     eventPlayer.health -= 2
                 else:
                     print("unkown event: ", event)
-
        
         for player in players:
             action = random.randint(0,4)
@@ -168,7 +184,7 @@ def main():
         for player in players:
             # draw the lines between point
             # player.distanceToPoint(mouse_pos, True, BLUE)
-            #player.distanceToPoint((800,500),True, RED, "X")
+            # player.distanceToPoint((800,500),True, RED, "X")
             player.updateHealth()
  
         # ALL CODE TO DRAW SHOULD GO ABOVE THIS COMMENT

@@ -322,7 +322,7 @@ class Player(pygame.sprite.Sprite):
         if self.direction == "none":
           facing = 0
         
-        self.sword = Sword(self.rect.x, self.rect.y, 60, 20, self.color, facing)
+        self.sword = Sword(self.rect.x, self.rect.y, 60, 10, self.color, facing)
       
         self.level.attack_list.add(self.sword)
         print(self.level.attack_list)
