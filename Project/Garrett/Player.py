@@ -47,6 +47,7 @@ class Player(pygame.sprite.Sprite):
         # self.runningFitness
         # self.totalFitnessCalculations
         # self.avgFitness
+        self.enemy = None
 
         self.maxHealth = 40
         self.health = 40
@@ -86,6 +87,9 @@ class Player(pygame.sprite.Sprite):
         # List of sprites we can bump against
         self.level = None
 
+    def setEnemy(self, enemy):
+      self.enemy = enemy
+
     def update(self):
         #update neural network
         mouse_pos = pygame.mouse.get_pos()
@@ -93,10 +97,10 @@ class Player(pygame.sprite.Sprite):
         #helps determine fitness
         # self.framesAlive += 1
 
-
+        enemyPos = (self.enemy.rect.x, self.enemy.rect.y)
         #pass outputs to think
         if self.isAI:
-          self.think(mouse_pos)
+            self.think(enemyPos)
 
         """ Move the player. """
         # Gravity
@@ -105,28 +109,26 @@ class Player(pygame.sprite.Sprite):
         # Move left/right
         self.rect.x += self.change_x
 
-
         if self.isAttacking == True:
-          print("Player: ", self.playerID, " is looking ", self.direction)
-          if self.direction == "left":
-            self.sword.rect.x = self.rect.x - 50
-            self.sword.rect.y = self.rect.y + 30
-          elif self.direction == "right":
-            self.sword.rect.x = self.rect.x + self.width + 50
-            self.sword.rect.y = self.rect.y + 30
-          else:
-            self.sword.rect.x = self.rect.x + self.width/2
-            self.sword.rect.y = self.rect.y -30
-          self.level.attack_list.remove(self.sword)
-        self.isAttacking = False
-      
+            print("Player: ", self.playerID, " is looking ", self.direction)
+            if self.direction == "left":
+                self.sword.rect.x = self.rect.x - 50
+                self.sword.rect.y = self.rect.y + 30
+            elif self.direction == "right":
+                self.sword.rect.x = self.rect.x + self.width + 50
+                self.sword.rect.y = self.rect.y + 30
+            else:
+                self.sword.rect.x = self.rect.x + self.width/2
+                self.sword.rect.y = self.rect.y -30
+            self.level.attack_list.remove(self.sword)
+            self.sword = None
+            self.isAttacking = False      
 
         # hit_box_list = pygame.sprite.spritecollide(self, self.level.danger_list, False)
         # See if we hit anything
         attack_hit_list = pygame.sprite.spritecollide(self, self.level.attack_list, False)
         if len(attack_hit_list) > 0:
-          pygame.event.post(self.damage)
-          
+            pygame.event.post(self.damage)          
         
         block_hit_list = pygame.sprite.spritecollide(self, self.level.platform_list, False)
         for block in block_hit_list:
@@ -163,7 +165,6 @@ class Player(pygame.sprite.Sprite):
                 self.rect.top = block.rect.bottom
             # Stop our vertical movement
             self.change_y = 0
- 
 
     #once neural net is established, send in the output nodes
     #as parameters
@@ -179,9 +180,9 @@ class Player(pygame.sprite.Sprite):
             # pygame.event.post(self.damage)
             pygame.event.post(self.attackEvent)
 
-        if self.rect.x > point[0]:
+        if self.rect.x < point[0]:
             pygame.event.post(self.moveRightEvent)
-        elif self.rect.x < point[0]:
+        elif self.rect.x > point[0]:
             pygame.event.post(self.moveLeftEvent)
         elif self.distanceToPoint(point) < 100:
             pygame.event.post(self.jumpEvent)
@@ -197,6 +198,7 @@ class Player(pygame.sprite.Sprite):
       self.runningFitness += fitness
       self.totalFitnessCalculations += 1
       return fitness
+    
     def determineAvgFitness(self):
       return self.runningFitness / self.totalFtinessCalculations
 
@@ -217,6 +219,7 @@ class Player(pygame.sprite.Sprite):
                 pygame.draw.line(self.screen, YELLOW, (self.rect.x, self.rect.y - 10), (self.rect.x + healthBarLength, self.rect.y - 10), 4)
             else: 
                 pygame.draw.line(self.screen, RED, (self.rect.x, self.rect.y - 10), (self.rect.x + healthBarLength, self.rect.y - 10), 4)  
+    
     def distanceToPoint(self, point, drawFlag = False, color = WHITE, axis = "BOTH"):
         x_goal = point[0]
         y_goal = point[1]
@@ -261,6 +264,7 @@ class Player(pygame.sprite.Sprite):
             self.screen.blit(distanceText, midPoint)
 
         return total_distance
+    
     def calc_grav(self):
         """ Calculate effect of gravity. """
         if self.change_y == 0:
@@ -272,6 +276,7 @@ class Player(pygame.sprite.Sprite):
         if self.rect.y >= SCREEN_HEIGHT - self.rect.height and self.change_y >= 0:
             self.change_y = 0
             self.rect.y = SCREEN_HEIGHT - self.rect.height
+    
     def jump(self):
         """ Called when user hits 'jump' button. """
  
@@ -289,22 +294,27 @@ class Player(pygame.sprite.Sprite):
         # If it is ok to jump, set our speed upwards
         if len(platform_hit_list) > 0 or self.rect.bottom >= SCREEN_HEIGHT:
                 self.change_y = -10
+    
     def boost(self):
         """Moves faster!"""
         if self.direction == "left":
             self.change_x -= 10
         elif self.direction == "right":
-            self.change_x += 10        
+            self.change_x += 10   
+
     def go_left(self):
         """ Called when the user hits the left arrow. """
         self.change_x = -4
+
     def go_right(self):
         """ Called when the user hits the right arrow. """
         self.change_x = 4
+
     def stop(self):
         """ Called when the user lets off the keyboard. """
-        self.direction = "none"
+        #self.direction = "none"
         self.change_x = 0
+
     def attack(self):
       if self.isAttacking == True:
         pass
@@ -317,7 +327,7 @@ class Player(pygame.sprite.Sprite):
         if self.direction == "none":
           facing = 0
         
-        self.sword = Sword(self.rect.x, self.rect.y, 50, 50, self.color, facing, time)
+        self.sword = Sword(self.rect.x, self.rect.y, 60, 10, self.color, facing)
       
         self.level.attack_list.add(self.sword)
         print(self.level.attack_list)
@@ -334,220 +344,3 @@ class Player(pygame.sprite.Sprite):
             self.stop()
         elif action == 4:
             self.attack()
-
-
-"""
-    def attack(self):
-        print("HYAHHH!")
-        self.attacking = True
-        if self.left:
-            facing = -1
-        else:
-            facing = 1
-        if len(self.swipes) < 2:
-            self.swipes.append(projectile(round(self.rect.x + self.width // 2), round(self.rect.y + self.height // 2), 6, (0,0,0), facing))
-"""
-
-""" ADD TO PLAYER CLASS
-
-  float fitness;
-  Genome brain;
-  boolean replay = false;
-
-  float unadjustedFitness;
-  int lifespan = 0;//how long the player lived for fitness
-  int bestScore =0;//stores the score achieved used for replay
-  boolean dead;
-  int score;
-  int gen = 0;
-
-  int genomeInputs = 7;
-  int genomeOutputs = 3;
-
-  float[] vision = new float[genomeInputs];//t he input array fed into the neuralNet 
-  float[] decision = new float[genomeOutputs]; //the out put of the NN 
-  //-------------------------------------
-  float posY = 0;
-  float velY = 0;
-  float gravity =1.2;
-  int runCount = -5;
-  int size = 20;
-
-  ArrayList<Obstacle> replayObstacles = new ArrayList<Obstacle>();
-  ArrayList<Bird> replayBirds = new ArrayList<Bird>();
-  ArrayList<Integer> localObstacleHistory = new ArrayList<Integer>();
-  ArrayList<Integer> localRandomAdditionHistory = new ArrayList<Integer>();
-  int historyCounter = 0;
-  int localObstacleTimer = 0;
-  float localSpeed = 10;
-  int localRandomAddition = 0;
-
-  boolean duck= false;
-  //---------------------------------------------------------------------------------------------------------------------------------------------------------
-  //constructor
-
-  Player() {
-    brain = new Genome(genomeInputs, genomeOutputs);
-  }
-----------------------------------------------------------------------------------------------------------------------------------------------------------
-  
-
-
-
-
-  //---------------------------------------------------------------------------------------------------------------------------------------------------------
-  //gets the output of the brain then converts them to actions
-  void think() {
-
-    float max = 0;
-    int maxIndex = 0;
-    //get the output of the neural network
-    decision = brain.feedForward(vision);
-
-    for (int i = 0; i < decision.length; i++) {
-      if (decision[i] > max) {
-        max = decision[i];
-        maxIndex = i;
-      }
-    }
-
-    if (max < 0.7) {
-      ducking(false);
-      return;
-    }
-
-    switch(maxIndex) {
-    case 0:
-      jump(false);
-      break;
-    case 1:
-      jump(true);
-      break;
-    case 2:
-      ducking(true);
-      break;
-    }
-  }
-
-  //---------------------------------------------------------------------------------------------------------------------------------------------------------
-  //fot Genetic algorithm
-  void calculateFitness() {
-    fitness = score*score;
-  }
-
-  //---------------------------------------------------------------------------------------------------------------------------------------------------------
-  Player crossover(Player parent2) {
-    Player child = new Player();
-    child.brain = brain.crossover(parent2.brain);
-    child.brain.generateNetwork();
-    return child;
-  }
-  //--------------------------------------------------------------------------------------------------------------------------------------------------------
-  //if replaying then the dino has local obstacles
-  void updateLocalObstacles() {
-    localObstacleTimer ++;
-    localSpeed += 0.002;
-    if (localObstacleTimer > minimumTimeBetweenObstacles + localRandomAddition) {
-      addLocalObstacle();
-    }
-    groundCounter ++;
-    if (groundCounter > 10) {
-      groundCounter =0;
-      grounds.add(new Ground());
-    }
-
-    moveLocalObstacles();
-    showLocalObstacles();
-  }
-
-  //---------------------------------------------------------------------------------------------------------------------------------------------------------
-  void moveLocalObstacles() {
-    for (int i = 0; i< replayObstacles.size(); i++) {
-      replayObstacles.get(i).move(localSpeed);
-      if (replayObstacles.get(i).posX < -100) {
-        replayObstacles.remove(i);
-        i--;
-      }
-    }
-
-    for (int i = 0; i< replayBirds.size(); i++) {
-      replayBirds.get(i).move(localSpeed);
-      if (replayBirds.get(i).posX < -100) {
-        replayBirds.remove(i);
-        i--;
-      }
-    }
-    for (int i = 0; i < grounds.size(); i++) {
-      grounds.get(i).move(localSpeed);
-      if (grounds.get(i).posX < -100) {
-        grounds.remove(i);
-        i--;
-      }
-    }
-  }
-  //------------------------------------------------------------------------------------------------------------------------------------------------------------
-  void addLocalObstacle() {
-    int tempInt = localObstacleHistory.get(historyCounter);
-    localRandomAddition = localRandomAdditionHistory.get(historyCounter);
-    historyCounter ++;
-    if (tempInt < 3) {
-      replayBirds.add(new Bird(tempInt));
-    } else {
-      replayObstacles.add(new Obstacle(tempInt -3));
-    }
-    localObstacleTimer = 0;
-  }
-  //---------------------------------------------------------------------------------------------------------------------------------------------------------
-  void showLocalObstacles() {
-    for (int i = 0; i< grounds.size(); i++) {
-      grounds.get(i).show();
-    }
-    for (int i = 0; i< replayObstacles.size(); i++) {
-      replayObstacles.get(i).show();
-    }
-
-    for (int i = 0; i< replayBirds.size(); i++) {
-      replayBirds.get(i).show();
-    }
-  }
-}
-
-"""
-
-
-"""
-
-  //returns a clone of this player with the same brian
-  Player clone() {
-    Player clone = new Player();
-    clone.brain = brain.clone();
-    clone.fitness = fitness;
-    clone.brain.generateNetwork(); 
-    clone.gen = gen;
-    clone.bestScore = score;
-    return clone;
-  }
-
-  //---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
-  //since there is some randomness in games sometimes when we want to replay the game we need to remove that randomness
-  //this fuction does that
-
-  Player cloneForReplay() {
-    Player clone = new Player();
-    clone.brain = brain.clone();
-    clone.fitness = fitness;
-    clone.brain.generateNetwork();
-    clone.gen = gen;
-    clone.bestScore = score;
-    clone.replay = true;
-    if (replay) {
-      clone.localObstacleHistory = (ArrayList)localObstacleHistory.clone();
-      clone.localRandomAdditionHistory = (ArrayList)localRandomAdditionHistory.clone();
-    } else {
-      clone.localObstacleHistory = (ArrayList)obstacleHistory.clone();
-      clone.localRandomAdditionHistory = (ArrayList)randomAdditionHistory.clone();
-    }
-
-    return clone;
-  }
-"""
