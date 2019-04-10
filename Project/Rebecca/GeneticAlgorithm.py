@@ -1,3 +1,4 @@
+# delete this
 import math
 from NeuralNetwork import *
 
