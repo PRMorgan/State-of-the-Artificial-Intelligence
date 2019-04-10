@@ -1,8 +1,8 @@
 import math
 from NeuralNetwork import *
 
-class Genome():
-    def __init___(self, inputs, outputs):
+class Genome:
+    def __init__(self):
 
         #contains connectionGene
         self.genes = []
@@ -10,8 +10,8 @@ class Genome():
         self.nodes = []
 
         #(int)quantity of both
-        self.inputs = inputs
-        self.outputs = outputs
+        self.inputs = 3
+        self.outputs = 3
         
         #(int)
         self.layers = 2
@@ -22,13 +22,13 @@ class Genome():
 
         #Create input nodes
         #might be wrong
-        for i in range(len(self.inputs)):
+        for i in range(self.inputs):
             self.nodes.append(Node(i))
             self.nextNode += 1
             self.nodes[i].layer = 0
         
         #Create output nodes
-        for i in range(len(outputs)):
+        for i in range(self.outputs):
             self.nodes.append(Node(i + self.inputs))
             self.nodes[i].layer = 1
             self.nextNode += 1;
@@ -77,7 +77,7 @@ class Genome():
         """  sets up the NN as a list of nodes in order to be engaged """
         self.connectNodes()
         network = []
-        for lay in self.layers:
+        for lay in range(self.layers):
             for node in self.nodes:
                 if node.layer == lay:
                     network.append(node)
@@ -114,3 +114,24 @@ class Genome():
                       i.layer = i.layer + 1;
               layers = layers + 1;
         connectNodes();
+
+    def mutate(self, innovationHistory):
+        if self.genes.size() == 0:
+            addConnection(innovationHistory)
+        randomNum1 = randrange(1, 10)
+        randomNum1 = 1.0/randomNum
+        if randomNum1 < 0.8:
+            for i in self.genes:
+                i.mutateWeight()
+
+        randomNum2 = randrange(1,10)
+        randomNum2 = 0.5/randomNum2
+        if randomNum2 < 0.05:
+            addConnection(innovationHistory)
+
+        randomNum3 = randrange(1,10)
+        randomNum3 = 0.1/randomNum3
+        if randomNum3 < 0.01:
+            addNode(innovationHistory)
+            
+
