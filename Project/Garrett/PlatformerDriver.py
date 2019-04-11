@@ -9,7 +9,6 @@ http://simpson.edu/computer-science/
 import pygame
 from Player import *
 from Level import *
-from Game import *
 import random
 import os
 os.environ['SDL_VIDEO_CENTERED'] = '1'
@@ -35,7 +34,6 @@ colors = [WHITE, GREEN, RED, BLUE, DarkSlateBlue, RosyBrown, PaleGreen, DeepSkyB
 SCREEN_WIDTH = 800
 SCREEN_HEIGHT = 600
 
-
 def main():
     """ Main Program """
     pygame.init()
@@ -46,29 +44,84 @@ def main():
  
     pygame.display.set_caption("Nidhog")
 
-    # <insert large block of code at bottom if shit goes south>
+    # Create all the levels
+    level_list = []
+ 
+    # Set the current level
+    current_level_no = 0
+
+    #create an active sprite list to update collectively
+    active_sprite_list = pygame.sprite.Group()
+
+    players = []
+
+    #create a player controlled by the keyboard
+    """
+    user_player = Player(69, (255,255,0), screen, False)
+    level_list.append( Level_01(user_player))
+    user_player.level = level_list[0]
+    user_player.rect.x = 200
+    user_player.rect.y = 200
+    active_sprite_list.add(user_player)
+    """
+
+    playerOne = Player(1, RED, screen, True)
+    playerTwo = Player(2, BLUE, screen, True)
+    active_sprite_list.add(playerOne)
+    active_sprite_list.add(playerTwo)
+    level_list.append( Level_01(playerOne))
+    playerOne.level = level_list[0]
+    level_list.append( Level_01(playerTwo))
+    playerTwo.level = level_list[0]
+    players.append(playerOne)
+    players.append(playerTwo)
+    current_level = level_list[current_level_no]
+
+    playerOne.rect.x = SCREEN_WIDTH - (SCREEN_WIDTH - 10)
+    playerOne.rect.y = SCREEN_HEIGHT - playerOne.rect.height - 200
+
+    playerTwo.rect.x = SCREEN_WIDTH - 10
+    playerTwo.rect.y = SCREEN_HEIGHT - playerTwo.rect.height - 200
+
+    playerOne.setEnemy(playerTwo)
+    playerTwo.setEnemy(playerOne)
+
+    """
+    for player in range(1):
+        color_index = random.randint(0,len(colors) - 1)
+        x_start_pos = random.randint(0,500)
+        playerID = player
+        player = Player(playerID, colors[color_index], screen)
+        players.append(player)
+        level_list.append( Level_01(player) )
+        current_level = level_list[current_level_no]
+        player.level = current_level 
+        player.rect.x = x_start_pos
+        player.rect.y = SCREEN_HEIGHT - player.rect.height - 200
+        active_sprite_list.add(player)
+        # possibleActions = [player.go_left, player.go_right, player.jump, player.stop]
+    """
 
     # Loop until the user clicks the close button.
-    games = []
-    game1 = Game(screen, 1)
-    game2 = Game(screen, 2)
-
-
-    games.append(game1)
-    games.append(game2)
-
-
     done = False
-
+ 
     # Used to manage how fast the screen updates
     clock = pygame.time.Clock()
+
+    """
+    Creating players brains:
+    pop = Population(30)
+    for person in pop:
+        pop.add(new Player());
+        person.brain.generateNetwork();
+        person.brain.mutate(innovationHistory);
+    """
 
     # -------- Main Program Loop -----------
     while not done:
 
         # Update the player.
-        for game in games:
-            game.active_sprite_list.update()
+        active_sprite_list.update()
         
         # update players --> in update() tell players to think()
         #in the think(), they should run the neural net once
@@ -97,10 +150,9 @@ def main():
             """
                         
             if event.type == pygame.USEREVENT:
-                for game in games:
-                    for player in game.players:
-                        if player.playerID == event.id:
-                            eventPlayer = player
+                for player in players:
+                    if player.playerID == event.id:
+                        eventPlayer = player
                 if event.action == "kill":
                     print("Just killed player: ", eventPlayer.playerID, "... removing now")
                     active_sprite_list.remove(eventPlayer)
@@ -123,26 +175,25 @@ def main():
                     eventPlayer.health -= 2
                 else:
                     print("unkown event: ", event)
+       
+        for player in players:
+            action = random.randint(0,4)
+            player.executeAction(action)
         
         # Update items in the level
-        
-        for game in games:
-            game.level.update()
+        current_level.update()
 
         # ALL CODE TO DRAW SHOULD GO BELOW THIS COMMENT
-        for game in games:
-            game.level.draw(screen)
-            game.active_sprite_list.draw(screen)
+        current_level.draw(screen)
+        active_sprite_list.draw(screen)
 
         # mouse_pos = pygame.mouse.get_pos()
 
-        # for player in players:
-        #     # draw the lines between point
-        #     player.distanceToPoint(player.enemyPos, True, BLUE)
-        #     # player.distanceToPoint((800,500),True, RED, "X")
-        #     player.updateHealth()
-        # playerOne.updateHealth()
-        # playerTwo.updateHealth()
+        for player in players:
+            # draw the lines between point
+            # player.distanceToPoint(mouse_pos, True, BLUE)
+            # player.distanceToPoint((800,500),True, RED, "X")
+            player.updateHealth()
  
         # ALL CODE TO DRAW SHOULD GO ABOVE THIS COMMENT
  
@@ -158,73 +209,3 @@ def main():
  
 if __name__ == "__main__":
     main()
-
-
-
-
-    # Create all the levels
- 
-    # Set the current level
-
-    #create an active sprite list to update collectively
-    # active_sprite_list = pygame.sprite.Group()
-
-    # players = []
-
-    #create a player controlled by the keyboard
-    """
-    user_player = Player(69, (255,255,0), screen, False)
-    level_list.append( Level_01(user_player))
-    user_player.level = level_list[0]
-    user_player.rect.x = 200
-    user_player.rect.y = 200
-    active_sprite_list.add(user_player)
-
-
-    playerOne = Player(1, RED, screen, True)
-    playerTwo = Player(2, BLUE, screen, True)
-    playerOne.rect.x = 0
-    playerOne.rect.y = 525
-    playerTwo.rect.x = SCREEN_WIDTH
-    playerTwo.rect.y = 500
-
-    active_sprite_list.add(playerOne)
-    active_sprite_list.add(playerTwo)
-
-    level_list.append( Level_01(playerTwo))
-    level_list.append( Level_01(playerOne))
-    
-    level_list = []
-    level_list.append( Level_01(playerOne))
-    levelOne = Level_01(playerOne)
-    playerOne.level = levelOne
-    playerTwo.level = levelOne
-    
-    players = [playerOne, playerTwo]
-    current_level = levelOne
-
-    playerOne.setEnemy(playerTwo)
-    playerTwo.setEnemy(playerOne)
-
- 
-    for player in range(1):
-        color_index = random.randint(0,len(colors) - 1)
-        x_start_pos = random.randint(0,500)
-        playerID = player
-        player = Player(playerID, colors[color_index], screen)
-        players.append(player)
-        level_list.append( Level_01(player) )
-        current_level = level_list[current_level_no]
-        player.level = current_level 
-        player.rect.x = x_start_pos
-        player.rect.y = SCREEN_HEIGHT - player.rect.height - 200
-        active_sprite_list.add(player)
-        # possibleActions = [player.go_left, player.go_right, player.jump, player.stop]
-        Creating players brains:
-        pop = Population(30)
-        for person in pop:
-            pop.add(new Player());
-            person.brain.generateNetwork();
-            person.brain.mutate(innovationHistory);
-    
-    """
