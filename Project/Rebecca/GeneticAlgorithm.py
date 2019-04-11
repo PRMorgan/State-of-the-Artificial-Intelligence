@@ -1,4 +1,3 @@
-# delete this
 import math
 from NeuralNetwork import *
 
@@ -134,5 +133,3 @@ class Genome:
         randomNum3 = 0.1/randomNum3
         if randomNum3 < 0.01:
             addNode(innovationHistory)
-            
-
