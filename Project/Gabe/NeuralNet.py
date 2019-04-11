@@ -89,7 +89,7 @@ class NeuralNet:
         
         while self.genes[randomConnection].fromNode == self.nodes[biasNode] and len(self.genes) !=1 : #dont disconnect bias
             randomConnection = math.floor(random(len(self.genes)))
-        self.genes[randomConnection].enabled = false #disable it
+        self.genes[randomConnection].enabled = False #disable it
         newNodeNo = self.nextNode
         self.nodes.append(Node(newNodeNo))
         nextNode += 1
@@ -147,7 +147,7 @@ class NeuralNet:
         if self.nodes[r1].layer == self.nodes[r2].layer:
             return True #if the nodes are in the same layer 
         if self.nodes[r1].isConnectedTo(self.nodes[r2]): 
-            return true #if the nodes are already connected
+            return True #if the nodes are already connected
         return False
 
 #-------------------------------------------------------------------------------------------------------------------------------------------
@@ -288,8 +288,7 @@ class NeuralNet:
             print(self.nodes[i].number, ",")
         print("\nGenes\n")
         for i in range(len(self.genes)): #for each connectionGene 
-            print("gene ", self.genes[i].innovationNo, "From node ", self.genes[i].fromNode.number, "To node ", self.genes[i].toNode.number, 
-                "is enabled ", self.genes.[i].enabled, "from layer ", self.genes[i].fromNode.layer, "to layer ", self.genes[i].toNode.layer, "weight: ", self.genes[i].weight, "\n")
+            print("gene ", self.genes[i].innovationNo, "From node ", self.genes[i].fromNode.number, "To node ", self.genes[i].toNode.number, "is enabled ", self.genes.[i].enabled, "from layer ", self.genes[i].fromNode.layer, "to layer ", self.genes[i].toNode.layer, "weight: ", self.genes[i].weight, "\n")
         print("\n")
 
 #----------------------------------------------------------------------------------------------------------------------------------------

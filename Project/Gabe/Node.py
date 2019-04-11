@@ -38,18 +38,18 @@ class Node():
  #used when adding a new connection 
   def isConnectedTo(node):
     if node.layer == layer: #nodes in the same layer cannot be connected
-      return false
+      return False
 
     #you get it
     if node.layer < layer:
       for  i in range(len(node.outputConnections)):
-        if node.outputConnections[i].toNode == this:
-          return true
+        if node.outputConnections[i].toNode == self:
+          return True
     else:
       for i in range(len(self.outputConnections)):
           if self.outputConnections[i].toNode == self.node:
-              return true
-    return false;
+              return True
+    return False;
 
   #---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
   #returns a copy of this node
