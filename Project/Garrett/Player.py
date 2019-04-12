@@ -2,6 +2,7 @@ import pygame
 from Level import *
 import time
 import math
+import random
 
 # Screen dimensions
 SCREEN_WIDTH = 800
@@ -32,7 +33,6 @@ class Player(pygame.sprite.Sprite):
         # This could also be an image loaded from the disk.
         self.width = 40
         self.height = 60
-
         # genomeInputs = 3;
         # genomeOutputs = 3;
         # self.brain = genome(genomeInputs, genomeOutputs)
@@ -48,6 +48,7 @@ class Player(pygame.sprite.Sprite):
         # self.totalFitnessCalculations
         # self.avgFitness
         self.enemy = None
+        self.enemyPos = None
 
         self.maxHealth = 40
         self.health = 40
@@ -86,21 +87,20 @@ class Player(pygame.sprite.Sprite):
  
         # List of sprites we can bump against
         self.level = None
-
-    def setEnemy(self, enemy):
-      self.enemy = enemy
-
     def update(self):
         #update neural network
         mouse_pos = pygame.mouse.get_pos()
-        
         #helps determine fitness
         # self.framesAlive += 1
 
-        enemyPos = (self.enemy.rect.x, self.enemy.rect.y)
+        #generate random action:
+        action = random.randint(0,4)
+        self.executeAction(action)
+
+        self.enemyPos = (self.enemy.rect.x, self.enemy.rect.y)
         #pass outputs to think
         if self.isAI:
-            self.think(enemyPos)
+            self.think(self.enemyPos, mouse_pos, True)
 
         """ Move the player. """
         # Gravity
@@ -165,15 +165,20 @@ class Player(pygame.sprite.Sprite):
                 self.rect.top = block.rect.bottom
             # Stop our vertical movement
             self.change_y = 0
+        
+        
+        self.updateHealth
 
-    #once neural net is established, send in the output nodes
-    #as parameters
-    def think(self, point):
+
+    def think(self, point, mousePoint = None, mouseFlag = False):
         """
         Converts output of neural net into events
         that generate actions for the specific player
         in the main driver class
         """
+        if mouseFlag == True:
+          if (self.rect.x < mousePoint[0] and self.rect.x + self.width > mousePoint[0]) and (self.rect.y < mousePoint[1] and self.rect.y + self.height > mousePoint[1]):
+            pygame.event.post(self.damage)
 
         if (self.rect.x < point[0] and self.rect.x + self.width > point[0]) and (self.rect.y < point[1] and self.rect.y + self.height > point[1]):
             # print("Player ", self.playerID, " has ", self.health)
@@ -190,6 +195,9 @@ class Player(pygame.sprite.Sprite):
         else:
             pygame.event.post(self.stopEvent)
     
+    def setEnemy(self, enemy):
+      self.enemy = enemy
+
     def calculateFitness(self):
       progressToGoal = self.distanceToPoint((800,500), False, RED, "X") / 500
       timeAlive = self.framesAlive / 60
@@ -202,7 +210,6 @@ class Player(pygame.sprite.Sprite):
     def determineAvgFitness(self):
       return self.runningFitness / self.totalFtinessCalculations
 
-    # def look(self)
     def updateHealth(self):
         healthBarLength = (self.health/self.maxHealth) * self.width
         if self.health <= 0:
@@ -334,13 +341,3 @@ class Player(pygame.sprite.Sprite):
         self.isAttacking = True
 
     def executeAction(self, action):
-        if action == 0:
-            self.go_left()
-        elif action == 1:
-            self.go_right()
-        elif action == 2:
-            self.jump()
-        elif action == 3:
-            self.stop()
-        elif action == 4:
-            self.attack()
