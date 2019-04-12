@@ -341,3 +341,13 @@ class Player(pygame.sprite.Sprite):
         self.isAttacking = True
 
     def executeAction(self, action):
+        if action == 0:
+            self.go_left()
+        elif action == 1:
+            self.go_right()
+        elif action == 2:
+            self.jump()
+        elif action == 3:
+            self.stop()
+        elif action == 4:
+            self.attack()
