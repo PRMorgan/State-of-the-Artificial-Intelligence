@@ -94,9 +94,15 @@ class Player(pygame.sprite.Sprite):
         #pass outputs to think
         if self.isAI:
             self.think(self.enemyPos, mouse_pos, True, self.freeze)
-        
-        if pygame.sprite.spritecollide(self, self.level.attack_list, False):
-            pygame.event.post(self.damage)
+    
+
+        """ Move the player. """
+        # Gravity
+        self.calc_grav()
+        self.rect.x += self.change_x
+
+        # Move left/right
+    
         
         if self.isAttacking == True:
             print("Player: ", self.playerID, " is attacking ", self.direction)
@@ -110,16 +116,15 @@ class Player(pygame.sprite.Sprite):
                 self.sword.rect.x = self.rect.x + self.width/2
                 self.sword.rect.y = self.rect.y -30
             self.level.attack_list.remove(self.sword)
-            self.isAttacking = False      
+            self.sword = None
+            self.isAttacking = False
 
-        """ Move the player. """
-        # Gravity
-        self.calc_grav()
+        if pygame.sprite.spritecollide(self, self.level.attack_list, False):
+            pygame.event.post(self.damage)
 
-        "---------------------- LOOKING AT PLAYER'S X-VALUES NOW --------------------------"
 
-        # Move left/right
-        self.rect.x += self.change_x
+        "---------------------- LOOKING AT PLAYER'S COLLISIONS WITH OTHER OBJECTS --------------------------"
+
 
         # Possible fix to sword code
         # print(self.playerID, "is looking at ", self.enemy.playerID, "'s sword:", self.enemy.sword)
@@ -129,50 +134,42 @@ class Player(pygame.sprite.Sprite):
         #         pygame.event.post(self.damage)
         # """
                  
-        "BLOCK COLLISION - X"
-        block_hit_list = pygame.sprite.spritecollide(self, self.level.platform_list, False)
-        for block in block_hit_list:
-            # If we are moving right,
-            # set our right side to the left side of the item we hit
-            if self.change_x > 0:
-                self.rect.right = block.rect.left
-            elif self.change_x < 0:
-                # Otherwise if we are moving left, do the opposite.
-                self.rect.left = block.rect.right
-
-                # Move up/down
-        self.rect.y += self.change_y
 
         "ENEMY COLLISION - X - error may come from bound conditionals using rect.<direction> - BUGGY AS HEK"
         if pygame.sprite.collide_rect(self, self.enemy):
             #moving right - we are not above or below enemy
             if self.change_x > 0 and ((self.rect.bottom > self.enemy.rect.bottom and self.rect.top < self.enemy.rect.bottom) or (self.rect.bottom > self.enemy.rect.top and self.rect.top > self.enemy.rect.bottom)):
-                self.rect.right = self.enemy.rect.left
+                # self.rect.right = self.enemy.rect.left
+                self.change_x = -3
+                self.enemy.change_x = -5
             #moving left - we are not above or below the enemy
             elif self.change_x < 0 and ((self.rect.bottom > self.enemy.rect.bottom and self.rect.top < self.enemy.rect.bottom) or (self.rect.bottom > self.enemy.rect.top and self.rect.top > self.enemy.rect.bottom)):
-                self.rect.left = self.enemy.rect.right
+                # self.rect.left = self.enemy.rect.right
+                self.change_x = 3
+                self.enemy.change_x = 5
             #moving right - we are above enemy moving down
-            elif (self.change_x > 0 and self.change_y > 0) and (self.rect.bottom > self.enemy.rect.top and self.rect.right > self.enemy.rect.right):
-                self.rect.bottom = self.enemy.rect.top
+            if (self.change_x > 0 and self.change_y > 0) and (self.rect.bottom > self.enemy.rect.top and self.rect.right > self.enemy.rect.right):
+                # self.rect.bottom = self.enemy.rect.top
                 self.change_y = -8
+                self.change_x = 3
             #moving left - we are above enemy moving down
-            elif (self.change_x < 0 and self.change_y > 0) and (self.rect.bottom > self.enemy.rect.top and self.rect.left < self.enemy.rect.left):
-                self.rect.bottom = self.enemy.rect.top
+            if (self.change_x < 0 and self.change_y > 0) and (self.rect.bottom > self.enemy.rect.top and self.rect.left < self.enemy.rect.left):
+                # self.rect.bottom = self.enemy.rect.top
                 self.change_y = -8
+                self.change_x = -3
             #moving right - we are below enemy moving up
-            elif self.change_x > 0 and self.change_y < 0 and self.rect.bottom > self.enemy.rect.bottom and self.rect.right > self.enemy.rect.right:
+            if self.change_x > 0 and self.change_y < 0 and self.rect.bottom > self.enemy.rect.bottom and self.rect.right > self.enemy.rect.right:
                 self.enemy.rect.bottom = self.rect.top
+                self.enemy.change_y = 3
             #moving left - we are below enemy moving up
-            elif self.change_x < 0 and self.change_y < 0 and self.rect.bottom > self.enemy.rect.bottom and self.rect.left < self.enemy.rect.left:
+            if self.change_x < 0 and self.change_y < 0 and self.rect.bottom > self.enemy.rect.bottom and self.rect.left < self.enemy.rect.left:
                 self.enemy.rect.bottom = self.rect.top
+                self.enemy.change_y = 3
         
+            
+        "---------------------- INTERACTION WITH PLATFORMS AND SIDE --------------------------"
 
-            
-            
-        "---------------------- LOOKING AT PLAYER'S Y-VALUES NOW --------------------------"
-        # # Move up/down
         self.rect.y += self.change_y
-
         "BOUNDS CHECKING"
         # If the player gets near the right side, shift the world left (-x)
         if self.rect.right > SCREEN_WIDTH:
@@ -193,62 +190,8 @@ class Player(pygame.sprite.Sprite):
                 self.rect.top = block.rect.bottom
             # Stop our vertical movement
             self.change_y = 0
-                
-        "To implement side jumping"
-        # if len(block_hit_list) > 0 or self.rect.bottom >= SCREEN_HEIGHT:
-        #     self.sideJumpCount = 0
 
-        
-        """
-        self.updateHealth()
-        
-        #update neural network
-        mouse_pos = pygame.mouse.get_pos()
-        #helps determine fitness
-        # self.framesAlive += 1
-
-        #generate random action:
-        action = random.randint(0,4)
-        self.executeAction(action)
-
-        self.enemyPos = (self.enemy.rect.x, self.enemy.rect.y)
-        #pass outputs to think
-        if self.isAI:
-            self.think(self.enemyPos, mouse_pos, True)
-        """
-        """ Move the player. """
-
-        """
-        # Gravity
-        self.calc_grav()
-
-        # Move left/right
-        self.rect.x += self.change_x
-
-        if self.isAttacking == True:
-            # print("Player: ", self.playerID, " is looking ", self.direction)
-            if self.direction == "left":
-                self.sword.rect.x = self.rect.x - 50
-                self.sword.rect.y = self.rect.y + 30
-            elif self.direction == "right":
-                self.sword.rect.x = self.rect.x + self.width + 50
-                self.sword.rect.y = self.rect.y + 30
-            else:
-                self.sword.rect.x = self.rect.x + self.width/2
-                self.sword.rect.y = self.rect.y -30
-            self.level.attack_list.remove(self.sword)
-            self.sword = None
-            self.isAttacking = False      
-
-        # hit_box_list = pygame.sprite.spritecollide(self, self.level.danger_list, False)
-        # See if we hit anything
-        
-        # uncomment
-        # attack_hit_list = pygame.sprite.spritecollide(self, self.level.attack_list, False)
-        # if len(attack_hit_list) > 0:
-        #     pygame.event.post(self.damage)          
-        
-        
+        "BLOCK COLLISION - X"
         block_hit_list = pygame.sprite.spritecollide(self, self.level.platform_list, False)
         for block in block_hit_list:
             # If we are moving right,
@@ -259,49 +202,12 @@ class Player(pygame.sprite.Sprite):
                 # Otherwise if we are moving left, do the opposite.
                 self.rect.left = block.rect.right
 
-
-        # Move up/down
-        self.rect.y += self.change_y
-
-        # If the player gets near the right side, shift the world left (-x)
-        if self.rect.right > SCREEN_WIDTH:
-            self.rect.right = SCREEN_WIDTH
- 
-        # If the player gets near the left side, shift the world right (+x)
-        if self.rect.left < 0:
-            self.rect.left = 0
- 
-        # Check and see if we hit anything
-        # block_hit_list = pygame.sprite.spritecollide(self, self.level.platform_list, False)
+                # Move up/down
+                
+        "To implement side jumping"
         # if len(block_hit_list) > 0 or self.rect.bottom >= SCREEN_HEIGHT:
         #     self.sideJumpCount = 0
-              
-        if pygame.sprite.collide_rect(self, self.enemy):
-            if self.change_x > 0 and not self.rect.y - self.height >= self.enemy.rect.y:
-                self.rect.right = self.enemy.rect.left
-            elif self.change_x < 0 and not self.rect.y - self.height >= self.enemy.rect.y:
-                self.rect.left = self.enemy.rect.right
-            # elif self.rect.y - self.height >= self.enemy.rect.y:
-            #     self.rect.y = self.enemy.rect.y
-            if self.change_y > 0:
-                self.rect.bottom = block.rect.top
-            elif self.change_y < 0:
-                self.rect.top = block.rect.bottom
-            # Stop our vertical movement
-            self.change_y = 0
-            # elif self.rect.bottom == self.enemy.rect.top:
-            #     self.rect.y = self.enemy.rect.top
-        
-        for block in block_hit_list:
-            # Reset our position based on the top/bottom of the object.
-            if self.change_y > 0:
-                self.rect.bottom = block.rect.top
-            elif self.change_y < 0:
-                self.rect.top = block.rect.bottom
-            # Stop our vertical movement
-            self.change_y = 0
-        
-        """
+
 
 
     def think(self, point, mousePoint = None, mouseFlag = False,  freeze = False,):
