@@ -10,8 +10,10 @@ import pygame
 from Player import *
 from Level import *
 from Game import *
+from Sword import *
 import random
 import os
+import time
 os.environ['SDL_VIDEO_CENTERED'] = '1'
  
 # Global constants
@@ -44,19 +46,17 @@ def main():
     size = [SCREEN_WIDTH, SCREEN_HEIGHT]
     screen = pygame.display.set_mode(size)
  
-    pygame.display.set_caption("Nidhog")
+    pygame.display.set_caption("State of the Art-ificial Intelligence")
 
     # <insert large block of code at bottom if shit goes south>
 
     # Loop until the user clicks the close button.
     games = []
-    game1 = Game(screen, 1)
-    game2 = Game(screen, 2)
-
+    game1 = Game(screen, 0)
+    #game2 = Game(screen, 1)
 
     games.append(game1)
-    games.append(game2)
-
+    #games.append(game2)
 
     done = False
 
@@ -103,9 +103,9 @@ def main():
                             eventPlayer = player
                 if event.action == "kill":
                     print("Just killed player: ", eventPlayer.playerID, "... removing now")
-                    active_sprite_list.remove(eventPlayer)
-                    players.remove(eventPlayer)
-                    print("players left: ", len(players))
+                    game.active_sprite_list.remove(eventPlayer)
+                    game.players.remove(eventPlayer)
+                    print("players left: ", len(game.players))
                 elif event.action == "attack":
                     eventPlayer.executeAction(4)
                 elif event.action == "moveLeft":
@@ -128,11 +128,17 @@ def main():
         
         for game in games:
             game.level.update()
+            # game.active_sprite_list.update()
 
         # ALL CODE TO DRAW SHOULD GO BELOW THIS COMMENT
         for game in games:
             game.level.draw(screen)
             game.active_sprite_list.draw(screen)
+            if len(game.players) > 1:
+                game.players[0].updateHealth()
+                game.players[1].updateHealth()
+
+        time.sleep(.01)
 
         # mouse_pos = pygame.mouse.get_pos()
 
@@ -179,18 +185,14 @@ if __name__ == "__main__":
     user_player.rect.x = 200
     user_player.rect.y = 200
     active_sprite_list.add(user_player)
-
-
     playerOne = Player(1, RED, screen, True)
     playerTwo = Player(2, BLUE, screen, True)
     playerOne.rect.x = 0
     playerOne.rect.y = 525
     playerTwo.rect.x = SCREEN_WIDTH
     playerTwo.rect.y = 500
-
     active_sprite_list.add(playerOne)
     active_sprite_list.add(playerTwo)
-
     level_list.append( Level_01(playerTwo))
     level_list.append( Level_01(playerOne))
     
@@ -202,10 +204,8 @@ if __name__ == "__main__":
     
     players = [playerOne, playerTwo]
     current_level = levelOne
-
     playerOne.setEnemy(playerTwo)
     playerTwo.setEnemy(playerOne)
-
  
     for player in range(1):
         color_index = random.randint(0,len(colors) - 1)
