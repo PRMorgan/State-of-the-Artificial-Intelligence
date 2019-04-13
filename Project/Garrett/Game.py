@@ -15,7 +15,6 @@ YELLOW = (255,255,0)
 
 colors = [RED, BLUE, WHITE, GREEN, DARKSLATEBLUE, DEEPSKYBLUE, PALEGREEN, ROSYBROWN, PALEVIOLET, YELLOW]
 
-
 class Game():
     def __init__(self, screen, gameNum):
         """ Creates a game that contains two players and a level """
@@ -27,30 +26,27 @@ class Game():
 
         drawFlag = False
 
-        self.createPopulation(2)
+        self.createPopulation()
 
-
-    def createPopulation(self, numberOfPlayers):
+    def createPopulation(self):
         """ Generate any number of players and add them to an environment"""
-        for member in range(numberOfPlayers):
-            playerID = str(self.gameNum) + str(member)
-            tempPlayer = self.createPlayer(playerID, colors[member], self.screen)
-            self.players.append(tempPlayer)
-        
-        for player in self.players:
-            self.setEnvironment(player)    
+        #create player 1
+        player1ID = str(self.gameNum) + str(1)
+        player1 = self.createPlayer(player1ID, colors[0], (500, 300), True)
 
-        for player in self.players:
-            if int(player.playerID) % 2 == 0:
-                player.setEnemy(self.players[1])    
-            else:
-                player.setEnemy(self.players[0])
+        player2ID = str(self.gameNum) + str(2)
+        player2 = self.createPlayer(player2ID, colors[1], (800, 300), True)
+        
+        player1.setEnemy(player2)
+        player2.setEnemy(player1)
     
-    def createPlayer(self, pid, color, position = (400,400), AIFlag = True):
+    def createPlayer(self, pid, color, position, AIFlag = True, freeze = False):
         """ Create a player from player class"""
-        player = Player(pid, color, self.screen, AIFlag)
-        player.rect.x =  400 # position[0] # x-position
-        player.rect.y =  400 # position[1] # y-position
+        player = Player(pid, color, self.screen, AIFlag, freeze)
+        player.rect.x =  position[0] # x-position
+        player.rect.y =  position[1] # y-position
+        self.players.append(player)
+        self.setEnvironment(player)
         return player
 
 
@@ -66,4 +62,3 @@ class Game():
         
         #add the player to the active sprite list to be updated
         self.active_sprite_list.add(player)
-            
