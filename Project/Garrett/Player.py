@@ -1,5 +1,6 @@
 import pygame
 from Level import *
+from Sword import *
 import time
 import math
 import random
@@ -23,7 +24,7 @@ class Player(pygame.sprite.Sprite):
         controls. """
  
     # -- Methods
-    def __init__(self, playerID, color, screen, AI = True):
+    def __init__(self, playerID, color, screen, AI = True, freeze = False):
         """ Constructor function """
  
         # Call the parent's constructor
@@ -33,20 +34,9 @@ class Player(pygame.sprite.Sprite):
         # This could also be an image loaded from the disk.
         self.width = 40
         self.height = 60
-        # genomeInputs = 3;
-        # genomeOutputs = 3;
-        # self.brain = genome(genomeInputs, genomeOutputs)
 
-        # # float[] vision = new float[genomeInputs];//the input array fed into the neuralNet 
-        # # float[] decision = new float[genomeOutputs]; //the out put of the NN 
-        # vision = []
-        # decision = []
+        self.freeze = freeze
 
-        # self.framesAlive = 0
-
-        # self.runningFitness
-        # self.totalFitnessCalculations
-        # self.avgFitness
         self.enemy = None
         self.enemyPos = None
 
@@ -87,7 +77,131 @@ class Player(pygame.sprite.Sprite):
  
         # List of sprites we can bump against
         self.level = None
+    
+    
     def update(self):
+        
+        #update neural network
+        mouse_pos = pygame.mouse.get_pos()
+
+        #generate random action:
+        if not self.freeze:
+            action = random.randint(0,4)
+            self.executeAction(action)
+
+        self.enemyPos = (self.enemy.rect.x, self.enemy.rect.y)
+        
+        #pass outputs to think
+        if self.isAI:
+            self.think(self.enemyPos, mouse_pos, True, self.freeze)
+        
+        if pygame.sprite.spritecollide(self, self.level.attack_list, False):
+            pygame.event.post(self.damage)
+        
+        if self.isAttacking == True:
+            print("Player: ", self.playerID, " is attacking ", self.direction)
+            if self.direction == "left":
+                self.sword.rect.x = self.rect.x - 50
+                self.sword.rect.y = self.rect.y + 30
+            elif self.direction == "right":
+                self.sword.rect.x = self.rect.x + self.width + 50
+                self.sword.rect.y = self.rect.y + 30
+            else:
+                self.sword.rect.x = self.rect.x + self.width/2
+                self.sword.rect.y = self.rect.y -30
+            self.level.attack_list.remove(self.sword)
+            self.isAttacking = False      
+
+        """ Move the player. """
+        # Gravity
+        self.calc_grav()
+
+        "---------------------- LOOKING AT PLAYER'S X-VALUES NOW --------------------------"
+
+        # Move left/right
+        self.rect.x += self.change_x
+
+        # Possible fix to sword code
+        # print(self.playerID, "is looking at ", self.enemy.playerID, "'s sword:", self.enemy.sword)
+        # if self.enemy.sword != None:
+        #     print(self.playerID, "noticed that ", self.enemy.playerID, "has a sword")
+        #     if pygame.sprite.collide_rect(self, self.enemy.sword):
+        #         pygame.event.post(self.damage)
+        # """
+                 
+        "BLOCK COLLISION - X"
+        block_hit_list = pygame.sprite.spritecollide(self, self.level.platform_list, False)
+        for block in block_hit_list:
+            # If we are moving right,
+            # set our right side to the left side of the item we hit
+            if self.change_x > 0:
+                self.rect.right = block.rect.left
+            elif self.change_x < 0:
+                # Otherwise if we are moving left, do the opposite.
+                self.rect.left = block.rect.right
+
+                # Move up/down
+        self.rect.y += self.change_y
+
+        "ENEMY COLLISION - X - error may come from bound conditionals using rect.<direction> - BUGGY AS HEK"
+        if pygame.sprite.collide_rect(self, self.enemy):
+            #moving right - we are not above or below enemy
+            if self.change_x > 0 and ((self.rect.bottom > self.enemy.rect.bottom and self.rect.top < self.enemy.rect.bottom) or (self.rect.bottom > self.enemy.rect.top and self.rect.top > self.enemy.rect.bottom)):
+                self.rect.right = self.enemy.rect.left
+            #moving left - we are not above or below the enemy
+            elif self.change_x < 0 and ((self.rect.bottom > self.enemy.rect.bottom and self.rect.top < self.enemy.rect.bottom) or (self.rect.bottom > self.enemy.rect.top and self.rect.top > self.enemy.rect.bottom)):
+                self.rect.left = self.enemy.rect.right
+            #moving right - we are above enemy moving down
+            elif (self.change_x > 0 and self.change_y > 0) and (self.rect.bottom > self.enemy.rect.top and self.rect.right > self.enemy.rect.right):
+                self.rect.bottom = self.enemy.rect.top
+                self.change_y = -8
+            #moving left - we are above enemy moving down
+            elif (self.change_x < 0 and self.change_y > 0) and (self.rect.bottom > self.enemy.rect.top and self.rect.left < self.enemy.rect.left):
+                self.rect.bottom = self.enemy.rect.top
+                self.change_y = -8
+            #moving right - we are below enemy moving up
+            elif self.change_x > 0 and self.change_y < 0 and self.rect.bottom > self.enemy.rect.bottom and self.rect.right > self.enemy.rect.right:
+                self.enemy.rect.bottom = self.rect.top
+            #moving left - we are below enemy moving up
+            elif self.change_x < 0 and self.change_y < 0 and self.rect.bottom > self.enemy.rect.bottom and self.rect.left < self.enemy.rect.left:
+                self.enemy.rect.bottom = self.rect.top
+        
+
+            
+            
+        "---------------------- LOOKING AT PLAYER'S Y-VALUES NOW --------------------------"
+        # # Move up/down
+        self.rect.y += self.change_y
+
+        "BOUNDS CHECKING"
+        # If the player gets near the right side, shift the world left (-x)
+        if self.rect.right > SCREEN_WIDTH:
+            self.rect.right = SCREEN_WIDTH
+ 
+        # If the player gets near the left side, shift the world right (+x)
+        if self.rect.left < 0:
+            self.rect.left = 0
+
+        "PLATFORM COLLISION - Y"
+        # Check and see if we hit anything
+        block_hit_list = pygame.sprite.spritecollide(self, self.level.platform_list, False)
+        for block in block_hit_list:
+            # Reset our position based on the top/bottom of the object.
+            if self.change_y > 0:
+                self.rect.bottom = block.rect.top
+            elif self.change_y < 0:
+                self.rect.top = block.rect.bottom
+            # Stop our vertical movement
+            self.change_y = 0
+                
+        "To implement side jumping"
+        # if len(block_hit_list) > 0 or self.rect.bottom >= SCREEN_HEIGHT:
+        #     self.sideJumpCount = 0
+
+        
+        """
+        self.updateHealth()
+        
         #update neural network
         mouse_pos = pygame.mouse.get_pos()
         #helps determine fitness
@@ -101,8 +215,10 @@ class Player(pygame.sprite.Sprite):
         #pass outputs to think
         if self.isAI:
             self.think(self.enemyPos, mouse_pos, True)
-
+        """
         """ Move the player. """
+
+        """
         # Gravity
         self.calc_grav()
 
@@ -110,7 +226,7 @@ class Player(pygame.sprite.Sprite):
         self.rect.x += self.change_x
 
         if self.isAttacking == True:
-            print("Player: ", self.playerID, " is looking ", self.direction)
+            # print("Player: ", self.playerID, " is looking ", self.direction)
             if self.direction == "left":
                 self.sword.rect.x = self.rect.x - 50
                 self.sword.rect.y = self.rect.y + 30
@@ -126,9 +242,12 @@ class Player(pygame.sprite.Sprite):
 
         # hit_box_list = pygame.sprite.spritecollide(self, self.level.danger_list, False)
         # See if we hit anything
-        attack_hit_list = pygame.sprite.spritecollide(self, self.level.attack_list, False)
-        if len(attack_hit_list) > 0:
-            pygame.event.post(self.damage)          
+        
+        # uncomment
+        # attack_hit_list = pygame.sprite.spritecollide(self, self.level.attack_list, False)
+        # if len(attack_hit_list) > 0:
+        #     pygame.event.post(self.damage)          
+        
         
         block_hit_list = pygame.sprite.spritecollide(self, self.level.platform_list, False)
         for block in block_hit_list:
@@ -139,9 +258,11 @@ class Player(pygame.sprite.Sprite):
             elif self.change_x < 0:
                 # Otherwise if we are moving left, do the opposite.
                 self.rect.left = block.rect.right
- 
+
+
         # Move up/down
         self.rect.y += self.change_y
+
         # If the player gets near the right side, shift the world left (-x)
         if self.rect.right > SCREEN_WIDTH:
             self.rect.right = SCREEN_WIDTH
@@ -151,13 +272,27 @@ class Player(pygame.sprite.Sprite):
             self.rect.left = 0
  
         # Check and see if we hit anything
-        block_hit_list = pygame.sprite.spritecollide(self, self.level.platform_list, False)
-        
-        if len(block_hit_list) > 0 or self.rect.bottom >= SCREEN_HEIGHT:
-            self.sideJumpCount = 0
+        # block_hit_list = pygame.sprite.spritecollide(self, self.level.platform_list, False)
+        # if len(block_hit_list) > 0 or self.rect.bottom >= SCREEN_HEIGHT:
+        #     self.sideJumpCount = 0
+              
+        if pygame.sprite.collide_rect(self, self.enemy):
+            if self.change_x > 0 and not self.rect.y - self.height >= self.enemy.rect.y:
+                self.rect.right = self.enemy.rect.left
+            elif self.change_x < 0 and not self.rect.y - self.height >= self.enemy.rect.y:
+                self.rect.left = self.enemy.rect.right
+            # elif self.rect.y - self.height >= self.enemy.rect.y:
+            #     self.rect.y = self.enemy.rect.y
+            if self.change_y > 0:
+                self.rect.bottom = block.rect.top
+            elif self.change_y < 0:
+                self.rect.top = block.rect.bottom
+            # Stop our vertical movement
+            self.change_y = 0
+            # elif self.rect.bottom == self.enemy.rect.top:
+            #     self.rect.y = self.enemy.rect.top
         
         for block in block_hit_list:
- 
             # Reset our position based on the top/bottom of the object.
             if self.change_y > 0:
                 self.rect.bottom = block.rect.top
@@ -166,16 +301,17 @@ class Player(pygame.sprite.Sprite):
             # Stop our vertical movement
             self.change_y = 0
         
-        
-        self.updateHealth
+        """
 
 
-    def think(self, point, mousePoint = None, mouseFlag = False):
+    def think(self, point, mousePoint = None, mouseFlag = False,  freeze = False,):
         """
         Converts output of neural net into events
         that generate actions for the specific player
         in the main driver class
         """
+        if freeze:
+            return
         if mouseFlag == True:
           if (self.rect.x < mousePoint[0] and self.rect.x + self.width > mousePoint[0]) and (self.rect.y < mousePoint[1] and self.rect.y + self.height > mousePoint[1]):
             pygame.event.post(self.damage)
@@ -211,6 +347,7 @@ class Player(pygame.sprite.Sprite):
       return self.runningFitness / self.totalFtinessCalculations
 
     def updateHealth(self):
+        print(self.playerID, " is updating health: ", self.health)
         healthBarLength = (self.health/self.maxHealth) * self.width
         if self.health <= 0:
             # pygame.draw.line(self.screen, RED, (self.rect.x, self.rect.y - 10), (self.rect.x + self.width, self.rect.y - 10), 4)
@@ -326,7 +463,7 @@ class Player(pygame.sprite.Sprite):
       if self.isAttacking == True:
         pass
       else:
-        print(self.playerID, " is attacking!")
+        # print(self.playerID, " is attacking!")
         if self.direction == "left":
           facing = -1
         if self.direction == "right":
@@ -335,9 +472,9 @@ class Player(pygame.sprite.Sprite):
           facing = 0
         
         self.sword = Sword(self.rect.x, self.rect.y, 60, 10, self.color, facing)
-      
         self.level.attack_list.add(self.sword)
-        print(self.level.attack_list)
+        print(self.sword)
+        # print(self.level.attack_list)
         self.isAttacking = True
 
     def executeAction(self, action):
@@ -351,3 +488,25 @@ class Player(pygame.sprite.Sprite):
             self.stop()
         elif action == 4:
             self.attack()
+    
+    #def isDead(self, DEATHFLAG):
+        # We don't want to do this right now because Garrett SUX
+
+
+
+
+### ----------Neural Net stuff????---------------
+        # genomeInputs = 3;
+        # genomeOutputs = 3;
+        # self.brain = genome(genomeInputs, genomeOutputs)
+
+        # # float[] vision = new float[genomeInputs];//the input array fed into the neuralNet 
+        # # float[] decision = new float[genomeOutputs]; //the out put of the NN 
+        # vision = []
+        # decision = []
+
+        # self.framesAlive = 0
+
+        # self.runningFitness
+        # self.totalFitnessCalculations
+        # self.avgFitness
