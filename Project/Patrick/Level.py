@@ -19,11 +19,13 @@ class Level(object):
     def __init__(self, player):
         """ Constructor. Pass in a handle to player. Needed for when moving platforms
             collide with the player. """
-        #self.active_sprite_list = pygame.sprite.Group()
+        self.active_sprite_list = pygame.sprite.Group()
         self.platform_list = pygame.sprite.Group()
-        self.attack_list = pygame.sprite.Group()
+        self.player_list = pygame.sprite.Group()
         self.enemy_list = pygame.sprite.Group()
         self.player = player
+        self.player_attack_list = pygame.sprite.Group()
+        self.enemy_attack_list = pygame.sprite.Group()
          
         # Background image
         self.background = None
@@ -31,9 +33,16 @@ class Level(object):
     # Update everythign on this level
     def update(self):
         """ Update everything in this level."""
+        self.active_sprite_list.update()
         self.platform_list.update()
+        self.player_list.update()
+        self.player_attack_list.update()
         self.enemy_list.update()
-        self.attack_list.update()
+        self.enemy_attack_list.update()
+        # self.enemy_list.update()
+        # self.player_list.update()
+        # self.attack_list.update()
+        # self.player.update()
  
     def draw(self, screen):
         """ Draw everything on this level. """
@@ -42,9 +51,11 @@ class Level(object):
         screen.fill(BLACK)
  
         # Draw all the sprite lists that we have
+        self.player_attack_list.draw(screen) 
+        self.enemy_attack_list.draw(screen) 
         self.platform_list.draw(screen)
         self.enemy_list.draw(screen)
-        self.attack_list.draw(screen) 
+        self.player_list.draw(screen)
  
 # Create platforms for the level
 class Level_01(Level):
@@ -98,4 +109,6 @@ class Platform(pygame.sprite.Sprite):
         self.image.fill(GREEN)
  
         self.rect = self.image.get_rect()
-        
+
+    def draw(self):
+        print("let's draw a sword")
