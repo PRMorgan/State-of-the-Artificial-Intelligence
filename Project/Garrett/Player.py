@@ -92,8 +92,8 @@ class Player(pygame.sprite.Sprite):
         self.enemyPos = (self.enemy.rect.x, self.enemy.rect.y)
         
         #pass outputs to think
-        if self.isAI:
-            self.think(self.enemyPos, mouse_pos, True, self.freeze)
+        # if self.isAI:
+        self.think(self.enemyPos, mouse_pos, True, self.freeze)
     
 
         """ Move the player. """
@@ -105,22 +105,22 @@ class Player(pygame.sprite.Sprite):
     
         
         if self.isAttacking == True:
-            print("Player: ", self.playerID, " is attacking ", self.direction)
-            if self.direction == "left":
-                self.sword.rect.x = self.rect.x - 50
-                self.sword.rect.y = self.rect.y + 30
-            elif self.direction == "right":
-                self.sword.rect.x = self.rect.x + self.width + 50
-                self.sword.rect.y = self.rect.y + 30
+            if self.isAI:
+                if len(self.level.player_attack_list) == 0:
+                    self.isAttacking = False
+                    self.sword = None
             else:
-                self.sword.rect.x = self.rect.x + self.width/2
-                self.sword.rect.y = self.rect.y -30
-            self.level.attack_list.remove(self.sword)
-            self.sword = None
-            self.isAttacking = False
+                if len(self.level.enemy_attack_list) == 0:
+                    self.isAttacking = False
+                    self.sword = None
 
-        if pygame.sprite.spritecollide(self, self.level.attack_list, False):
-            pygame.event.post(self.damage)
+        if self.isAI: 
+            if pygame.sprite.spritecollide(self, self.level.enemy_attack_list, False):
+                pygame.event.post(self.damage)
+        else:
+            if pygame.sprite.spritecollide(self, self.level.player_attack_list, False):
+                pygame.event.post(self.damage)
+
 
 
         "---------------------- LOOKING AT PLAYER'S COLLISIONS WITH OTHER OBJECTS --------------------------"
@@ -137,34 +137,50 @@ class Player(pygame.sprite.Sprite):
 
         "ENEMY COLLISION - X - error may come from bound conditionals using rect.<direction> - BUGGY AS HEK"
         if pygame.sprite.collide_rect(self, self.enemy):
+            #going right
+            if self.change_x > 0: 
+                self.rect.right = self.enemy.rect.left
+                self.change_x = 20
+            #going left
+            if self.change_x < 0: 
+                self.rect.left = self.enemy.rect.right
+                self.change_x = -20
+            #going up
+            if self.change_y < 0:
+                self.change_y = 0
+            #going down
+            if self.change_y > 0:
+                self.change_y = 0
+
+
             #moving right - we are not above or below enemy
-            if self.change_x > 0 and ((self.rect.bottom > self.enemy.rect.bottom and self.rect.top < self.enemy.rect.bottom) or (self.rect.bottom > self.enemy.rect.top and self.rect.top > self.enemy.rect.bottom)):
-                # self.rect.right = self.enemy.rect.left
-                self.change_x = -3
-                self.enemy.change_x = -5
-            #moving left - we are not above or below the enemy
-            elif self.change_x < 0 and ((self.rect.bottom > self.enemy.rect.bottom and self.rect.top < self.enemy.rect.bottom) or (self.rect.bottom > self.enemy.rect.top and self.rect.top > self.enemy.rect.bottom)):
-                # self.rect.left = self.enemy.rect.right
-                self.change_x = 3
-                self.enemy.change_x = 5
-            #moving right - we are above enemy moving down
-            if (self.change_x > 0 and self.change_y > 0) and (self.rect.bottom > self.enemy.rect.top and self.rect.right > self.enemy.rect.right):
-                # self.rect.bottom = self.enemy.rect.top
-                self.change_y = -8
-                self.change_x = 3
-            #moving left - we are above enemy moving down
-            if (self.change_x < 0 and self.change_y > 0) and (self.rect.bottom > self.enemy.rect.top and self.rect.left < self.enemy.rect.left):
-                # self.rect.bottom = self.enemy.rect.top
-                self.change_y = -8
-                self.change_x = -3
-            #moving right - we are below enemy moving up
-            if self.change_x > 0 and self.change_y < 0 and self.rect.bottom > self.enemy.rect.bottom and self.rect.right > self.enemy.rect.right:
-                self.enemy.rect.bottom = self.rect.top
-                self.enemy.change_y = 3
-            #moving left - we are below enemy moving up
-            if self.change_x < 0 and self.change_y < 0 and self.rect.bottom > self.enemy.rect.bottom and self.rect.left < self.enemy.rect.left:
-                self.enemy.rect.bottom = self.rect.top
-                self.enemy.change_y = 3
+            # if self.change_x > 0 and ((self.rect.bottom > self.enemy.rect.bottom and self.rect.top < self.enemy.rect.bottom) or (self.rect.bottom > self.enemy.rect.top and self.rect.top > self.enemy.rect.bottom)):
+            #     # self.rect.right = self.enemy.rect.left
+            #     self.change_x = -3
+            #     self.enemy.change_x = -5
+            # #moving left - we are not above or below the enemy
+            # elif self.change_x < 0 and ((self.rect.bottom > self.enemy.rect.bottom and self.rect.top < self.enemy.rect.bottom) or (self.rect.bottom > self.enemy.rect.top and self.rect.top > self.enemy.rect.bottom)):
+            #     # self.rect.left = self.enemy.rect.right
+            #     self.change_x = 3
+            #     self.enemy.change_x = 5
+            # #moving right - we are above enemy moving down
+            # if (self.change_x > 0 and self.change_y > 0) and (self.rect.bottom > self.enemy.rect.top and self.rect.right > self.enemy.rect.right):
+            #     # self.rect.bottom = self.enemy.rect.top
+            #     self.change_y = -8
+            #     self.change_x = 3
+            # #moving left - we are above enemy moving down
+            # if (self.change_x < 0 and self.change_y > 0) and (self.rect.bottom > self.enemy.rect.top and self.rect.left < self.enemy.rect.left):
+            #     # self.rect.bottom = self.enemy.rect.top
+            #     self.change_y = -8
+            #     self.change_x = -3
+            # #moving right - we are below enemy moving up
+            # if self.change_x > 0 and self.change_y < 0 and self.rect.bottom > self.enemy.rect.bottom and self.rect.right > self.enemy.rect.right:
+            #     self.enemy.rect.bottom = self.rect.top
+            #     self.enemy.change_y = 3
+            # #moving left - we are below enemy moving up
+            # if self.change_x < 0 and self.change_y < 0 and self.rect.bottom > self.enemy.rect.bottom and self.rect.left < self.enemy.rect.left:
+            #     self.enemy.rect.bottom = self.rect.top
+            #     self.enemy.change_y = 3
         
             
         "---------------------- INTERACTION WITH PLATFORMS AND SIDE --------------------------"
@@ -253,7 +269,7 @@ class Player(pygame.sprite.Sprite):
       return self.runningFitness / self.totalFtinessCalculations
 
     def updateHealth(self):
-        print(self.playerID, " is updating health: ", self.health)
+        # print(self.playerID, " is updating health: ", self.health)
         healthBarLength = (self.health/self.maxHealth) * self.width
         if self.health <= 0:
             # pygame.draw.line(self.screen, RED, (self.rect.x, self.rect.y - 10), (self.rect.x + self.width, self.rect.y - 10), 4)
@@ -378,9 +394,10 @@ class Player(pygame.sprite.Sprite):
           facing = 0
         
         self.sword = Sword(self.rect.x, self.rect.y, 60, 10, self.color, facing)
-        self.level.attack_list.add(self.sword)
-        print(self.sword)
-        # print(self.level.attack_list)
+        if self.isAI:
+            self.level.player_attack_list.add(self.sword)
+        else:
+            self.level.enemy_attack_list.add(self.sword)
         self.isAttacking = True
 
     def executeAction(self, action):
