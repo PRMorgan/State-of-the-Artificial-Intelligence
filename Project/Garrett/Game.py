@@ -20,45 +20,62 @@ class Game():
         """ Creates a game that contains two players and a level """
         self.gameNum = gameNum
         self.screen = screen
-        self.players = []
-        self.active_sprite_list = pygame.sprite.Group()
+        self.player = None
+        self.enemy = None
         self.level = None
 
-        drawFlag = False
+        self.entities = []
 
         self.createPopulation()
 
     def createPopulation(self):
         """ Generate any number of players and add them to an environment"""
         #create player 1
-        player1ID = str(self.gameNum) + str(1)
-        player1 = self.createPlayer(player1ID, colors[0], (500, 300), True)
+        playerID = str(self.gameNum) + str(1)
+        self.player = Player(playerID, BLUE, self.screen, True)
+        self.player.rect.x = 100 # x-position
+        self.player.rect.y =  300 # y-position
+        self.level = Level_01(self.player)
+        self.player.level = self.level
 
-        player2ID = str(self.gameNum) + str(2)
-        player2 = self.createPlayer(player2ID, colors[1], (800, 300), True)
+
+        enemyID = str(self.gameNum) + str(2)
+        self.enemy = Player(enemyID, RED, self.screen, False)
+        self.enemy.rect.x = 800 # x-position
+        self.enemy.rect.y =  300 # y-position
+        self.enemy.level = self.level
         
-        player1.setEnemy(player2)
-        player2.setEnemy(player1)
+        self.level.player_list.add(self.player)
+        self.level.enemy_list.add(self.enemy)
+
+        self.entities.append(self.player)
+        self.entities.append(self.enemy)
+
+
+
+        self.player.setEnemy(self.enemy)
+        self.enemy.setEnemy(self.player)
+
     
-    def createPlayer(self, pid, color, position, AIFlag = True, freeze = False):
-        """ Create a player from player class"""
-        player = Player(pid, color, self.screen, AIFlag, freeze)
-        player.rect.x =  position[0] # x-position
-        player.rect.y =  position[1] # y-position
-        self.players.append(player)
-        self.setEnvironment(player)
-        return player
+    # def createPlayer(self, pid, color, position, AIFlag = True, freeze = False):
+    #     """ Create a player from player class"""
+    #     player = Player(pid, color, self.screen, AIFlag, freeze)
+    #     player.rect.x =  position[0] # x-position
+    #     player.rect.y =  position[1] # y-position
+    #     self.players.append(player)
+    #     self.setEnvironment(player)
+    #     return player
 
 
-    def setEnvironment(self, player):
-        """ Set up an environment for the players to interact"""
-        #if there is no level created, create one and link it to the 1st player
+    # def setEnvironment(self, player):
+    #     """ Set up an environment for the players to interact"""
+    #     #if there is no level created, create one and link it to the 1st player
         
-        if self.level == None:
-            self.level = Level_01(player)
-            player.level = self.level
-        else:
-            player.level = self.level
+    #     if self.level == None:
+    #         self.level = Level_01(player)
+    #         player.level = self.level
+    #     else:
+    #         player.level = self.level
         
-        #add the player to the active sprite list to be updated
-        self.active_sprite_list.add(player)
+    #     #add the player to the active sprite list to be updated
+    #     self.active_sprite_list.add(player)
