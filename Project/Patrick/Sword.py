@@ -39,13 +39,3 @@ class Sword(pygame.sprite.Sprite):
 
         if self.timer >= 3:
             self.kill()
-
-
-
-        # for sword in attack_list:
-        #     sword.rect.x = self.x
-        #     sword.rect.y = self.y
-        # self.attack_list.add(sword)
-
-    # def draw(self, win):
-    #     pygame.draw.rect(win, self.color, pygame.Rect(self.x, self.y, 60, 20))

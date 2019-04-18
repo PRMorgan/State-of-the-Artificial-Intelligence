@@ -19,6 +19,9 @@ ROSYBROWN = (188,143,143)
 PALEVIOLET = (219,112,147)
 YELLOW = (255,255,0)
 
+# *BUG* player doesn't move down when colliding with other players. 
+# This results in top player getting the kill 9 times out of 10.
+
 class Player(pygame.sprite.Sprite):
     """ This class represents the bar at the bottom that the player
         controls. """
@@ -42,6 +45,9 @@ class Player(pygame.sprite.Sprite):
 
         self.maxHealth = 40
         self.health = 40
+        self.deadFlag = False
+        self.numDeaths = 0
+
         self.color = color 
         self.playerID = playerID
 
@@ -70,6 +76,8 @@ class Player(pygame.sprite.Sprite):
 
         #coordinate point
         self.player_coord = (self.rect.x, self.rect.y)
+        self.startx = self.rect.x
+        self.starty = self.rect.y
 
         # Set speed vector of player
         self.change_x = 0
@@ -80,7 +88,6 @@ class Player(pygame.sprite.Sprite):
     
     
     def update(self):
-        
         #update neural network
         mouse_pos = pygame.mouse.get_pos()
 
@@ -102,7 +109,6 @@ class Player(pygame.sprite.Sprite):
         self.rect.x += self.change_x
 
         # Move left/right
-    
         
         if self.isAttacking == True:
             if self.isAI:
@@ -127,24 +133,24 @@ class Player(pygame.sprite.Sprite):
 
 
         # Possible fix to sword code
-        # print(self.playerID, "is looking at ", self.enemy.playerID, "'s sword:", self.enemy.sword)
+        # print(self.playerID, "is looking at ", self.enemy.playerID, "'s sword:", self.enemy.sword) #wink wink
         # if self.enemy.sword != None:
         #     print(self.playerID, "noticed that ", self.enemy.playerID, "has a sword")
         #     if pygame.sprite.collide_rect(self, self.enemy.sword):
         #         pygame.event.post(self.damage)
         # """
-                 
 
-        "ENEMY COLLISION - X - error may come from bound conditionals using rect.<direction> - BUGGY AS HEK"
+
+        # ENEMY COLLISION - X - error may come from bound conditionals using rect.<direction> - BUGGY AS H*CK
         if pygame.sprite.collide_rect(self, self.enemy):
             #going right
             if self.change_x > 0: 
                 self.rect.right = self.enemy.rect.left
-                self.change_x = 20
+                self.change_x = 25
             #going left
             if self.change_x < 0: 
                 self.rect.left = self.enemy.rect.right
-                self.change_x = -20
+                self.change_x = -25
             #going up
             if self.change_y < 0:
                 self.change_y = 0
@@ -183,7 +189,7 @@ class Player(pygame.sprite.Sprite):
             #     self.enemy.change_y = 3
         
             
-        "---------------------- INTERACTION WITH PLATFORMS AND SIDE --------------------------"
+        # ---------------------- INTERACTION WITH PLATFORMS AND SIDE --------------------------
 
         self.rect.y += self.change_y
         "BOUNDS CHECKING"
@@ -225,7 +231,6 @@ class Player(pygame.sprite.Sprite):
         #     self.sideJumpCount = 0
 
 
-
     def think(self, point, mousePoint = None, mouseFlag = False,  freeze = False,):
         """
         Converts output of neural net into events
@@ -255,6 +260,7 @@ class Player(pygame.sprite.Sprite):
     
     def setEnemy(self, enemy):
       self.enemy = enemy
+      print (self.enemy.playerID)
 
     def calculateFitness(self):
       progressToGoal = self.distanceToPoint((800,500), False, RED, "X") / 500
@@ -271,13 +277,14 @@ class Player(pygame.sprite.Sprite):
     def updateHealth(self):
         # print(self.playerID, " is updating health: ", self.health)
         healthBarLength = (self.health/self.maxHealth) * self.width
-        if self.health <= 0:
+        if (self.health <= 0) and (self.numDeaths > 2):
             # pygame.draw.line(self.screen, RED, (self.rect.x, self.rect.y - 10), (self.rect.x + self.width, self.rect.y - 10), 4)
             # self.displayDeath()
             self.kill()
             self.level.active_sprite_list.remove(self)
             pygame.event.post(self.killEvent)
         else:
+            # Display a health bar with colors corresponding to the player's remaining health
             if self.health/self.maxHealth > .8:
                 pygame.draw.line(self.screen, GREEN, (self.rect.x, self.rect.y - 10), (self.rect.x + healthBarLength, self.rect.y - 10), 4)
             elif self.health/self.maxHealth > .5:
@@ -411,13 +418,24 @@ class Player(pygame.sprite.Sprite):
             self.jump()
         elif action == 3:
             self.stop()
-        elif action == 4:
+        elif (action == 4) and (self.enemy.isDead() == False):
             self.attack()
+
+    def respawn(self):
+        # Respawn back to starting point
+        self.rect.x = self.startx
+        self.rect.y = self.starty
+        self.health = 40
     
-    #def isDead(self, DEATHFLAG):
-        # We don't want to do this right now because Garrett SUX
-
-
+    def isDead(self):
+        if self.health <= 0:
+            self.deadFlag = True
+            self.numDeaths += 1
+            if self.numDeaths <= 2:
+                 self.respawn()
+            return self.deadFlag
+        else:
+            return self.deadFlag
 
 
 ### ----------Neural Net stuff????---------------

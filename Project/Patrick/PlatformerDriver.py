@@ -74,8 +74,6 @@ def main():
         #     game.player.level.player_list.update()
         #     game.player.level.player_list.update()
 
-        
-        
         # update players --> in update() tell players to think()
         #in the think(), they should run the neural net once
         for event in pygame.event.get():
