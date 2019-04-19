@@ -52,11 +52,15 @@ def main():
 
     # Loop until the user clicks the close button.
     games = []
-    game1 = Game(screen, 0)
-    #game2 = Game(screen, 1)
+    finishedGames = []
+    # game1 = Game(screen, 0)
+    # game2 = Game(screen, 1)
+    
+    numGames = 1
 
-    games.append(game1)
-    #games.append(game2)
+    for game in range(numGames):
+        tempGame = Game(screen, game)
+        games.append(tempGame)
 
     done = False
 
@@ -71,11 +75,13 @@ def main():
         #     game.active_sprite_list.update()
 
         # for game in games:
+        #     if game.isOver:
+        #         finishedGames.append(game)
+        #         games.remove(game)
         #     game.player.level.player_list.update()
         #     game.player.level.player_list.update()
 
-        
-        
+
         # update players --> in update() tell players to think()
         #in the think(), they should run the neural net once
         for event in pygame.event.get():
@@ -107,12 +113,12 @@ def main():
                     for player in game.entities:
                         if player.playerID == event.id:
                             eventPlayer = player
-                if event.action == "kill":
-                    print("Just killed player: ", eventPlayer.playerID, "... removing now")
+                #if event.action == "kill":
+                    #print("Just killed player: ", eventPlayer.playerID, "... removing now")
                     # game.active_sprite_list.remove(eventPlayer)
                     # game.players.remove(eventPlayer)
                     # print("players left: ", len(game.players))
-                elif event.action == "attack":
+                if event.action == "attack":
                     eventPlayer.executeAction(4)
                 elif event.action == "moveLeft":
                     eventPlayer.executeAction(0)
@@ -145,7 +151,7 @@ def main():
             game.player.updateHealth()
             game.enemy.updateHealth()
 
-        # time.sleep(.01)
+        #time.sleep(.05)
 
         # mouse_pos = pygame.mouse.get_pos()
 

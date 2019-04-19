@@ -11,6 +11,8 @@ BLUE = (0, 0, 255)
 SCREEN_WIDTH = 800
 SCREEN_HEIGHT = 600
 
+bg = pygame.image.load('arena86.jpg')
+
 class Level(object):
     """ This is a generic super-class used to define a level.
         Create a child class for each level with level-specific
@@ -49,6 +51,7 @@ class Level(object):
  
         # Draw the background
         screen.fill(BLACK)
+        screen.blit(bg, (0,0))
  
         # Draw all the sprite lists that we have
         self.player_attack_list.draw(screen) 
@@ -77,6 +80,7 @@ class Level_01(Level):
         """
 
         # Arena-style... arena...
+        """
         level = [[100, 60, 0, SCREEN_HEIGHT - 60],
                 [100, 40, 100, SCREEN_HEIGHT - 40],
                 [100, 20, 200, SCREEN_HEIGHT - 20],
@@ -86,6 +90,9 @@ class Level_01(Level):
                 [100, 40, SCREEN_WIDTH - 200, SCREEN_HEIGHT - 40],
                 [100, 60, SCREEN_WIDTH - 100, SCREEN_HEIGHT - 60],
                 ]
+        """
+
+        level = [[800,90,0,SCREEN_HEIGHT-90]]
  
         # Go through the array above and add platforms
         for platform in level:
@@ -105,8 +112,9 @@ class Platform(pygame.sprite.Sprite):
             code. """
         super().__init__()
  
-        self.image = pygame.Surface([width, height])
-        self.image.fill(GREEN)
+        self.image = pygame.Surface([width, height], pygame.SRCALPHA, 32)
+        self.image = self.image.convert_alpha()
+        #self.image.fill(GREEN)
  
         self.rect = self.image.get_rect()
 
