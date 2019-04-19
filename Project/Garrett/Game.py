@@ -38,16 +38,16 @@ class Game():
         """ Generate any number of players and add them to an environment"""
         #create player 1
         playerID = str(self.gameNum) + str(1)
-        self.player = Player(playerID, BLUE, self.screen, (100,300), True)
-        self.player.rect.x = 100 # x-position
-        self.player.rect.y =  300 # y-position
+        self.player = Player(playerID, BLUE, self.screen, (0,450), True)
+        self.player.rect.x = 0 # x-position
+        self.player.rect.y =  450 # y-position
         self.level = Level_01(self.player)
         self.player.level = self.level
 
         enemyID = str(self.gameNum) + str(2)
-        self.enemy = Player(enemyID, RED, self.screen, (800,300), False)
+        self.enemy = Player(enemyID, RED, self.screen, (800,450), False)
         self.enemy.rect.x = 800 # x-position
-        self.enemy.rect.y =  300 # y-position
+        self.enemy.rect.y =  450 # y-position
         self.enemy.level = self.level
         
         self.level.player_list.add(self.player)

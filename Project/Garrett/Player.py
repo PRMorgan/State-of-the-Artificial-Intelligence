@@ -96,6 +96,20 @@ class Player(pygame.sprite.Sprite):
 
         self.enemyPos = (self.enemy.rect.x, self.enemy.rect.y)
         
+        if self.isAI:
+            if self.numDeaths > 2:
+                self.level.player_list.remove(self)
+            if self.enemy.numDeaths > 2:
+                self.level.enemy_list.remove(self.enemy)
+        else:
+           if self.numDeaths > 2:
+                self.level.enemy_list.remove(self)
+        # # else:
+        # #     if self.numDeaths == 3:
+        # #         self.level.player_list.remove(self)
+        # if self.numDeaths == 3:
+        #     self.level.player_list.remove(self)
+        
         #pass outputs to think
         # if self.isAI:
         self.think(self.enemyPos, mouse_pos, True, self.freeze)
@@ -122,6 +136,9 @@ class Player(pygame.sprite.Sprite):
             if pygame.sprite.spritecollide(self, self.level.enemy_attack_list, False):
                 pygame.event.post(self.damage)
         else:
+            if self.enemy.numDeaths >= 3:
+                self.executeAction(3)
+                self.freeze = True
             if pygame.sprite.spritecollide(self, self.level.player_attack_list, False):
                 pygame.event.post(self.damage)
 
@@ -298,34 +315,50 @@ class Player(pygame.sprite.Sprite):
 
     def updateHealth(self):
         # print(self.playerID, " is updating health: ", self.health)
+        """Heart Code"""
         if self.isAI == False:
-            startx = self.startx - 35
+            startx = self.startx - 120
         else:
             startx = self.startx
-
         for heartCount in range(3 - self.numDeaths):
-            self.screen.blit(heart, (startx - 90 + (heartCount*40),35))
+            self.screen.blit(heart, (startx + (heartCount*40),35))
 
-
+        """Health Bar Code"""
         healthBarLength = (self.health/self.maxHealth) * self.width
-        if (self.health <= 0) and (self.numDeaths >= 2):
-            # pygame.draw.line(self.screen, RED, (self.rect.x, self.rect.y - 10), (self.rect.x + self.width, self.rect.y - 10), 4)
-            # self.displayDeath()
+
+        if (self.health <= 0) and (self.numDeaths == 3):
+            self.deadFlag = True
             self.kill()
-            self.level.active_sprite_list.remove(self)
-            pygame.event.post(self.killEvent)
+
         else:
             # Display a health bar with colors corresponding to the player's remaining health
-            if self.health/self.maxHealth > .8:
-                pygame.draw.line(self.screen, GREEN, (self.rect.x, self.rect.y - 10), (self.rect.x + healthBarLength, self.rect.y - 10), 4)
-            elif self.health/self.maxHealth > .5:
-                pygame.draw.line(self.screen, PALEGREEN, (self.rect.x, self.rect.y - 10), (self.rect.x + healthBarLength, self.rect.y - 10), 4)
-            elif self.health/self.maxHealth > .2:
-                healthBarLength = (self.health/self.maxHealth) * self.width
-                pygame.draw.line(self.screen, YELLOW, (self.rect.x, self.rect.y - 10), (self.rect.x + healthBarLength, self.rect.y - 10), 4)
-            else: 
-                pygame.draw.line(self.screen, RED, (self.rect.x, self.rect.y - 10), (self.rect.x + healthBarLength, self.rect.y - 10), 4)  
-    
+            if self.health <= 0 and self.numDeaths <= 2:
+                self.respawn()
+            else:
+                if self.health/self.maxHealth > .8:
+                    pygame.draw.line(self.screen, GREEN, (self.rect.x, self.rect.y - 10), (self.rect.x + healthBarLength, self.rect.y - 10), 4)
+                elif self.health/self.maxHealth > .5:
+                    pygame.draw.line(self.screen, PALEGREEN, (self.rect.x, self.rect.y - 10), (self.rect.x + healthBarLength, self.rect.y - 10), 4)
+                elif self.health/self.maxHealth > .2:
+                    healthBarLength = (self.health/self.maxHealth) * self.width
+                    pygame.draw.line(self.screen, YELLOW, (self.rect.x, self.rect.y - 10), (self.rect.x + healthBarLength, self.rect.y - 10), 4)
+                else: 
+                    pygame.draw.line(self.screen, RED, (self.rect.x, self.rect.y - 10), (self.rect.x + healthBarLength, self.rect.y - 10), 4)  
+        
+        # elif self.health <= 0 and self.numDeaths <= 2:
+        #     self.respawn()
+        # elif self.health > 0:
+        #     # Display a health bar with colors corresponding to the player's remaining health
+        #     if self.health/self.maxHealth > .8:
+        #         pygame.draw.line(self.screen, GREEN, (self.rect.x, self.rect.y - 10), (self.rect.x + healthBarLength, self.rect.y - 10), 4)
+        #     elif self.health/self.maxHealth > .5:
+        #         pygame.draw.line(self.screen, PALEGREEN, (self.rect.x, self.rect.y - 10), (self.rect.x + healthBarLength, self.rect.y - 10), 4)
+        #     elif self.health/self.maxHealth > .2:
+        #         healthBarLength = (self.health/self.maxHealth) * self.width
+        #         pygame.draw.line(self.screen, YELLOW, (self.rect.x, self.rect.y - 10), (self.rect.x + healthBarLength, self.rect.y - 10), 4)
+        #     else: 
+        #         pygame.draw.line(self.screen, RED, (self.rect.x, self.rect.y - 10), (self.rect.x + healthBarLength, self.rect.y - 10), 4)  
+        
     def distanceToPoint(self, point, drawFlag = False, color = WHITE, axis = "BOTH"):
         x_goal = point[0]
         y_goal = point[1]
@@ -449,39 +482,15 @@ class Player(pygame.sprite.Sprite):
             self.jump()
         elif action == 3:
             self.stop()
-        elif (action == 4) and (self.enemy.isDead() == False):
+        elif (action == 4) and (self.enemy.deadFlag == False):
             self.attack()
 
     def respawn(self):
         # Respawn back to starting point
+        self.numDeaths += 1
+        
+        # if self.numDeaths < 3:
         self.rect.x = self.startx
         self.rect.y = self.starty
         self.health = 40
-        self.deadFlag = False
-        self.numDeaths += 1
-    
-    def isDead(self):
-        if self.health <= 0:
-            self.deadFlag = True
-            if self.numDeaths <= 2:
-                 self.respawn()
-            return self.deadFlag
-        else:
-            return self.deadFlag
-
-
-### ----------Neural Net stuff????---------------
-        # genomeInputs = 3;
-        # genomeOutputs = 3;
-        # self.brain = genome(genomeInputs, genomeOutputs)
-
-        # # float[] vision = new float[genomeInputs];//the input array fed into the neuralNet 
-        # # float[] decision = new float[genomeOutputs]; //the out put of the NN 
-        # vision = []
-        # decision = []
-
-        # self.framesAlive = 0
-
-        # self.runningFitness
-        # self.totalFitnessCalculations
-        # self.avgFitness
+        
