@@ -27,7 +27,7 @@ class Player(pygame.sprite.Sprite):
         controls. """
  
     # -- Methods
-    def __init__(self, playerID, color, screen, AI = True, freeze = False):
+    def __init__(self, playerID, color, screen, startPos, AI = True, freeze = False):
         """ Constructor function """
  
         # Call the parent's constructor
@@ -76,8 +76,9 @@ class Player(pygame.sprite.Sprite):
 
         #coordinate point
         self.player_coord = (self.rect.x, self.rect.y)
-        self.startx = self.rect.x
-        self.starty = self.rect.y
+        self.startPos = startPos
+        self.startx = self.startPos[0]
+        self.starty = self.startPos[1]
 
         # Set speed vector of player
         self.change_x = 0
@@ -145,18 +146,28 @@ class Player(pygame.sprite.Sprite):
         if pygame.sprite.collide_rect(self, self.enemy):
             #going right
             if self.change_x > 0: 
-                self.rect.right = self.enemy.rect.left
-                self.change_x = 25
+                self.rect.right = self.enemy.rect.left - 5
+                self.change_x += 20
             #going left
-            if self.change_x < 0: 
-                self.rect.left = self.enemy.rect.right
-                self.change_x = -25
+            elif self.change_x < 0: 
+                self.rect.left = self.enemy.rect.right + 5
+                self.change_x -= 20
             #going up
-            if self.change_y < 0:
-                self.change_y = 0
-            #going down
-            if self.change_y > 0:
-                self.change_y = 0
+            elif self.rect.y < self.enemy.rect.y:
+                self.rect.bottom -= self.change_y * 2
+
+            # POSSIBLE BUG FIX
+            """
+            Compare player and enemy change_y (which is based on gravity, so not static)
+            Whichecher is larger, tells the other what to do. 
+            Possibly set enemy's change_y to player's if player's larger
+            """
+
+            # elif self.change_y < 0:
+            #     self.change_y += 3
+            # #going down
+            # elif self.change_y > 0:
+            #     self.change_y += 3
 
 
             #moving right - we are not above or below enemy
@@ -259,20 +270,22 @@ class Player(pygame.sprite.Sprite):
             pygame.event.post(self.stopEvent)
     
     def setEnemy(self, enemy):
-      self.enemy = enemy
-      print (self.enemy.playerID)
+        if enemy == None:
+            self.enemy = None
+        self.enemy = enemy
+        print (self.enemy.playerID)
 
     def calculateFitness(self):
-      progressToGoal = self.distanceToPoint((800,500), False, RED, "X") / 500
-      timeAlive = self.framesAlive / 60
-      health = self.health / self.maxHealth
-      fitness = timeAlive - progressToGoal + health
-      self.runningFitness += fitness
-      self.totalFitnessCalculations += 1
-      return fitness
+        progressToGoal = self.distanceToPoint((800,500), False, RED, "X") / 500
+        timeAlive = self.framesAlive / 60
+        health = self.health / self.maxHealth
+        fitness = timeAlive - progressToGoal + health
+        self.runningFitness += fitness
+        self.totalFitnessCalculations += 1
+        return fitness
     
     def determineAvgFitness(self):
-      return self.runningFitness / self.totalFtinessCalculations
+        return self.runningFitness / self.totalFtinessCalculations
 
     def updateHealth(self):
         # print(self.playerID, " is updating health: ", self.health)
@@ -402,7 +415,7 @@ class Player(pygame.sprite.Sprite):
         if self.direction == "none":
           facing = 0
         
-        self.sword = Sword(self.rect.x, self.rect.y, 60, 10, self.color, facing)
+        self.sword = Sword(self.rect.x, self.rect.y, 25, 10, self.color, facing)
         if self.isAI:
             self.level.player_attack_list.add(self.sword)
         else:
@@ -426,11 +439,12 @@ class Player(pygame.sprite.Sprite):
         self.rect.x = self.startx
         self.rect.y = self.starty
         self.health = 40
+        self.deadFlag = False
+        self.numDeaths += 1
     
     def isDead(self):
         if self.health <= 0:
             self.deadFlag = True
-            self.numDeaths += 1
             if self.numDeaths <= 2:
                  self.respawn()
             return self.deadFlag

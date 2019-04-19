@@ -105,12 +105,12 @@ def main():
                     for player in game.entities:
                         if player.playerID == event.id:
                             eventPlayer = player
-                if event.action == "kill":
-                    print("Just killed player: ", eventPlayer.playerID, "... removing now")
+                #if event.action == "kill":
+                    #print("Just killed player: ", eventPlayer.playerID, "... removing now")
                     # game.active_sprite_list.remove(eventPlayer)
                     # game.players.remove(eventPlayer)
                     # print("players left: ", len(game.players))
-                elif event.action == "attack":
+                if event.action == "attack":
                     eventPlayer.executeAction(4)
                 elif event.action == "moveLeft":
                     eventPlayer.executeAction(0)
@@ -143,7 +143,7 @@ def main():
             game.player.updateHealth()
             game.enemy.updateHealth()
 
-        # time.sleep(.01)
+        #time.sleep(.05)
 
         # mouse_pos = pygame.mouse.get_pos()
 
