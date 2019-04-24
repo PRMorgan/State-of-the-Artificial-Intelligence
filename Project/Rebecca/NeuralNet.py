@@ -71,7 +71,7 @@ class NeuralNet:
         self.connectNodes()
         self.network = []
         #for each layer add the node in that layer, since layers cannot connect to themselves there is no need to order the nodes within a layer
-        for l in self.layers: #for each layer
+        for l in range(self.layers): #for each layer
             for i in self.nodes: #for each node
                 if i.layer == l: #if that node is in that layer
                     self.network.append(i)
