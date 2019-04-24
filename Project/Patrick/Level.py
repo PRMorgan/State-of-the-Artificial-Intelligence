@@ -11,7 +11,7 @@ BLUE = (0, 0, 255)
 SCREEN_WIDTH = 800
 SCREEN_HEIGHT = 600
 
-bg = pygame.image.load('arena86.jpg')
+bg = pygame.image.load('Images/arena86.jpg')
 
 class Level(object):
     """ This is a generic super-class used to define a level.
@@ -50,8 +50,7 @@ class Level(object):
         """ Draw everything on this level. """
  
         # Draw the background
-        #screen.fill(BLACK)
-        screen.blit(bg, (0,0))
+        # screen.fill(BLACK)
  
         # Draw all the sprite lists that we have
         self.player_attack_list.draw(screen) 
@@ -59,6 +58,9 @@ class Level(object):
         self.platform_list.draw(screen)
         self.enemy_list.draw(screen)
         self.player_list.draw(screen)
+
+    def drawBG(self, screen):
+        screen.blit(bg, (0,0))
  
 # Create platforms for the level
 class Level_01(Level):

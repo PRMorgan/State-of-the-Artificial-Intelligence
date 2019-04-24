@@ -8,8 +8,8 @@ class Sword(pygame.sprite.Sprite):
         self.x = x
         self.y = y
 
-        self.image = pygame.Surface([width, height])
-        self.image.fill(color)
+        self.image = pygame.image.load('Images/swordRight.png')#Surface([width, height])
+        #self.image.fill((192,192,192))
         self.rect = self.image.get_rect()
         self.width = width
 
@@ -18,9 +18,13 @@ class Sword(pygame.sprite.Sprite):
         if facing == -1:
             self.rect.x = x - 50
             self.rect.y = y + 30
+            self.image = pygame.image.load('Images/swordLeft.png')
+            #pygame.transform.flip(self.image, True, False)
         elif facing == 1:
             self.rect.x = x + 45#50
             self.rect.y = y + 30
+            self.image = pygame.image.load('Images/swordRight.png')
+            #pygame.transform.flip(self.image, False, True)
         else:
             self.rect.x = x + width
             self.rect.y = y - 20
