@@ -1,5 +1,6 @@
-
-
+from Player import *
+from Game import *
+from Species import *
 class Population():
 
 #------------------------------------------------------------------------------------------------------------------------------------------
@@ -17,7 +18,7 @@ class Population():
         self.newStage = False
         self.populationLife = 0
         for i in range(size):
-            self.pop.append(Player())
+            self.pop.append(Game.createPopulation(self))
             self.pop[i].brain.generateNetwork()
             self.pop[i].brain.mutate(self.innovationHistory)
 
@@ -25,12 +26,12 @@ class Population():
     #update all the players which are alive
     def updateAlive(self):
         self.populationLife += 1
-        for i in range(len(self.pop)):
-            if not self.pop[i].isDead:
-                self.pop[i].look() # get inputs for brain 
-                self.pop[i].think() # use outputs from neural network
-                self.pop[i].update() # move the player according to the outputs from the neural network
-                if not showNothing:
+        for i in self.pop:
+            if not i.isDead:
+                i.look() # get inputs for brain 
+                i.think() # use outputs from neural network
+                i.update() # move the player according to the outputs from the neural network
+                if not i.showNothing:
                     self.pop[i].show()
 
 #------------------------------------------------------------------------------------------------------------------------------------------ 
@@ -44,37 +45,37 @@ class Population():
 #------------------------------------------------------------------------------------------------------------------------------------------
     #sets the best player globally and for this gen
     def setBestPlayer(self):
-        tempBest =  species.get(0).players.get(0);
+        tempBest =  Species.selectPlayer(0) 
         #tempBest =  self.genPlayers[0]
-        tempBest.gen = self.gen;
+        tempBest.gen = self.gen
         
         #if best this gen is better than the global best score then set the global best as the best this gen
         if tempBest.score > self.bestScore:
-            genPlayers.append(tempBest.cloneForReplay())
+            self.genPlayers.append(tempBest.cloneForReplay())
             print("old best:", self.bestScore,"\n")
             print("new best:", tempBest.score,"\n")
-            self.bestScore = tempBest.score;
-            self.bestPlayer = tempBest.cloneForReplay();
+            self.bestScore = tempBest.score
+            self.bestPlayer = tempBest.cloneForReplay()
 
 #------------------------------------------------------------------------------------------------------------------------------------------------
     # this function is called when all the players in the population are dead and a new generation needs to be made
     def naturalSelection(self):
-        speciate() #seperate the population into species 
-        calculateFitness() #calculate the fitness of each player
-        sortSpecies() #sort the species to be ranked in fitness order, best first
+        self.speciate() #seperate the population into species 
+        self.calculateFitness() #calculate the fitness of each player
+        self.sortSpecies() #sort the species to be ranked in fitness order, best first
         if massExtinctionEvent:
-            massExtinction()
+            self.massExtinction()
             massExtinctionEvent = False
 
-        cullSpecies() # kill off the bottom half of each species
-        setBestPlayer() # save the best player of this gen
-        killStaleSpecies() # remove species which haven't improved in the last 15(ish) generations
-        killBadSpecies() # kill species which are so bad that they cant reproduce
+        self.cullSpecies() # kill off the bottom half of each species
+        self.setBestPlayer() # save the best player of this gen
+        self.killStaleSpecies() # remove species which haven't improved in the last 15(ish) generations
+        self.killBadSpecies() # kill species which are so bad that they cant reproduce
         
         print("generation", self.gen, "Number of mutations", len(self.innovationHistory), 
             "species: ", len(self.species), "<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<\n")
         
-        averageSum = getAvgFitnessSum()
+        averageSum = self.getAvgFitnessSum()
         children = [] #the next generation
 
         print("Species:\n")              
@@ -87,12 +88,12 @@ class Population():
             children.append(self.species[j].champ.clone()) #add champion without any mutation
             NoOfChildren = math.floor(self.species[j].averageFitness / averageSum * len(self.pop)) -1 # the number of children this species is allowed, note -1 is because the champ is already added
             for i in range(NoOfChildren): #get the calculated amount of children from this species
-                children.append(self.species[j].giveMeBaby(innovationHistory))
+                children.append(self.species[j].giveMeBaby(self.innovationHistory))
             
         while len(children) < len(self.pop): #if not enough babies (due to flooring the number of children to get a whole int) 
-            children.append(self.species[0].giveMeBaby(innovationHistory)) #get babies from the best species
+            children.append(self.species[0].giveMeBaby(self.innovationHistory)) #get babies from the best species
         self.pop.clear()
-        self.pop = children[:]; #set the children as the current population
+        self.pop = children[:] #set the children as the current population
         self.gen += 1 
         for i in range(len(self.pop)): # generate networks for each of the children
             self.pop[i].brain.generateNetwork()
@@ -129,17 +130,16 @@ class Population():
         # sort the species by the fitness of its best player
         # using selection sort like a loser
         temp = []
-        for i in range(len(self.species)):
+        for i in self.species:
             maxScore = 0.0
             maxIndex = 0
-            for j in range(len(self.species)):
-                if self.species.[j].bestFitness > maxScore:
+            for j in self.species: 
+                if j.bestFitness > maxScore:
                     maxScore = self.species[j].bestFitness
                     maxIndex = j
-            temp.append(self.species[maxIndex]);
+            temp.append(self.species[maxIndex])
             self.species.remove(maxIndex)
-            i =- 1
-        self.species = temp[:];
+        self.species = temp[:]
 
 #------------------------------------------------------------------------------------------------------------------------------------------
     #kills all species which haven't improved in 15 generations
@@ -152,10 +152,10 @@ class Population():
 #------------------------------------------------------------------------------------------------------------------------------------------
     #if a species sucks so much that it wont even be allocated 1 child for the next generation then kill it now
     def killBadSpecies(self):
-        averageSum = getAvgFitnessSum()
+        averageSum = self.getAvgFitnessSum()
 
-        for i in range(len(self.species)):
-            if self.species[i].averageFitness / averageSum * self.pop.size() < 1: #if wont be given a single child 
+        for i in self.species:
+            if i.averageFitness / averageSum * len(self.pop) < 1: #if wont be given a single child 
                 self.species.remove(i) # sad
                 i -= 1
 

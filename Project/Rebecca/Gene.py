@@ -1,4 +1,4 @@
-
+import random 
 
 #a connection between 2 nodes
 class Gene():
@@ -13,16 +13,16 @@ class Gene():
     #---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
     #changes the weight
     def mutateWeight(self):
-        rand2 = random(1);
+        rand2 = random.random(1)
         if rand2 < 0.1: #10% of the time completely change the weight
-           self.weight = random(-1, 1)
+           self.weight = random.random(-1, 1)
         else: #otherwise slightly change it
-            self.weight += randomGaussian()/50;
+            self.weight += random.randrange(1, 200)/50 #What is this and how to fix??
             #keep weight between bounds
             if self.weight > 1:
                 self.weight = 1
             if self.weight < -1:
-                self.weight = -1;        
+                self.weight = -1     
 #----------------------------------------------------------------------------------------------------------
     #returns a copy of this connectionGene
     def clone(self,fromNode,toNode):

@@ -13,46 +13,46 @@ class Node():
   #---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
   #the node sends its output to the inputs of the nodes its connected to
   def engage(self):
-    if layer != 0: #no sigmoid for the inputs and bias
-      outputValue = sigmoid(inputSum)
+    if self.layer != 0: #no sigmoid for the inputs and bias
+      outputValue = self.sigmoid(self.inputSum)
 
-    for i in range(len(outputConnections)): #for each connection
-        if outputConnections[i].enabled: #dont do shit if not enabled
-            outputConnections[i].toNode.inputSum += outputConnections[i].weight * outputValue #add the weighted output to the sum of the inputs of whatever node this node is connected to
+    for i in self.outputConnections: #for each connection
+        if i.enabled: #dont do shit if not enabled
+            i.toNode.inputSum += i.weight * outputValue #add the weighted output to the sum of the inputs of whatever node this node is connected to
 
 #----------------------------------------------------------------------------------------------------------------------------------------
 #not used
-  def stepFunction(x):
+  def stepFunction(self, x):
     if x < 0:
       return 0
     else:
       return 1
 #---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
 #sigmoid activation function
-  def sigmoid(x):
+  def sigmoid(self, x):
     y = 1 / (1 + pow(math.e, -4.9*x))
     return y
  #----------------------------------------------------------------------------------------------------------------------------------------------------------
  #returns whether this node connected to the parameter node
  #used when adding a new connection 
-  def isConnectedTo(node):
-    if node.layer == layer: #nodes in the same layer cannot be connected
+  def isConnectedTo(self, node):
+    if node.layer == self.layer: #nodes in the same layer cannot be connected
       return False
 
     #you get it
-    if node.layer < layer:
+    if node.layer < self.layer:
       for  i in range(len(node.outputConnections)):
         if node.outputConnections[i].toNode == self:
           return True
     else:
       for i in range(len(self.outputConnections)):
-          if self.outputConnections[i].toNode == self.node:
+          if self.outputConnections[i].toNode == node:
               return True
-    return False;
+    return False
 
   #---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
   #returns a copy of this node
-  def clone():
+  def clone(self):
     clone = Node(self.number)
     clone.layer = self.layer
     return clone
