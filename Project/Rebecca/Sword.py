@@ -9,7 +9,7 @@ class Sword(pygame.sprite.Sprite):
         self.y = y
 
         self.image = pygame.Surface([width, height])
-        self.image.fill(color)
+        self.image.fill((192,192,192))
         self.rect = self.image.get_rect()
         self.width = width
 
