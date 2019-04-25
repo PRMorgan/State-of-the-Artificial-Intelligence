@@ -24,10 +24,12 @@ BLUE = (0, 0, 255)
 WHITE = (255, 255, 255)
 
 FRAMERATE = 60
-TOTALTIME = 10
+TOTALTIME = 30
 
 SCREEN_WIDTH = 800
 SCREEN_HEIGHT = 600
+
+SCREEN_WIDTH_EXT = 1300
 
 colors = [RED,BLUE,WHITE]
 
@@ -37,7 +39,7 @@ def main():
     pygame.init()
  
     # Set the height and width of the screen
-    size = [SCREEN_WIDTH, SCREEN_HEIGHT]
+    size = [SCREEN_WIDTH_EXT, SCREEN_HEIGHT]
     screen = pygame.display.set_mode(size)
  
     pygame.display.set_caption("State of the Art-ificial Intelligence")
@@ -88,7 +90,7 @@ def main():
             
             for game in pop.games:
                 game.level.update()
-            pop.games[0].level.drawBG(screen)
+            pop.games[0].level.drawBG(screen,pop.games[0])
 
             # if len(games) == 0:
             #     finishedGames[0].level.draw(screen)
@@ -102,20 +104,20 @@ def main():
             gameUI.button(screen, "Show Best",315,10,70,20,RED,BLUE,gameUI.showBest)
             gameUI.button(screen, "Next",390,10,70,20,RED,BLUE,gameUI.nextGame)
             gameUI.button(screen, "Prev",465,10,70,20,RED,BLUE,gameUI.prevGame)
-            gameUI.button(screen, "Satisfied?", 323, 150, 100, 20, RED, BLUE, gameUI.endGame)
+            gameUI.button(screen, "Quit", 5, 575, 50, 20, RED, BLUE, gameUI.endGame)
             
             #screen, text, x, y, width, height, color
             # msg = "Game: " + str(gameUI.gameScreen + 1) + "/" + str(len(pop))
             # gameUI.displayText(screen, msg,353,35,90,20, BLUE)
 
-            timemsg = "Time Remaining: " + str(int(timeremaining/FRAMERATE))
-            gameUI.displayText(screen, timemsg,323,120,140,20, BLUE)
+            timemsg = str(int(timeremaining/FRAMERATE))
+            gameUI.displayText(screen, timemsg,397,143,140,20, BLUE)
 
-            numGoalsMsg = "Levels Cleared: " + str(game.player.numGoals)
-            gameUI.displayText(screen, numGoalsMsg, 10, 80, 120, 20, BLUE)
+            #numGoalsMsg = "Levels Cleared: " + str(game.player.numGoals)
+            #gameUI.displayText(screen, numGoalsMsg, 10, 80, 120, 20, BLUE)
 
-            numGoalsMsg = "Levels Cleared: " + str(game.enemy.numGoals)
-            gameUI.displayText(screen, numGoalsMsg, SCREEN_WIDTH - 125, 80, 120, 20, BLUE)
+            numGoalsMsg = str(game.player.numGoals - game.enemy.numGoals)
+            gameUI.displayText(screen, numGoalsMsg, 403, 207, 120, 20, False)
 
 
             if gameUI.gameScreen == -1:
@@ -199,8 +201,8 @@ class Interface():
         screen.blit(text, pos)
 
     def displayText(self, screen, msg,x,y,w,h,color):
-        pygame.draw.rect(screen, color,(x,y,w,h))
-        font = pygame.font.SysFont('tahoma', 15, False, False)
+        #pygame.draw.rect(screen, color,(x,y,w,h))
+        font = pygame.font.SysFont('Noteworthy', 24, True, False)
         text = font.render(msg, True, WHITE)
         pos = [x,y]
         screen.blit(text, pos)

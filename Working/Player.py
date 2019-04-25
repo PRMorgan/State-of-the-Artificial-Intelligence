@@ -116,7 +116,8 @@ class Player(pygame.sprite.Sprite):
         #     self.level.enemy_list.remove(self.enemy)
     
         # """ Pass environment data to think """
-        self.think(self.enemyPos, mouse_pos, True, self.freeze)
+        #self.think(self.enemyPos, mouse_pos, True, self.freeze)
+        self.think([800], mouse_pos, True, self.freeze)
 
         # """ Move the player. """
         # Gravity
@@ -339,9 +340,9 @@ class Player(pygame.sprite.Sprite):
     
     def updateHealth(self):
         for hearts in range(self.numHearts):
-            self.screen.blit(heart,((self.startx + (hearts * 40)), 35))
+            self.screen.blit(heart,((self.startx + (hearts * 40)), 90))
         for deaths in range(self.numDeaths):
-            self.screen.blit(death,((self.startx + ((deaths % 6) * 40)), (110 + (int(deaths/6)*40))))
+            self.screen.blit(death,((self.startx + ((deaths % 6) * 40)), (130 + (int(deaths/6)*40))))
         if self.numHearts <= 0:
             self.respawn()
             self.numDeaths += 1

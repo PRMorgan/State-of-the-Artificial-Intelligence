@@ -85,7 +85,7 @@ class NeuralNet:
         if len(self.genes) == 0:
             self.addConnection(innovationHistory)
             return
-        randomConnection = math.floor(random.randint(1, len(self.genes)))
+        randomConnection = math.floor(random.randint(0, len(self.genes) - 1))
         
         while self.genes[randomConnection].fromNode == self.nodes[self.biasNode] and len(self.genes) !=1 : #dont disconnect bias
             randomConnection = math.floor(random.randint(1, len(self.genes)))
@@ -104,7 +104,7 @@ class NeuralNet:
         self.genes.append(Gene(self.getNode(newNodeNo), self.genes[randomConnection].toNode, self.genes[randomConnection].weight, connectionInnovationNumber))
         self.getNode(newNodeNo).layer = self.genes[randomConnection].fromNode.layer + 1
         
-        connectionInnovationNumber = self.getInnovationNumber(innovationHistory, self.biasNode, self.getNode(newNodeNo))
+        connectionInnovationNumber = self.getInnovationNumber(innovationHistory, self.nodes[self.biasNode], self.getNode(newNodeNo))
         #connect the bias to the new node with a weight of 0 
         self.genes.append(Gene(self.nodes[self.biasNode], self.getNode(newNodeNo), 0, connectionInnovationNumber))
         
@@ -149,9 +149,9 @@ class NeuralNet:
         self.connectNodes()
 
     def randomConnectionNodesAreBad(self, r1, r2):
-        print("r1: " + str(r1))
-        print("r2: " + str(r2))
-        print("numNodes: " + str(len(self.nodes)))
+        #print("r1: " + str(r1))
+        #print("r2: " + str(r2))
+        #print("numNodes: " + str(len(self.nodes)))
         if self.nodes[r1].layer == self.nodes[r2].layer:
             return True #if the nodes are in the same layer 
         if self.nodes[r1].isConnectedTo(self.nodes[r2]): 
@@ -168,13 +168,14 @@ class NeuralNet:
             if i.matches(self, fromNode, toNode): #if match found
                 isNew = False #its not a new mutation
                 #set the innovation number as the innovation number of the match
-                connectionInnovationNumber = innovationHistory[i].innovationNumber 
+                connectionInnovationNumber = i.innovationNumber 
                 break
+        innoNumbers = []
         if isNew: #if the mutation is new then create an arrayList of integers representing the current state of the genome
-            innoNumbers = []
             for i in self.genes: #set the innovation numbers
                 innoNumbers.append(i.innovationNo)
         #then add this mutation to the innovationHistory 
+        #print("fromnode: " + str(fromNode) + " tonode: " + str(toNode))
         innovationHistory.append(connectionHistory(fromNode.number, toNode.number, connectionInnovationNumber, innoNumbers))
         self.nextConnectionNo += 1
         return connectionInnovationNumber

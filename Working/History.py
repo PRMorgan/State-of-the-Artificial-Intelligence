@@ -16,8 +16,8 @@ class connectionHistory():
         if len(genome.genes) == len(self.innovationNumbers): #if the number of connections are different then the genoemes aren't the same
             if fromNode.number == self.fromNode and toNode.number == self.toNode:
                 #next check if all the innovation numbers match from the genome
-                for i in range(len(genome.genes)):
-                    if not self.innovationNumbers.contains(genome.genes[i].innovationNo):
+                for gene in genome.genes:
+                    if gene.innovationNumber not in self.innovationNumbers:
                         return False
                 #if reached this far then the innovationNumbers match the genes innovation numbers 
                 # and the connection is between the same nodes so it does match

@@ -188,9 +188,9 @@ class Enemy(pygame.sprite.Sprite):
 
     def updateHealth(self):
         for hearts in range(self.numHearts):
-                self.screen.blit(heart, ((self.startx - 160 + (hearts * 40)), 35))
+                self.screen.blit(heart, ((self.startx - 160 + (hearts * 40)), 90))
         for deaths in range(self.enemy.numKills):
-            self.screen.blit(death,((self.startx - 40 + ((deaths % 6) * -40)), (110 + (int(deaths/6)*40))))
+            self.screen.blit(death,((self.startx - 40 + ((deaths % 6) * -40)), (130 + (int(deaths/6)*40))))
         if self.numHearts <= 0:
             self.respawn()
             self.enemy.numKills += 1
