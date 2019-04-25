@@ -1,4 +1,5 @@
 import pygame
+import random
 
 # Colors
 BLACK = (0, 0, 0)
@@ -8,12 +9,43 @@ RED = (255, 0, 0)
 BLUE = (0, 0, 255)
  
 # Screen dimensions
-global SCREEN_WIDTH
-global SCREEN_HEIGHT
 SCREEN_WIDTH = 800
-SCREEN_HEIGHT = 600
+SCREEN_HEIGHT = 600 #This is strictly for the game partition
+SCREEN_WIDTH_EXT = 1300 #Extension side for data display
 
-bg = pygame.image.load('Images/arena86.jpg')
+# Background image filenames
+MapForeground = "MapForeground.png"
+Airport = "Airport.gif"
+Beach = "Beach.gif"
+Bridge = "Bridge.gif"
+Carnival = "Carnival.gif"
+CityApocalypse = "CityApocalypse.gif"
+DesertRuins = "DesertRuins.gif"
+Docks = "Docks.gif"
+DojoRuins = "DojoRuins.gif"
+CityApocalypse = "CityApocalypse.gif"
+FinalJudgement = "FinalJudgement.gif"
+FinalRuins = "FinalRuins.gif"
+Forest = "Forest.gif"
+Hanger = "Hanger.gif"
+HouseFire = "HouseFire.gif"
+Jungle = "Jungle.gif"
+Naboo = "Naboo.gif"
+OriginalDojo = "OriginalDojo.png"
+Prairie = "Prairie.gif"
+Rural = "Rural.gif"
+Temple = "Temple.gif"
+TownOnFire = "TownOnFire.gif"
+Waterfall = "Waterfall.gif"
+
+maps = [FinalRuins,DesertRuins,DojoRuins,CityApocalypse,TownOnFire,
+        HouseFire,Rural,Docks,Forest,OriginalDojo,Jungle,Waterfall,
+        Prairie,Beach,Carnival,Hanger,Airport,Naboo,Temple,FinalJudgement]
+randomBackground = maps[random.randint(0,len(maps))]
+                  
+bg = pygame.image.load('Images/Backgrounds/' + randomBackground)
+overlay = pygame.image.load('Images/Backgrounds/' + MapForeground)
+#bg = pygame.image.load('Images/Backgrounds/arena86.jpg')
 
 class Level(object):
     """ This is a generic super-class used to define a level.
@@ -63,6 +95,7 @@ class Level(object):
 
     def drawBG(self, screen):
         screen.blit(bg, (0,0))
+        screen.blit(overlay, (0,0))
  
 # Create platforms for the level
 class Level_01(Level):
