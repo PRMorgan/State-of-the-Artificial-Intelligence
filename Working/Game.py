@@ -46,17 +46,21 @@ class Game():
 
         self.createPopulation()
     
-    def isOver(self):
-        if self.player.deadFlag == True:
-            return True
-        else:
-            return False
+    def updateAllHealth(self):
+        self.player.updateHealth
+        self.enemy.updateHealth
+        
+    # def isOver(self):
+    #     if self.player.deadFlag == True:
+    #         return True
+    #     else:
+    #         return False
     
-    def enemyKilled(self):
-        if self.enemy.deadFlag == True:
-            return True
-        else:
-            return False
+    # def enemyKilled(self):
+    #     if self.enemy.deadFlag == True:
+    #         return True
+    #     else:
+    #         return False
 
     def createPopulation(self):
         """ Generate any number of players and add them to an environment"""

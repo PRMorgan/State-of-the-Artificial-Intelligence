@@ -17,25 +17,18 @@ import time
 os.environ['SDL_VIDEO_CENTERED'] = '1'
  
 # Global constants
- 
-# Colors
-# BLACK = (0, 0, 0)
-WHITE = (255, 255, 255)
-GREEN = (0, 255, 0)
+
 RED = (255, 0, 0)
 BLUE = (0, 0, 255)
-DarkSlateBlue = (72,61,139)
-DeepSkyBlue = (0,191,255)
-PaleGreen = (152,251,152)
-RosyBrown = (188,143,143)
-PaleViolet = (219,112,147)
+WHITE = (255, 255, 255)
 
+FRAMERATE = 60
+TOTALTIME = 30
 
-colors = [WHITE, GREEN, RED, BLUE, DarkSlateBlue, RosyBrown, PaleGreen, DeepSkyBlue, PaleViolet]
-
-# Screen dimensions
 SCREEN_WIDTH = 800
 SCREEN_HEIGHT = 600
+
+colors = [RED,BLUE,WHITE]
 
 def main():
 
@@ -74,13 +67,16 @@ def main():
     #pygame.mixer.music.play(-1)
 
     # -------- Main Program Loop -----------
+    timeremaining = FRAMERATE * TOTALTIME
+
     while not done:
-        for game in games:
-            if game.isOver():
-                finishedGames.append(game)
-                print("Removing game: ", game.gameNum)
-                games.remove(game)
-                gameUI.updateGameNums(len(games))
+        timeremaining -= 1
+        # for game in games:
+        #     if game.isOver():
+        #         finishedGames.append(game)
+        #         print("Removing game: ", game.gameNum)
+        #         games.remove(game)
+        #         gameUI.updateGameNums(len(games))
 
         # update players --> in update() tell players to think()
         #in the think(), they should run the neural net once
@@ -88,61 +84,18 @@ def main():
             if event.type == pygame.QUIT:
                 done = True
             
-            """
-            if event.type == pygame.KEYDOWN:
-                if event.key == pygame.K_LEFT:
-                    user_player.direction = "left"
-                    user_player.executeAction(0) 
-                if event.key == pygame.K_RIGHT:
-                    user_player.direction = "right"
-                    user_player.executeAction(1)
-                if event.key == pygame.K_UP:
-                    user_player.executeAction(2)
-                if event.key == pygame.K_SPACE:
-                    user_player.executeAction(4)
- 
-            if event.type == pygame.KEYUP:
-                if event.key == pygame.K_LEFT:
-                    user_player.executeAction(3)
-                if event.key == pygame.K_RIGHT:
-                    user_player.executeAction(3)
-            """
-                        
-            # if event.type == pygame.USEREVENT:
-            #     for game in games:
-            #         for player in game.entities:
-            #             if player.playerID == event.id:
-            #                 eventPlayer = player
-            #     if event.action == "attack":
-            #         eventPlayer.executeAction(4)
-            #     elif event.action == "moveLeft":
-            #         eventPlayer.executeAction(0)
-            #         eventPlayer.direction = "left"
-            #     elif event.action == "moveRight":
-            #         eventPlayer.executeAction(1)
-            #         eventPlayer.direction = "right"
-            #     elif event.action == "jump":
-            #         eventPlayer.executeAction(2)
-            #     elif event.action == "stop":
-            #         eventPlayer.executeAction(3)
-            #         eventPlayer.direction = "none"
-            #     elif event.action == "damage":
-            #         eventPlayer.health -= 2
-            #     else:
-            #         print("unkown event: ", event)
-        
         # Update items in the level
         
         for game in games:
             game.level.update()
+        games[0].level.drawBG(screen)
 
-
-        if len(games) == 0:
-            finishedGames[0].level.draw(screen)
-            finishedGames[0].level.drawBG(screen)
-        else:
-            games[0].level.draw(screen)
-            games[0].level.drawBG(screen)
+        # if len(games) == 0:
+        #     finishedGames[0].level.draw(screen)
+        #     finishedGames[0].level.drawBG(screen)
+        # else:
+        #     games[0].level.draw(screen)
+        #     games[0].level.drawBG(screen)
 
         #screen, text, x, y, width, height, color1, color, function
         gameUI.button(screen, "Show All",240,10,70,20,RED,BLUE,gameUI.showAll)
@@ -154,23 +107,31 @@ def main():
         msg = "Game: " + str(gameUI.gameScreen + 1) + "/" + str(len(games))
         gameUI.displayText(screen, msg,353,35,90,20, BLUE)
 
+        timemsg = "Time Remaining: " + str(int(timeremaining/FRAMERATE))
+        gameUI.displayText(screen, timemsg,323,120,140,20, BLUE)
+
+        numGoalsMsg = "Levels Cleared: " + str(game.player.numGoals)
+        gameUI.displayText(screen, numGoalsMsg, 10, 80, 120, 20, BLUE)
+
+        numGoalsMsg = "Levels Cleared: " + str(game.enemy.numGoals)
+        gameUI.displayText(screen, numGoalsMsg, SCREEN_WIDTH - 125, 80, 120, 20, BLUE)
+
 
         if gameUI.gameScreen == -1:
             # if 
             for game in games:
                 game.level.draw(screen)
-                if game.player.deadFlag != True:
-                    game.player.updateHealth()
-                if game.enemy.deadFlag != True:
-                    game.enemy.updateHealth()
+                game.player.updateHealth()
+                game.enemy.updateHealth()
+                game.updateAllHealth()
+                # if game.player.deadFlag != True:
+                #     game.player.updateHealth()
+                # if game.enemy.deadFlag != True:
+                #     game.enemy.updateHealth()
         elif len(games) != 0:
             games[gameUI.gameScreen].level.draw(screen)
-            games[gameUI.gameScreen].player.updateHealth()
-            games[gameUI.gameScreen].enemy.updateHealth()
+            games[gameUI.gameScreen].updateAllHealth()
 
-
-            
-        
 
         #time.sleep(.05)
 
@@ -187,7 +148,20 @@ def main():
         # ALL CODE TO DRAW SHOULD GO ABOVE THIS COMMENT
  
         # Limit to 60 frames per second
-        clock.tick(60)
+        clock.tick(FRAMERATE)
+
+        if timeremaining <= 0:
+            for game in games:
+                game.player.respawn()
+                game.player.updateFitness()
+                print("K: " + str(game.player.numKills) + "\n")
+                print("D: " + str(game.player.numDeaths) + "\n")
+                print("G: " + str(game.player.numGoals) + "\n")
+                print("EG: " + str(game.enemy.numGoals) + "\n")
+                print("MD: " + str(game.player.maxDistance) + "\n")
+                print("RD: " + str(game.player.runningDistance) + "\n")
+                print("Fitness: " + str(game.player.fitness))
+            done = True
  
         # Go ahead and update the screen with what we've drawn.
         pygame.display.flip()

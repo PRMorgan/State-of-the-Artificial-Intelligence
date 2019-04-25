@@ -1,7 +1,9 @@
 import pygame
 from Level import *
+from Sword import *
 import time
 import math
+import random
 
 # Screen dimensions
 SCREEN_WIDTH = 800
@@ -16,13 +18,18 @@ PALEGREEN = (152,251,152)
 ROSYBROWN = (188,143,143)
 PALEVIOLET = (219,112,147)
 YELLOW = (255,255,0)
+heart = pygame.image.load('heart.png')
+
+
+# *BUG* player doesn't move down when colliding with other players. 
+# This results in top player getting the kill 9 times out of 10.
 
 class Player(pygame.sprite.Sprite):
     """ This class represents the bar at the bottom that the player
         controls. """
  
     # -- Methods
-    def __init__(self, playerID, color, screen, AI = True):
+    def __init__(self, playerID, color, screen, startPos, freeze = False):
         """ Constructor function """
  
         # Call the parent's constructor
@@ -33,39 +40,33 @@ class Player(pygame.sprite.Sprite):
         self.width = 40
         self.height = 60
 
-        # genomeInputs = 3;
-        # genomeOutputs = 3;
-        # self.brain = genome(genomeInputs, genomeOutputs)
+        self.freeze = freeze
 
-        # # float[] vision = new float[genomeInputs];//the input array fed into the neuralNet 
-        # # float[] decision = new float[genomeOutputs]; //the out put of the NN 
-        # vision = []
-        # decision = []
+        self.enemy = None
+        self.enemyPos = None
 
-        # self.framesAlive = 0
+        self.maxHearts = 4
+        self.numHearts = 4
+        # self.deadFlag = False
+        # self.numLives = 3
 
-        # self.runningFitness
-        # self.totalFitnessCalculations
-        # self.avgFitness
+        self.numDeaths = 0
+        self.numKills = 0
+        self.numGoals = 0
+        self.runningDistance = 0
+        self.maxDistance = 0
+        self.fitness = 0.0
 
-        self.maxHealth = 40
-        self.health = 40
         self.color = color 
         self.playerID = playerID
 
         self.sword = None
-        self.isAI = AI
         self.isAttacking = False
+        self.attackDelay = 30 #30 frames between each attack
 
-        self.direction = "none"
-        self.moveLeftEvent = pygame.event.Event(pygame.USEREVENT, action = "moveLeft", id = playerID)
-        self.moveRightEvent = pygame.event.Event(pygame.USEREVENT, action = "moveRight", id = playerID)
-        self.jumpEvent = pygame.event.Event(pygame.USEREVENT, action = "jump", id = playerID)
-        self.stopEvent = pygame.event.Event(pygame.USEREVENT, action = "stop", id = playerID)
-        self.killEvent = pygame.event.Event(pygame.USEREVENT, action = "kill", id = playerID)
-        self.attackEvent = pygame.event.Event(pygame.USEREVENT, action = "attack", id = playerID)
+        self.direction = "right"
 
-        self.damage = pygame.event.Event(pygame.USEREVENT, action = "damage", id= playerID)
+        # self.damage = pygame.event.Event(pygame.USEREVENT, action = "damage", id= playerID)
         self.sideJumpCount = 0
         self.image = pygame.Surface([self.width, self.height])
         self.image.fill(color)
@@ -78,6 +79,9 @@ class Player(pygame.sprite.Sprite):
 
         #coordinate point
         self.player_coord = (self.rect.x, self.rect.y)
+        self.startPos = startPos
+        self.startx = self.startPos[0]
+        self.starty = self.startPos[1]
 
         # Set speed vector of player
         self.change_x = 0
@@ -85,49 +89,74 @@ class Player(pygame.sprite.Sprite):
  
         # List of sprites we can bump against
         self.level = None
-
+    
     def update(self):
-        #update neural network
+        # """ Update our position knowledge """
+        if self.attackDelay != 0:
+            self.attackDelay -= 1
+            
         mouse_pos = pygame.mouse.get_pos()
-        
-        #helps determine fitness
-        # self.framesAlive += 1
+        self.enemyPos = (self.enemy.rect.x, self.enemy.rect.y)
+     
+        # """ Who is alive """
+        # if self.enemy.numLives == 0:
+        #     self.level.enemy_list.remove(self.enemy)
+    
+        # """ Pass environment data to think """
+        self.think(self.enemyPos, mouse_pos, True, self.freeze)
 
-
-        #pass outputs to think
-        if self.isAI:
-          self.think(mouse_pos)
-
-        """ Move the player. """
+        # """ Move the player. """
         # Gravity
         self.calc_grav()
-
+        self.calc_friction()
         # Move left/right
         self.rect.x += self.change_x
 
-
+        # """ Update sword status"""
+        #this is true once we generate swords
         if self.isAttacking == True:
-          print("Player: ", self.playerID, " is looking ", self.direction)
-          if self.direction == "left":
-            self.sword.rect.x = self.rect.x - 50
-            self.sword.rect.y = self.rect.y + 30
-          elif self.direction == "right":
-            self.sword.rect.x = self.rect.x + self.width + 50
-            self.sword.rect.y = self.rect.y + 30
-          else:
-            self.sword.rect.x = self.rect.x + self.width/2
-            self.sword.rect.y = self.rect.y -30
-          self.level.attack_list.remove(self.sword)
-        self.isAttacking = False
-      
+            #if it doesn't need to be true anymore
+            if len(self.level.player_attack_list) == 0:
+                self.isAttacking = False
+                self.sword = None
 
-        # hit_box_list = pygame.sprite.spritecollide(self, self.level.danger_list, False)
-        # See if we hit anything
-        attack_hit_list = pygame.sprite.spritecollide(self, self.level.attack_list, False)
-        if len(attack_hit_list) > 0:
-          pygame.event.post(self.damage)
-          
-        
+        # """ Did we just get stabbed? """
+        if pygame.sprite.spritecollide(self, self.level.enemy_attack_list, True):
+            # 4 hits to kill
+            self.change_x -= 10
+            self.change_y -= 4
+            self.numHearts -= 1
+            
+    
+        "---------------------- LOOKING AT PLAYER'S COLLISIONS WITH OTHER OBJECTS --------------------------"
+        self.entityCollision()
+
+                
+        # ---------------------- INTERACTION WITH PLATFORMS AND SIDE --------------------------
+
+        self.rect.y += self.change_y
+        "BOUNDS CHECKING"
+        # If the player gets near the right side, shift the world left (-x)
+        if self.rect.right > SCREEN_WIDTH:
+            self.rect.right = SCREEN_WIDTH
+ 
+        # If the player gets near the left side, shift the world right (+x)
+        if self.rect.left < 0:
+            self.rect.left = 0
+
+        "PLATFORM COLLISION - Y"
+        # Check and see if we hit anything
+        block_hit_list = pygame.sprite.spritecollide(self, self.level.platform_list, False)
+        for block in block_hit_list:
+            # Reset our position based on the top/bottom of the object.
+            if self.change_y > 0:
+                self.rect.bottom = block.rect.top
+            elif self.change_y < 0:
+                self.rect.top = block.rect.bottom
+            # Stop our vertical movement
+            self.change_y = 0
+
+        "BLOCK COLLISION - X"
         block_hit_list = pygame.sprite.spritecollide(self, self.level.platform_list, False)
         for block in block_hit_list:
             # If we are moving right,
@@ -137,86 +166,159 @@ class Player(pygame.sprite.Sprite):
             elif self.change_x < 0:
                 # Otherwise if we are moving left, do the opposite.
                 self.rect.left = block.rect.right
- 
-        # Move up/down
-        self.rect.y += self.change_y
-        # If the player gets near the right side, shift the world left (-x)
-        if self.rect.right > SCREEN_WIDTH:
-            self.rect.right = SCREEN_WIDTH
- 
-        # If the player gets near the left side, shift the world right (+x)
-        if self.rect.left < 0:
-            self.rect.left = 0
- 
-        # Check and see if we hit anything
-        block_hit_list = pygame.sprite.spritecollide(self, self.level.platform_list, False)
-        
-        if len(block_hit_list) > 0 or self.rect.bottom >= SCREEN_HEIGHT:
-            self.sideJumpCount = 0
-        
-        for block in block_hit_list:
- 
-            # Reset our position based on the top/bottom of the object.
-            if self.change_y > 0:
-                self.rect.bottom = block.rect.top
-            elif self.change_y < 0:
-                self.rect.top = block.rect.bottom
-            # Stop our vertical movement
-            self.change_y = 0
- 
 
-    #once neural net is established, send in the output nodes
-    #as parameters
-    def think(self, point):
+                # Move up/down
+                
+        "To implement side jumping"
+        # if len(block_hit_list) > 0 or self.rect.bottom >= SCREEN_HEIGHT:
+        #     self.sideJumpCount = 0
+
+    def entityCollision(self):
+        if pygame.sprite.collide_rect(self, self.enemy):
+            y_momentum_diff = abs(self.change_y) - abs(self.enemy.change_y)
+            x_momentum_diff = abs(self.change_x) - abs(self.enemy.change_x)
+            # print ("Collision! Player", self.rect.right, self.rect.left, self.rect.top, self.rect.bottom)
+            # print ("           Enemy", self.enemy.rect.right, self.enemy.rect.left, self.enemy.rect.top, self.enemy.rect.bottom)
+
+
+            #our right side is inside their left side and our bottom lower than their top
+            if (self.rect.right > self.enemy.rect.left) and self.rect.bottom > self.enemy.rect.top + 4:
+                #set our right to their left
+                # self.rect.right = self.enemy.rect.left
+                #if we have more momentum, push them back with the force of our velocity
+                if x_momentum_diff >= 0:
+                    self.enemy.change_x = self.change_x - 15
+                    self.change_x = 0
+                    # self.enemy.change_y += self.change_y/2
+                else:
+                    self.change_x = self.enemy.change_x
+                    self.enemy.change_x = 0
+            #our left side is inside their right side and our bottom lower than their top
+            if (self.rect.left < self.enemy.rect.right) and self.rect.bottom > self.enemy.rect.top + 10:
+                #set our left to their right
+                # self.rect.left = self.enemy.rect.right
+                #if we have more momentum, push them back with the force of our velocity
+                if x_momentum_diff >= 0:
+                    self.enemy.change_x = self.change_x + 15
+                    self.change_x = 0
+                    # self.enemy.change_y += self.change_y/2
+                else:
+                    self.change_x = self.enemy.change_x
+                    self.enemy.change_x = 0
+            
+            #our right side is inside their left side and our bottom is higher than their top
+            if (self.rect.right > self.enemy.rect.left) and self.rect.bottom < self.enemy.rect.top + 10:
+                #set our right to their left
+                self.rect.bottom = self.enemy.rect.top
+                #bounce a lil
+                self.change_y -= 1
+            
+            if (self.rect.right > self.enemy.rect.left) and self.rect.top > self.enemy.rect.bottom - 10:
+                self.enemy.rect.bottom = self.rect.top
+                self.enemy.change_y -= 1
+
+            
+            #our left side is inside their right side and our bottom is higher than their top
+            if (self.rect.left < self.enemy.rect.right) and self.rect.bottom < self.enemy.rect.top + 10:
+                #set our bottom to their top
+                self.rect.bottom = self.enemy.rect.top
+                #bounce a lil
+                self.change_y -= 1
+
+            if (self.rect.left < self.enemy.rect.right) and self.rect.top > self.enemy.rect.bottom - 10:
+                self.enemy.rect.bottom = self.rect.top
+                self.enemy.change_y -= 1
+
+            if self.rect.left == self.enemy.rect.left and self.rect.top > self.enemy.rect.bottom - 10:
+                self.enemy.rect.bottom = self.rect.top
+                self.enemy.change_y -= 1
+            
+            if self.rect.left == self.enemy.rect.left and self.rect.bottom < self.enemy.rect.top + 10:
+                self.rect.bottom = self.enemy.rect.top
+                self.change_y -= 4
+
+
+    def think(self, point, mousePoint = None, mouseFlag = False,  freeze = False,):
         """
         Converts output of neural net into events
         that generate actions for the specific player
         in the main driver class
         """
-
-        if (self.rect.x < point[0] and self.rect.x + self.width > point[0]) and (self.rect.y < point[1] and self.rect.y + self.height > point[1]):
-            # print("Player ", self.playerID, " has ", self.health)
+        if freeze:
+            return
+        else:
+            action = random.randint(0,10)
+            self.executeAction(action)
+        if mouseFlag == True:
+          if (self.rect.x < mousePoint[0] and self.rect.x + self.width > mousePoint[0]) and (self.rect.y < mousePoint[1] and self.rect.y + self.height > mousePoint[1]):
+            self.numHearts -= 1
             # pygame.event.post(self.damage)
-            pygame.event.post(self.attackEvent)
 
-        if self.rect.x > point[0]:
-            pygame.event.post(self.moveRightEvent)
-        elif self.rect.x < point[0]:
-            pygame.event.post(self.moveLeftEvent)
+        # if self.distanceToPoint(point, True, RED, "X") < 50:
+        #     self.attack()
+        
+        # if self.enemy.deadFlag:
+        #     self.go_right()
+        if self.rect.x < point[0]:
+            self.go_right()
+            # pygame.event.post(self.moveRightEvent)
+        elif self.rect.x > point[0]:
+            self.go_left()
+            # pygame.event.post(self.moveLeftEvent)
         elif self.distanceToPoint(point) < 100:
-            pygame.event.post(self.jumpEvent)
+            self.jump()
+            # pygame.event.post(self.jumpEvent)
         #add to next statement when debugged:
         else:
-            pygame.event.post(self.stopEvent)
+            self.stop()
+            # pygame.event.post(self.stopEvent)
     
-    def calculateFitness(self):
-      progressToGoal = self.distanceToPoint((800,500), False, RED, "X") / 500
-      timeAlive = self.framesAlive / 60
-      health = self.health / self.maxHealth
-      fitness = timeAlive - progressToGoal + health
-      self.runningFitness += fitness
-      self.totalFitnessCalculations += 1
-      return fitness
-    def determineAvgFitness(self):
-      return self.runningFitness / self.totalFtinessCalculations
+    def setEnemy(self, enemy):
+        if enemy == None:
+            self.enemy = None
+        self.enemy = enemy
 
-    # def look(self)
+    def updateFitness(self):
+      self.fitness = 0
+        # progressToGoal = self.distanceToPoint((800,500), False, RED, "X") / 500
+        # timeAlive = self.framesAlive / 60
+        # numHearts = self.health / self.maxHealth
+        # fitness = timeAlive - progressToGoal + health
+        # self.runningFitness += fitness
+        # self.totalFitnessCalculations += 1
+        # return fitness
+    
     def updateHealth(self):
-        healthBarLength = (self.health/self.maxHealth) * self.width
-        if self.health <= 0:
-            # pygame.draw.line(self.screen, RED, (self.rect.x, self.rect.y - 10), (self.rect.x + self.width, self.rect.y - 10), 4)
-            # self.displayDeath()
-            pygame.event.post(self.killEvent)
-        else:
-            if self.health/self.maxHealth > .8:
-                pygame.draw.line(self.screen, GREEN, (self.rect.x, self.rect.y - 10), (self.rect.x + healthBarLength, self.rect.y - 10), 4)
-            elif self.health/self.maxHealth > .5:
-                pygame.draw.line(self.screen, PALEGREEN, (self.rect.x, self.rect.y - 10), (self.rect.x + healthBarLength, self.rect.y - 10), 4)
-            elif self.health/self.maxHealth > .2:
-                healthBarLength = (self.health/self.maxHealth) * self.width
-                pygame.draw.line(self.screen, YELLOW, (self.rect.x, self.rect.y - 10), (self.rect.x + healthBarLength, self.rect.y - 10), 4)
-            else: 
-                pygame.draw.line(self.screen, RED, (self.rect.x, self.rect.y - 10), (self.rect.x + healthBarLength, self.rect.y - 10), 4)  
+        for heart in range(self.numHearts):
+                self.screen.blit(heart, self.startx + (heart*40), 35)
+        if self.numHearts <= 0:
+            self.respawn()
+            self.numDeaths += 1
+
+        # print(self.playerID, " is updating health: ", self.health)
+        """Heart Code"""
+        # for heartCount in range(self.numLives):
+        #     self.screen.blit(heart, (self.startx + (heartCount*40),35))
+
+        """Health Bar Code -- placed at top"""
+        # healthBarLength = (self.health/self.maxHealth) * self.width
+
+        # if (self.health <= 0) and (self.numLives == 0):
+        #     print("Killing player: ", self.playerID)
+        #     self.deadFlag = True
+        #     self.level.player_list.remove(self)
+            # Display a health bar with colors corresponding to the player's remaining health
+            # if self.health/self.maxHealth > .8:
+            #     #
+            #     pygame.draw.line(self.screen, GREEN, (self.rect.x, self.rect.y - 10), (self.rect.x + healthBarLength, self.rect.y - 10), 4)
+            # elif self.health/self.maxHealth > .5:
+            #     pygame.draw.line(self.screen, PALEGREEN, (self.rect.x, self.rect.y - 10), (self.rect.x + healthBarLength, self.rect.y - 10), 4)
+            # elif self.health/self.maxHealth > .2:
+            #     healthBarLength = (self.health/self.maxHealth) * self.width
+            #     pygame.draw.line(self.screen, YELLOW, (self.rect.x, self.rect.y - 10), (self.rect.x + healthBarLength, self.rect.y - 10), 4)
+            # else: 
+            #     pygame.draw.line(self.screen, RED, (self.rect.x, self.rect.y - 10), (self.rect.x + healthBarLength, self.rect.y - 10), 4)  
+    
     def distanceToPoint(self, point, drawFlag = False, color = WHITE, axis = "BOTH"):
         x_goal = point[0]
         y_goal = point[1]
@@ -261,6 +363,13 @@ class Player(pygame.sprite.Sprite):
             self.screen.blit(distanceText, midPoint)
 
         return total_distance
+
+    def calc_friction(self):
+        if self.change_x > 0:
+            self.change_x -= .2
+        if self.change_x < 0:
+            self.change_x += .2
+
     def calc_grav(self):
         """ Calculate effect of gravity. """
         if self.change_y == 0:
@@ -272,6 +381,7 @@ class Player(pygame.sprite.Sprite):
         if self.rect.y >= SCREEN_HEIGHT - self.rect.height and self.change_y >= 0:
             self.change_y = 0
             self.rect.y = SCREEN_HEIGHT - self.rect.height
+    
     def jump(self):
         """ Called when user hits 'jump' button. """
  
@@ -289,39 +399,40 @@ class Player(pygame.sprite.Sprite):
         # If it is ok to jump, set our speed upwards
         if len(platform_hit_list) > 0 or self.rect.bottom >= SCREEN_HEIGHT:
                 self.change_y = -10
-    def boost(self):
-        """Moves faster!"""
-        if self.direction == "left":
-            self.change_x -= 10
-        elif self.direction == "right":
-            self.change_x += 10        
+    
     def go_left(self):
         """ Called when the user hits the left arrow. """
-        self.change_x = -4
+        self.direction = "left"
+        if self.change_x < -8:
+            self.change_x = -8
+        else:
+            self.change_x -= .5
+
     def go_right(self):
         """ Called when the user hits the right arrow. """
-        self.change_x = 4
-    def stop(self):
-        """ Called when the user lets off the keyboard. """
-        self.direction = "none"
-        self.change_x = 0
+        self.direction = "right"
+        if self.change_x > 4:
+            self.change_x = 4
+        else:
+            self.change_x += .5
+
     def attack(self):
-      if self.isAttacking == True:
-        pass
-      else:
-        print(self.playerID, " is attacking!")
-        if self.direction == "left":
-          facing = -1
-        if self.direction == "right":
-          facing = 1
-        if self.direction == "none":
-          facing = 0
-        
-        self.sword = Sword(self.rect.x, self.rect.y, 50, 50, self.color, facing, time)
-      
-        self.level.attack_list.add(self.sword)
-        print(self.level.attack_list)
-        self.isAttacking = True
+        if self.isAttacking == True:
+            pass
+        elif self.attackDelay == 0:
+            # print(self.playerID, " is attacking!")
+            if self.direction == "left":
+                facing = -1
+            if self.direction == "right":
+                facing = 1
+            if self.direction == "none":
+                facing = 0
+
+            self.sword = Sword(self.rect.x, self.rect.y, 25, 10, self.color, facing)
+            
+            self.level.player_attack_list.add(self.sword)
+            self.isAttacking = True
+            self.attackDelay = 30
 
     def executeAction(self, action):
         if action == 0:
@@ -330,224 +441,11 @@ class Player(pygame.sprite.Sprite):
             self.go_right()
         elif action == 2:
             self.jump()
-        elif action == 3:
-            self.stop()
-        elif action == 4:
+        elif (action == 4):
             self.attack()
 
-
-"""
-    def attack(self):
-        print("HYAHHH!")
-        self.attacking = True
-        if self.left:
-            facing = -1
-        else:
-            facing = 1
-        if len(self.swipes) < 2:
-            self.swipes.append(projectile(round(self.rect.x + self.width // 2), round(self.rect.y + self.height // 2), 6, (0,0,0), facing))
-"""
-
-""" ADD TO PLAYER CLASS
-
-  float fitness;
-  Genome brain;
-  boolean replay = false;
-
-  float unadjustedFitness;
-  int lifespan = 0;//how long the player lived for fitness
-  int bestScore =0;//stores the score achieved used for replay
-  boolean dead;
-  int score;
-  int gen = 0;
-
-  int genomeInputs = 7;
-  int genomeOutputs = 3;
-
-  float[] vision = new float[genomeInputs];//t he input array fed into the neuralNet 
-  float[] decision = new float[genomeOutputs]; //the out put of the NN 
-  //-------------------------------------
-  float posY = 0;
-  float velY = 0;
-  float gravity =1.2;
-  int runCount = -5;
-  int size = 20;
-
-  ArrayList<Obstacle> replayObstacles = new ArrayList<Obstacle>();
-  ArrayList<Bird> replayBirds = new ArrayList<Bird>();
-  ArrayList<Integer> localObstacleHistory = new ArrayList<Integer>();
-  ArrayList<Integer> localRandomAdditionHistory = new ArrayList<Integer>();
-  int historyCounter = 0;
-  int localObstacleTimer = 0;
-  float localSpeed = 10;
-  int localRandomAddition = 0;
-
-  boolean duck= false;
-  //---------------------------------------------------------------------------------------------------------------------------------------------------------
-  //constructor
-
-  Player() {
-    brain = new Genome(genomeInputs, genomeOutputs);
-  }
-----------------------------------------------------------------------------------------------------------------------------------------------------------
-  
-
-
-
-
-  //---------------------------------------------------------------------------------------------------------------------------------------------------------
-  //gets the output of the brain then converts them to actions
-  void think() {
-
-    float max = 0;
-    int maxIndex = 0;
-    //get the output of the neural network
-    decision = brain.feedForward(vision);
-
-    for (int i = 0; i < decision.length; i++) {
-      if (decision[i] > max) {
-        max = decision[i];
-        maxIndex = i;
-      }
-    }
-
-    if (max < 0.7) {
-      ducking(false);
-      return;
-    }
-
-    switch(maxIndex) {
-    case 0:
-      jump(false);
-      break;
-    case 1:
-      jump(true);
-      break;
-    case 2:
-      ducking(true);
-      break;
-    }
-  }
-
-  //---------------------------------------------------------------------------------------------------------------------------------------------------------
-  //fot Genetic algorithm
-  void calculateFitness() {
-    fitness = score*score;
-  }
-
-  //---------------------------------------------------------------------------------------------------------------------------------------------------------
-  Player crossover(Player parent2) {
-    Player child = new Player();
-    child.brain = brain.crossover(parent2.brain);
-    child.brain.generateNetwork();
-    return child;
-  }
-  //--------------------------------------------------------------------------------------------------------------------------------------------------------
-  //if replaying then the dino has local obstacles
-  void updateLocalObstacles() {
-    localObstacleTimer ++;
-    localSpeed += 0.002;
-    if (localObstacleTimer > minimumTimeBetweenObstacles + localRandomAddition) {
-      addLocalObstacle();
-    }
-    groundCounter ++;
-    if (groundCounter > 10) {
-      groundCounter =0;
-      grounds.add(new Ground());
-    }
-
-    moveLocalObstacles();
-    showLocalObstacles();
-  }
-
-  //---------------------------------------------------------------------------------------------------------------------------------------------------------
-  void moveLocalObstacles() {
-    for (int i = 0; i< replayObstacles.size(); i++) {
-      replayObstacles.get(i).move(localSpeed);
-      if (replayObstacles.get(i).posX < -100) {
-        replayObstacles.remove(i);
-        i--;
-      }
-    }
-
-    for (int i = 0; i< replayBirds.size(); i++) {
-      replayBirds.get(i).move(localSpeed);
-      if (replayBirds.get(i).posX < -100) {
-        replayBirds.remove(i);
-        i--;
-      }
-    }
-    for (int i = 0; i < grounds.size(); i++) {
-      grounds.get(i).move(localSpeed);
-      if (grounds.get(i).posX < -100) {
-        grounds.remove(i);
-        i--;
-      }
-    }
-  }
-  //------------------------------------------------------------------------------------------------------------------------------------------------------------
-  void addLocalObstacle() {
-    int tempInt = localObstacleHistory.get(historyCounter);
-    localRandomAddition = localRandomAdditionHistory.get(historyCounter);
-    historyCounter ++;
-    if (tempInt < 3) {
-      replayBirds.add(new Bird(tempInt));
-    } else {
-      replayObstacles.add(new Obstacle(tempInt -3));
-    }
-    localObstacleTimer = 0;
-  }
-  //---------------------------------------------------------------------------------------------------------------------------------------------------------
-  void showLocalObstacles() {
-    for (int i = 0; i< grounds.size(); i++) {
-      grounds.get(i).show();
-    }
-    for (int i = 0; i< replayObstacles.size(); i++) {
-      replayObstacles.get(i).show();
-    }
-
-    for (int i = 0; i< replayBirds.size(); i++) {
-      replayBirds.get(i).show();
-    }
-  }
-}
-
-"""
-
-
-"""
-
-  //returns a clone of this player with the same brian
-  Player clone() {
-    Player clone = new Player();
-    clone.brain = brain.clone();
-    clone.fitness = fitness;
-    clone.brain.generateNetwork(); 
-    clone.gen = gen;
-    clone.bestScore = score;
-    return clone;
-  }
-
-  //---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
-  //since there is some randomness in games sometimes when we want to replay the game we need to remove that randomness
-  //this fuction does that
-
-  Player cloneForReplay() {
-    Player clone = new Player();
-    clone.brain = brain.clone();
-    clone.fitness = fitness;
-    clone.brain.generateNetwork();
-    clone.gen = gen;
-    clone.bestScore = score;
-    clone.replay = true;
-    if (replay) {
-      clone.localObstacleHistory = (ArrayList)localObstacleHistory.clone();
-      clone.localRandomAdditionHistory = (ArrayList)localRandomAdditionHistory.clone();
-    } else {
-      clone.localObstacleHistory = (ArrayList)obstacleHistory.clone();
-      clone.localRandomAdditionHistory = (ArrayList)randomAdditionHistory.clone();
-    }
-
-    return clone;
-  }
-"""
+    def respawn(self):
+        # Respawn back to starting point       
+        self.rect.x = self.startx
+        self.rect.y = self.starty
+        self.numHearts = self.maxHearts

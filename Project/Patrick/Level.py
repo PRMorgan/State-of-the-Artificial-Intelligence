@@ -8,6 +8,8 @@ RED = (255, 0, 0)
 BLUE = (0, 0, 255)
  
 # Screen dimensions
+global SCREEN_WIDTH
+global SCREEN_HEIGHT
 SCREEN_WIDTH = 800
 SCREEN_HEIGHT = 600
 
