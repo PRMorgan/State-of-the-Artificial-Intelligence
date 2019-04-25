@@ -11,6 +11,7 @@ from Player import *
 from Level import *
 from Game import *
 from Sword import *
+from Population import *
 import random
 import os
 import time
@@ -44,18 +45,17 @@ def main():
     # <insert large block of code at bottom if shit goes south>
 
     # Loop until the user clicks the close button.
-    games = []
-    finishedGames = []
+    # games = []
+    # finishedGames = []
     # game1 = Game(screen, 0)
     # game2 = Game(screen, 1)
     
     numGames = 1
+    pop = Population(numGames, screen)
 
-    for game in range(numGames):
-        tempGame = Game(screen, game)
-        games.append(tempGame)
-
-    done = False
+    # for game in range(numGames):
+    #     tempGame = Game(screen, game)
+    #     games.append(tempGame)
 
     # Used to manage how fast the screen updates
     clock = pygame.time.Clock()
@@ -68,106 +68,110 @@ def main():
 
     # -------- Main Program Loop -----------
     timeremaining = FRAMERATE * TOTALTIME
+    while not gameUI.satisfied:
+        while not gameUI.done:
+            timeremaining -= 1
+            # for game in games:
+            #     if game.isOver():
+            #         finishedGames.append(game)
+            #         print("Removing game: ", game.gameNum)
+            #         games.remove(game)
+            #         gameUI.updateGameNums(len(games))
 
-    while not done:
-        timeremaining -= 1
-        # for game in games:
-        #     if game.isOver():
-        #         finishedGames.append(game)
-        #         print("Removing game: ", game.gameNum)
-        #         games.remove(game)
-        #         gameUI.updateGameNums(len(games))
-
-        # update players --> in update() tell players to think()
-        #in the think(), they should run the neural net once
-        for event in pygame.event.get():
-            if event.type == pygame.QUIT:
-                done = True
+            # update players --> in update() tell players to think()
+            #in the think(), they should run the neural net once
+            for event in pygame.event.get():
+                if event.type == pygame.QUIT:
+                    gameUI.done = True
+                
+            # Update items in the level
             
-        # Update items in the level
-        
-        for game in games:
-            game.level.update()
-        games[0].level.drawBG(screen)
+            for game in pop.games:
+                game.level.update()
+            pop.games[0].level.drawBG(screen)
 
-        # if len(games) == 0:
-        #     finishedGames[0].level.draw(screen)
-        #     finishedGames[0].level.drawBG(screen)
-        # else:
-        #     games[0].level.draw(screen)
-        #     games[0].level.drawBG(screen)
+            # if len(games) == 0:
+            #     finishedGames[0].level.draw(screen)
+            #     finishedGames[0].level.drawBG(screen)
+            # else:
+            #     games[0].level.draw(screen)
+            #     games[0].level.drawBG(screen)
 
-        #screen, text, x, y, width, height, color1, color, function
-        gameUI.button(screen, "Show All",240,10,70,20,RED,BLUE,gameUI.showAll)
-        gameUI.button(screen, "Show Best",315,10,70,20,RED,BLUE,gameUI.showBest)
-        gameUI.button(screen, "Next",390,10,70,20,RED,BLUE,gameUI.nextGame)
-        gameUI.button(screen, "Prev",465,10,70,20,RED,BLUE,gameUI.prevGame)
-        
-        #screen, text, x, y, width, height, color
-        msg = "Game: " + str(gameUI.gameScreen + 1) + "/" + str(len(games))
-        gameUI.displayText(screen, msg,353,35,90,20, BLUE)
+            #screen, text, x, y, width, height, color1, color, function
+            gameUI.button(screen, "Show All",240,10,70,20,RED,BLUE,gameUI.showAll)
+            gameUI.button(screen, "Show Best",315,10,70,20,RED,BLUE,gameUI.showBest)
+            gameUI.button(screen, "Next",390,10,70,20,RED,BLUE,gameUI.nextGame)
+            gameUI.button(screen, "Prev",465,10,70,20,RED,BLUE,gameUI.prevGame)
+            gameUI.button(screen, "Satisfied?", 323, 150, 100, 20, RED, BLUE, gameUI.endGame)
+            
+            #screen, text, x, y, width, height, color
+            # msg = "Game: " + str(gameUI.gameScreen + 1) + "/" + str(len(pop))
+            # gameUI.displayText(screen, msg,353,35,90,20, BLUE)
 
-        timemsg = "Time Remaining: " + str(int(timeremaining/FRAMERATE))
-        gameUI.displayText(screen, timemsg,323,120,140,20, BLUE)
+            timemsg = "Time Remaining: " + str(int(timeremaining/FRAMERATE))
+            gameUI.displayText(screen, timemsg,323,120,140,20, BLUE)
 
-        numGoalsMsg = "Levels Cleared: " + str(game.player.numGoals)
-        gameUI.displayText(screen, numGoalsMsg, 10, 80, 120, 20, BLUE)
+            numGoalsMsg = "Levels Cleared: " + str(game.player.numGoals)
+            gameUI.displayText(screen, numGoalsMsg, 10, 80, 120, 20, BLUE)
 
-        numGoalsMsg = "Levels Cleared: " + str(game.enemy.numGoals)
-        gameUI.displayText(screen, numGoalsMsg, SCREEN_WIDTH - 125, 80, 120, 20, BLUE)
-
-
-        if gameUI.gameScreen == -1:
-            # if 
-            for game in games:
-                game.level.draw(screen)
-                game.player.updateHealth()
-                game.enemy.updateHealth()
-                game.updateAllHealth()
-                # if game.player.deadFlag != True:
-                #     game.player.updateHealth()
-                # if game.enemy.deadFlag != True:
-                #     game.enemy.updateHealth()
-        elif len(games) != 0:
-            games[gameUI.gameScreen].level.draw(screen)
-            games[gameUI.gameScreen].updateAllHealth()
+            numGoalsMsg = "Levels Cleared: " + str(game.enemy.numGoals)
+            gameUI.displayText(screen, numGoalsMsg, SCREEN_WIDTH - 125, 80, 120, 20, BLUE)
 
 
-        #time.sleep(.05)
+            if gameUI.gameScreen == -1:
+                # if 
+                for game in pop.games:
+                    game.level.draw(screen)
+                    game.player.updateHealth()
+                    game.enemy.updateHealth()
+                    game.updateAllHealth()
+                    # if game.player.deadFlag != True:
+                    #     game.player.updateHealth()
+                    # if game.enemy.deadFlag != True:
+                    #     game.enemy.updateHealth()
+            elif len(pop.games) != 0:
+                pop.games[gameUI.gameScreen].level.draw(screen)
+                pop.games[gameUI.gameScreen].updateAllHealth()
 
-        # mouse_pos = pygame.mouse.get_pos()
 
-        # for player in players:
-        #     # draw the lines between point
-        #     player.distanceToPoint(player.enemyPos, True, BLUE)
-        #     # player.distanceToPoint((800,500),True, RED, "X")
-        #     player.updateHealth()
-        # playerOne.updateHealth()
-        # playerTwo.updateHealth()
- 
-        # ALL CODE TO DRAW SHOULD GO ABOVE THIS COMMENT
- 
-        # Limit to 60 frames per second
-        clock.tick(FRAMERATE)
+            #time.sleep(.05)
 
-        if timeremaining <= 0:
-            for game in games:
-                game.player.respawn()
-                game.player.updateFitness()
-                print("K: " + str(game.player.numKills) + "\n")
-                print("D: " + str(game.player.numDeaths) + "\n")
-                print("G: " + str(game.player.numGoals) + "\n")
-                print("EG: " + str(game.enemy.numGoals) + "\n")
-                print("MD: " + str(game.player.maxDistance) + "\n")
-                print("RD: " + str(game.player.runningDistance) + "\n")
-                print("Fitness: " + str(game.player.fitness))
-            done = True
- 
-        # Go ahead and update the screen with what we've drawn.
-        pygame.display.flip()
- 
-    # Be IDLE friendly. If you forget this line, the program will 'hang'
-    # on exit.
+            # mouse_pos = pygame.mouse.get_pos()
+
+            # for player in players:
+            #     # draw the lines between point
+            #     player.distanceToPoint(player.enemyPos, True, BLUE)
+            #     # player.distanceToPoint((800,500),True, RED, "X")
+            #     player.updateHealth()
+            # playerOne.updateHealth()
+            # playerTwo.updateHealth()
+    
+            # ALL CODE TO DRAW SHOULD GO ABOVE THIS COMMENT
+    
+            # Limit to 60 frames per second
+            clock.tick(FRAMERATE)
+
+            if timeremaining <= 0:
+                for game in pop.games:
+                    game.player.respawn()
+                    game.player.updateFitness()
+                    print("K: " + str(game.player.numKills) + "\n")
+                    print("D: " + str(game.player.numDeaths) + "\n")
+                    print("G: " + str(game.player.numGoals) + "\n")
+                    print("EG: " + str(game.enemy.numGoals) + "\n")
+                    print("MD: " + str(game.player.maxDistance) + "\n")
+                    print("RD: " + str(game.player.runningDistance) + "\n")
+                    print("Fitness: " + str(game.player.fitness))
+                    gameUI.done = True
+    
+            # Go ahead and update the screen with what we've drawn.
+            pygame.display.flip()
+        gameUI.done = False
+        timeremaining = FRAMERATE * TOTALTIME
+        #pop.NaturalSelection()
+
+        # Be IDLE friendly. If you forget this line, the program will 'hang'
+        # on exit.
     pygame.quit()
 
 class Interface():
@@ -175,6 +179,8 @@ class Interface():
         self.screen = screen
         self.gameScreen = -1
         self.gameNums = gameNums
+        self.satisfied = False
+        self.done = False
     def button(self, screen, msg,x,y,w,h,ic,ac,action=None):
         mouse = pygame.mouse.get_pos()
         click = pygame.mouse.get_pressed()
@@ -218,6 +224,10 @@ class Interface():
 
     def updateGameNums(self, newNum):
         self.gameNums = newNum
+    
+    def endGame(self):
+        self.satisfied = True
+        self.done = True
 
     
 if __name__ == "__main__":

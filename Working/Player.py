@@ -1,6 +1,7 @@
 import pygame
 from Level import *
 from Sword import *
+from NeuralNet import *
 import time
 import math
 import random
@@ -36,6 +37,15 @@ class Player(pygame.sprite.Sprite):
  
         # Call the parent's constructor
         super().__init__()
+
+        ########WWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWW
+        #How many input/outputs do we need??
+        genomeInputs = 12
+        genomeOutputs = 4
+
+        self.brain = NeuralNet(genomeInputs, genomeOutputs)
+        self.vision = self.look(self.enemy, screen)
+        self.decision = self.think(self.vision, None, False, None)
  
         # Create an image of the block, and fill it with a color.
         # This could also be an image loaded from the disk.
@@ -281,6 +291,19 @@ class Player(pygame.sprite.Sprite):
         elif self.distanceToPoint(point) < 100:
             self.jump()
 
+    def look(self, otherPlayers, gameWidth):
+        min = 10000
+        minIndex = -1
+        vision = [ "", "", ""]
+    
+        poscalc = Enemy.enemy.rect.x + Enemy.enemy.rect.y / 2 - (self.posX - gameWidth / 2)
+        if(poscalc < min and poscalc > 0):
+            min = poscalc
+    
+        vision[1] = poscalc ##This is the distance between the players
+        vision[2] = self.otherPlayer.direction ##We might have to fix this <---- direction other player is facing
+        vision[0] = 1.0/(min/10.0) # <----What does this calculate?
+        return self.vision #<--- this wasn't returned inthe dino run c version  
     
     def setEnemy(self, enemy):
         if enemy == None:

@@ -5,42 +5,43 @@ class Population():
 
 #------------------------------------------------------------------------------------------------------------------------------------------
     #constructor
-    def __init__(self,size):
-        self.pop = []
+    def __init__(self,size, screen):
+        self.games = []
         self.bestPlayer = None
         self.bestScore = 0
         self.gen = 0
         self.innovationHistory = []
         self.genPlayers = []
         self.species = []
+        self.screen = screen
 
         self.massExtinctionEvent = False
         self.newStage = False
         self.populationLife = 0
         for i in range(size):
-            self.pop.append(Game.createPopulation(self))
-            self.pop[i].brain.generateNetwork()
-            self.pop[i].brain.mutate(self.innovationHistory)
+            self.games.append(Game(screen, i))
+            self.games[i].player.brain.generateNetwork()
+            self.games[i].player.brain.mutate(self.innovationHistory)
 
 #------------------------------------------------------------------------------------------------------------------------------------------
     #update all the players which are alive
-    def updateAlive(self):
-        self.populationLife += 1
-        for i in self.pop:
-            if not i.isDead:
-                i.look() # get inputs for brain 
-                i.think() # use outputs from neural network
-                i.update() # move the player according to the outputs from the neural network
-                if not i.showNothing:
-                    self.pop[i].show()
+    # def updateAlive(self):
+    #     self.populationLife += 1
+    #     for i in self.pop:
+    #         if not i.isDead:
+    #             i.look() # get inputs for brain 
+    #             i.think() # use outputs from neural network
+    #             i.update() # move the player according to the outputs from the neural network
+    #             if not i.showNothing:
+    #                 self.pop[i].show()
 
 #------------------------------------------------------------------------------------------------------------------------------------------ 
-    #returns true if all the players are dead      sad
-    def done(self):
-        for i in range(len(self.pop)):
-            if not self.pop[i].isDead:
-                return False
-        return True
+    # #returns true if all the players are dead      sad
+    # def done(self):
+    #     for i in range(len(self.pop)):
+    #         if not self.pop[i].isDead:
+    #             return False
+    #     return True
 
 #------------------------------------------------------------------------------------------------------------------------------------------
     #sets the best player globally and for this gen
