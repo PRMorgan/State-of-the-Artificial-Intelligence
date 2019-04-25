@@ -43,21 +43,24 @@ class Game():
         self.level = None
 
         self.entities = []
-        self.innovationHistory = []
 
         self.createPopulation()
     
-    def isOver(self):
-        if self.player.deadFlag == True:
-            return True
-        else:
-            return False
+    def updateAllHealth(self):
+        self.player.updateHealth
+        self.enemy.updateHealth
+        
+    # def isOver(self):
+    #     if self.player.deadFlag == True:
+    #         return True
+    #     else:
+    #         return False
     
-    def enemyKilled(self):
-        if self.enemy.deadFlag == True:
-            return True
-        else:
-            return False
+    # def enemyKilled(self):
+    #     if self.enemy.deadFlag == True:
+    #         return True
+    #     else:
+    #         return False
 
     def createPopulation(self):
         """ Generate any number of players and add them to an environment"""
@@ -84,8 +87,5 @@ class Game():
         self.player.setEnemy(self.enemy)
         self.enemy.setEnemy(self.player)
 
-        #WWWWWWWWWWWWWWWWWWWWWWWWWWWWWWW
         self.player.brain.generateNetwork()
-        #To Work on: Where do we get the innovation history from???
-        self.player.brain.mutate(self.innovationHistory)
-        #MMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMM
+        #self.player.brain.mutate()

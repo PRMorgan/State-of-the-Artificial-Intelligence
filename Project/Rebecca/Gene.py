@@ -1,4 +1,5 @@
 import random 
+import numpy.random
 
 #a connection between 2 nodes
 class Gene():
@@ -13,11 +14,11 @@ class Gene():
     #---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
     #changes the weight
     def mutateWeight(self):
-        rand2 = random.random(1)
+        rand2 = random.uniform(0,1)
         if rand2 < 0.1: #10% of the time completely change the weight
-           self.weight = random.random(-1, 1)
+           self.weight = random.uniform(-1, 1)
         else: #otherwise slightly change it
-            self.weight += random.randrange(1, 200)/50 #What is this and how to fix??
+            self.weight += numpy.random.normal()/50
             #keep weight between bounds
             if self.weight > 1:
                 self.weight = 1

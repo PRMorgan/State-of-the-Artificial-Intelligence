@@ -13,6 +13,7 @@ class Node():
   #---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
   #the node sends its output to the inputs of the nodes its connected to
   def engage(self):
+    outputValue = 0
     if self.layer != 0: #no sigmoid for the inputs and bias
       outputValue = self.sigmoid(self.inputSum)
 

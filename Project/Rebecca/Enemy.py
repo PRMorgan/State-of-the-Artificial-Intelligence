@@ -5,9 +5,6 @@ import time
 import math
 import random
 
-# Screen dimensions
-SCREEN_WIDTH = 800
-SCREEN_HEIGHT = 600
 WHITE = (255, 255, 255)
 GREEN = (0, 255, 0)
 RED = (255, 0, 0)
@@ -18,8 +15,14 @@ PALEGREEN = (152,251,152)
 ROSYBROWN = (188,143,143)
 PALEVIOLET = (219,112,147)
 YELLOW = (255,255,0)
-heart = pygame.image.load('heart.png')
+heart = pygame.image.load('Images/heart.png')
+death = pygame.image.load('Images/skull.png')
 
+#hurtSound = pygame.mixer.Sound("SFX/LinkHurtEnemy.wav")
+#attackSound = pygame.mixer.Sound("SFX/LinkAttackEnemy.wav")
+
+SCREEN_WIDTH = 800
+SCREEN_HEIGHT = 600
 
 # *BUG* player doesn't move down when colliding with other players. 
 # This results in top player getting the kill 9 times out of 10.
@@ -45,10 +48,9 @@ class Enemy(pygame.sprite.Sprite):
         self.enemy = None
         self.enemyPos = None
 
-        self.maxHealth = 40
-        self.health = 40
-        self.deadFlag = False
-        self.numLives = 3
+        self.maxHearts = 4
+        self.numHearts = self.maxHearts
+        self.numGoals = 0
 
         self.color = color 
         self.playerID = playerID
@@ -57,9 +59,7 @@ class Enemy(pygame.sprite.Sprite):
         self.isAttacking = False
         self.attackDelay = 30 #30 frames between each attack
 
-
-        self.direction = "none"
-        self.attackEvent = pygame.event.Event(pygame.USEREVENT, action = "attack", id = playerID)
+        self.direction = "left"
 
         self.image = pygame.Surface([self.width, self.height])
         self.image.fill(color)
@@ -90,10 +90,14 @@ class Enemy(pygame.sprite.Sprite):
 
         if self.attackDelay != 0:
             self.attackDelay -= 1
-            
 
         self.enemyPos = (self.enemy.rect.x, self.enemy.rect.y)
         self.think(self.enemyPos, mouse_pos, True, self.freeze)
+
+        if self.rect.x <= 0:
+            self.numGoals += 1
+            self.respawn()
+            self.enemy.respawn()
 
         """ Move the player. """
         # Gravity
@@ -108,15 +112,13 @@ class Enemy(pygame.sprite.Sprite):
                 self.isAttacking = False
                 self.sword = None
 
-
-        if self.enemy.numLives == 0:
-            self.enemy.deadFlag = True
-            self.executeAction(3)
-            self.freeze = True
+        # """ Did we just get stabbed? """
         if pygame.sprite.spritecollide(self, self.level.player_attack_list, True):
-            self.change_x += 20
+            # pygame.mixer.Sound.play(hurtSound)
+            self.change_x += 10
             self.change_y -= 4
-            self.health -= 10
+            self.numHearts -= 1
+
 
         # ---------------------- INTERACTION WITH PLATFORMS AND SIDE --------------------------
 
@@ -167,7 +169,7 @@ class Enemy(pygame.sprite.Sprite):
         #     self.executeAction(action)
         if mouseFlag == True:
             if (self.rect.x < mousePoint[0] and self.rect.x + self.width > mousePoint[0]) and (self.rect.y < mousePoint[1] and self.rect.y + self.height > mousePoint[1]):
-                self.health -= 10 
+                self.numHearts -= 1
 
         if self.distanceToPoint(point, True, RED, "X") < 50:
             self.attack()
@@ -178,8 +180,6 @@ class Enemy(pygame.sprite.Sprite):
             self.go_right()
         elif self.rect.x > point[0]:
             self.go_left()
-        else:
-            self.stop()
     
     def setEnemy(self, enemy):
         if enemy == None:
@@ -187,34 +187,13 @@ class Enemy(pygame.sprite.Sprite):
         self.enemy = enemy
 
     def updateHealth(self):
-        """Heart Code"""
-        for heartCount in range(self.numLives):
-            self.screen.blit(heart, (self.startx - 120 + (heartCount*40),35))
-
-        """Health Bar Code"""
-        healthBarLength = (self.health/self.maxHealth) * self.width
-
-        if (self.health <= 0) and (self.numLives == 0):
-            print("Killing player: ", self.playerID)
-            self.deadFlag = True
-            self.level.enemy_list.remove(self)
-            self.kill()
-            # del self
-            
-        else:
-            # Display a health bar with colors corresponding to the player's remaining health
-            if self.health <= 0 and self.numLives > 0:
-                self.respawn()
-            else:
-                if self.health/self.maxHealth > .8:
-                    pygame.draw.line(self.screen, GREEN, (self.rect.x, self.rect.y - 10), (self.rect.x + healthBarLength, self.rect.y - 10), 4)
-                elif self.health/self.maxHealth > .5:
-                    pygame.draw.line(self.screen, PALEGREEN, (self.rect.x, self.rect.y - 10), (self.rect.x + healthBarLength, self.rect.y - 10), 4)
-                elif self.health/self.maxHealth > .2:
-                    healthBarLength = (self.health/self.maxHealth) * self.width
-                    pygame.draw.line(self.screen, YELLOW, (self.rect.x, self.rect.y - 10), (self.rect.x + healthBarLength, self.rect.y - 10), 4)
-                else: 
-                    pygame.draw.line(self.screen, RED, (self.rect.x, self.rect.y - 10), (self.rect.x + healthBarLength, self.rect.y - 10), 4)  
+        for hearts in range(self.numHearts):
+                self.screen.blit(heart, ((self.startx - 160 + (hearts * 40)), 90))
+        for deaths in range(self.enemy.numKills):
+            self.screen.blit(death,((self.startx - 40 + ((deaths % 6) * -40)), (130 + (int(deaths/6)*40))))
+        if self.numHearts <= 0:
+            self.respawn()
+            self.enemy.numKills += 1
         
     def distanceToPoint(self, point, drawFlag = False, color = WHITE, axis = "BOTH"):
         x_goal = point[0]
@@ -297,23 +276,20 @@ class Enemy(pygame.sprite.Sprite):
     def go_left(self):
         """ Called when the user hits the left arrow. """
         self.direction = "left"
-        if self.change_x < -8:
-            self.change_x = -8
+        self.image = pygame.image.load('Images/enemyleftangry.png')
+        if self.change_x < -4:
+            self.change_x = -4
         else:
             self.change_x -= .5
 
     def go_right(self):
         """ Called when the user hits the right arrow. """
         self.direction = "right"
-        if self.change_x > 8:
-            self.change_x = 8
+        self.image = pygame.image.load('Images/enemyrightangry.png')
+        if self.change_x > 4:
+            self.change_x = 4
         else:
             self.change_x += .5
-
-    def stop(self):
-        """ Called when the user lets off the keyboard. """
-        self.direction = "none"
-        self.change_x = 0
 
     def attack(self):
         if self.isAttacking == True:
@@ -321,13 +297,15 @@ class Enemy(pygame.sprite.Sprite):
         elif self.attackDelay == 0:
             # print(self.playerID, " is attacking!")
             if self.direction == "left":
+                self.image = pygame.image.load('Images/enemyleftangry.png')
                 facing = -1
             if self.direction == "right":
+                self.image = pygame.image.load('Images/enemyrightangry.png')
                 facing = 1
             if self.direction == "none":
                 facing = 0
 
-            self.sword = Sword(self.rect.x, self.rect.y, 25, 10, self.color, facing)
+            self.sword = Sword(self.rect.x, self.rect.y, 40, 20, self.color, facing)
             
             self.level.enemy_attack_list.add(self.sword)
             self.isAttacking = True
@@ -340,21 +318,11 @@ class Enemy(pygame.sprite.Sprite):
             self.go_right()
         elif action == 2:
             self.jump()
-        # elif action == 3:
-        #     self.stop()
         elif (action == 3 or action == 4):
             self.attack()
 
     def respawn(self):
-        # Respawn back to starting point
-        self.numLives -= 1
-        
-        # if self.numDeaths < 3:
-        if self.numLives != 0:
-            self.rect.x = self.startx
-            self.rect.y = self.starty
-            self.health = 40
-        else:
-            self.deadFlag = True
-            self.level.enemy_list.remove(self)
-            
+        # Respawn back to starting point       
+        self.rect.x = self.startx
+        self.rect.y = self.starty
+        self.numHearts = self.maxHearts

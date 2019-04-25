@@ -1,4 +1,5 @@
 import pygame
+import random
 
 # Colors
 BLACK = (0, 0, 0)
@@ -11,7 +12,29 @@ BLUE = (0, 0, 255)
 SCREEN_WIDTH = 800
 SCREEN_HEIGHT = 600
 
-bg = pygame.image.load('arena86.jpg')
+# Background image filenames
+maps = ["FinalRuins.gif",
+        "DesertRuins.gif",
+        "DojoRuins.gif",
+        "CityApocalypse.gif",
+        "TownOnFire.gif",
+        "HouseFire.gif",
+        "Rural.gif",
+        "Docks.gif",
+        "Forest.gif",
+        "Prairie.gif",
+        "OriginalDojo.png",
+        "Jungle.gif",
+        "Waterfall.gif",
+        "Beach.gif",
+        "Bridge.gif",
+        "Carnival.gif",
+        "Hanger.gif",
+        "Airport.gif",
+        "Naboo.gif",
+        "Temple.gif",
+        "FinalJudgement.gif"]
+overlay = pygame.image.load('Images/Backgrounds/MapForeground.png')
 
 class Level(object):
     """ This is a generic super-class used to define a level.
@@ -59,8 +82,19 @@ class Level(object):
         self.enemy_list.draw(screen)
         self.player_list.draw(screen)
 
-    def drawBG(self, screen):
+    def drawBG(self, screen, game):
+        currentmapindex = (game.player.numGoals - game.enemy.numGoals) + 10
+        if currentmapindex > 20:
+            currentmapindex = 20
+        elif currentmapindex < 0:
+            currentmapindex = 0
+        bg = pygame.image.load('Images/Backgrounds/' + maps[currentmapindex])
         screen.blit(bg, (0,0))
+        screen.blit(overlay, (0,0))
+
+       
+        
+
  
 # Create platforms for the level
 class Level_01(Level):

@@ -34,11 +34,6 @@ class Player(pygame.sprite.Sprite):
  
         # Call the parent's constructor
         super().__init__()
-
-        #How many input/outputs do we need??
-        genomeInputs = 12
-        genomeOutputs = 4
-
  
         # Create an image of the block, and fill it with a color.
         # This could also be an image loaded from the disk.
@@ -73,8 +68,9 @@ class Player(pygame.sprite.Sprite):
 
         # self.damage = pygame.event.Event(pygame.USEREVENT, action = "damage", id= playerID)
         self.sideJumpCount = 0
-        self.image = pygame.Surface([self.width, self.height])
-        self.image.fill(color)
+        self.image = pygame.image.load("Images/playerrightangry.png")
+        #self.image = pygame.Surface([self.width, self.height])
+        #self.image.fill(color)
 
         # So our player can modify the overall screen
         self.screen = screen
@@ -94,11 +90,11 @@ class Player(pygame.sprite.Sprite):
  
         # List of sprites we can bump against
         self.level = None
-
-
+    
+        genomeInputs = 12
+        genomeOutputs = 4
         self.brain = NeuralNet(genomeInputs, genomeOutputs)
-        self.vision = self.look(self.enemy, screen)
-        self.decision = self.think(self.vision, None, False, None)
+ 
     
     def update(self):
         # """ Update our position knowledge """
@@ -110,7 +106,6 @@ class Player(pygame.sprite.Sprite):
             self.respawn()
             self.enemy.respawn()
 
-        mouse_pos = pygame.mouse.get_pos()
         self.enemyPos = (self.enemy.rect.x, self.enemy.rect.y)
      
         # """ Who is alive """
@@ -118,7 +113,8 @@ class Player(pygame.sprite.Sprite):
         #     self.level.enemy_list.remove(self.enemy)
     
         # """ Pass environment data to think """
-        self.think(self.enemyPos, mouse_pos, True, self.freeze)
+        #self.think(self.enemyPos, mouse_pos, True, self.freeze)
+        self.think()
 
         # """ Move the player. """
         # Gravity
@@ -268,33 +264,24 @@ class Player(pygame.sprite.Sprite):
         Converts output of neural net into events
         that generate actions for the specific player
         in the main driver class
-        """        
-
-        float max = 0
-        int maxIndex = 0
+        """
+        max = 0
+        maxIndex = 0
         
         #look around 
         self.vision = self.look()
 
         #get the output of the neural network
-        decision = self.brain.feedForward(vision);
+        decision = self.brain.feedForward(self.vision);
 
-        j = 0
-        for i in decision:
-            j += 1
-            if (decision[i] = > max):
+        for i in range(len(decision)):
+            if (decision[i] >= max):
                 max = decision[i]
-                maxIndex = j
-            
+                maxIndex = i
 
-        if maxIndex == 0:
-            self.go_left()
-        if maxIndex == 1:
-            self.go_right()
-        if maxIndex == 2:
-            self.jump()
-        if maxIndex == 3:
-            self.attack()
+        print("The action chosen is: ")
+        print (maxIndex)  
+        self.executeAction(maxIndex)
 
     def look(self):
         vision = []
@@ -348,9 +335,9 @@ class Player(pygame.sprite.Sprite):
     
     def updateHealth(self):
         for hearts in range(self.numHearts):
-            self.screen.blit(heart,((self.startx + (hearts * 40)), 35))
+            self.screen.blit(heart,((self.startx + (hearts * 40)), 90))
         for deaths in range(self.numDeaths):
-            self.screen.blit(death,((self.startx + ((deaths % 6) * 40)), (110 + (int(deaths/6)*40))))
+            self.screen.blit(death,((self.startx + ((deaths % 6) * 40)), (130 + (int(deaths/6)*40))))
         if self.numHearts <= 0:
             self.respawn()
             self.numDeaths += 1
@@ -501,11 +488,11 @@ class Player(pygame.sprite.Sprite):
     def executeAction(self, action):
         if action == 0:
             self.go_left()
-        elif action == 1:
+        elif action == 3:
             self.go_right()
         elif action == 2:
             self.jump()
-        elif (action == 4):
+        elif action == 1:
             self.attack()
 
     def respawn(self):
