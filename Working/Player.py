@@ -24,9 +24,6 @@ death = pygame.image.load('Images/skull.png')
 SCREEN_WIDTH = 800
 SCREEN_HEIGHT = 600
 
-# *BUG* player doesn't move down when colliding with other players. 
-# This results in top player getting the kill 9 times out of 10.
-
 class Player(pygame.sprite.Sprite):
     """ This class represents the bar at the bottom that the player
         controls. """
@@ -38,14 +35,10 @@ class Player(pygame.sprite.Sprite):
         # Call the parent's constructor
         super().__init__()
 
-        ########WWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWW
         #How many input/outputs do we need??
         genomeInputs = 12
         genomeOutputs = 4
 
-        self.brain = NeuralNet(genomeInputs, genomeOutputs)
-        self.vision = self.look(self.enemy, screen)
-        self.decision = self.think(self.vision, None, False, None)
  
         # Create an image of the block, and fill it with a color.
         # This could also be an image loaded from the disk.
@@ -101,6 +94,11 @@ class Player(pygame.sprite.Sprite):
  
         # List of sprites we can bump against
         self.level = None
+
+
+        self.brain = NeuralNet(genomeInputs, genomeOutputs)
+        self.vision = self.look(self.enemy, screen)
+        self.decision = self.think(self.vision, None, False, None)
     
     def update(self):
         # """ Update our position knowledge """
@@ -292,18 +290,36 @@ class Player(pygame.sprite.Sprite):
             self.jump()
 
     def look(self, otherPlayers, gameWidth):
-        min = 10000
-        minIndex = -1
-        vision = [ "", "", ""]
-    
-        poscalc = Enemy.enemy.rect.x + Enemy.enemy.rect.y / 2 - (self.posX - gameWidth / 2)
-        if(poscalc < min and poscalc > 0):
-            min = poscalc
-    
-        vision[1] = poscalc ##This is the distance between the players
-        vision[2] = self.otherPlayer.direction ##We might have to fix this <---- direction other player is facing
-        vision[0] = 1.0/(min/10.0) # <----What does this calculate?
-        return self.vision #<--- this wasn't returned inthe dino run c version  
+        vision = []
+        #player_x
+        vision.append(self.rect.x)
+        #player_y
+        vision.append(self.rect.y)
+        #player_x_velocity
+        vision.append(self.change_x)
+        #player_y_velocity
+        vision.append(self.change_y)
+        #player_is_attacking
+        vision.append(self.isAttacking)
+        #player_attack_delay
+        vision.append(self.attackDelay)
+        #player_health
+        vision.append(self.numHearts)
+        #enemy_x
+        vision.append(self.enemy.rect.x)
+        #enemy_y
+        vision.append(self.enemy.rect.y)
+        #enemy_x_velocity
+        vision.append(self.enemy.change_x)
+        #enemy_y_velocity
+        vision.append(self.enemy.change_y)
+        #enemy_is_attacking
+        vision.append(self.enemy.isAttacking)
+        #enemy_attack_delay
+        vision.append(self.enemy.attackDelay)
+        #enemy_health
+        vision.append(self.enemy.numHearts)
+        return vision
     
     def setEnemy(self, enemy):
         if enemy == None:
