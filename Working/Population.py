@@ -87,17 +87,18 @@ class Population():
             print("\n")
             
             children.append(self.species[j].champ.clone()) #add champion without any mutation
-            NoOfChildren = math.floor(self.species[j].averageFitness / averageSum * len(self.pop)) -1 # the number of children this species is allowed, note -1 is because the champ is already added
+            NoOfChildren = math.floor(self.species[j].averageFitness / averageSum * len(self.games)) -1 # the number of children this species is allowed, note -1 is because the champ is already added
             for i in range(NoOfChildren): #get the calculated amount of children from this species
                 children.append(self.species[j].giveMeBaby(self.innovationHistory))
             
-        while len(children) < len(self.pop): #if not enough babies (due to flooring the number of children to get a whole int) 
+        while len(children) < len(self.games): #if not enough babies (due to flooring the number of children to get a whole int) 
             children.append(self.species[0].giveMeBaby(self.innovationHistory)) #get babies from the best species
-        self.pop.clear()
-        self.pop = children[:] #set the children as the current population
+        self.games.clear()
+        self.games = children[:] #set the children as the current population
+        
         self.gen += 1 
-        for i in range(len(self.pop)): # generate networks for each of the children
-            self.pop[i].brain.generateNetwork()
+        for game in self.games: # generate networks for each of the children
+            game.player.brain.generateNetwork()
         populationLife = 0
 
 #------------------------------------------------------------------------------------------------------------------------------------------
@@ -105,21 +106,21 @@ class Population():
     def speciate(self):
         for s in self.species: #empty species
             s.players.clear()
-        for i in range(len(self.pop)): # for each player
+        for i in range(len(self.games)): # for each player
             speciesFound = False
             for s in self.species: # for each species
-                if s.sameSpecies(self.pop[i].brain): # if the player is similar enough to be considered in the same species
-                    s.addToSpecies(self.pop[i]) # add it to the species
+                if s.sameSpecies(self.games[i].player.brain): # if the player is similar enough to be considered in the same species
+                    s.addToSpecies(self.games[i].player) # add it to the species
                     speciesFound = True
                     break
             if not speciesFound: # if no species was similar enough then add a new species with this as its champion
-                self.species.append(Species(self.pop[i]))
+                self.species.append(Species(self.games[i].player))
 
 #------------------------------------------------------------------------------------------------------------------------------------------
     #calculates the fitness of all of the players 
     def calculateFitness(self):
-        for i in range(len(self.pop)):
-            self.pop[i].calculateFitness()
+        for game in self.games:
+            game.player.calculateFitness()
 
 #------------------------------------------------------------------------------------------------------------------------------------------
     #sorts the players within a species and the species by their fitnesses

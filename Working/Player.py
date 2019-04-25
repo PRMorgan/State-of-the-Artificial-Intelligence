@@ -34,11 +34,6 @@ class Player(pygame.sprite.Sprite):
  
         # Call the parent's constructor
         super().__init__()
-
-        #How many input/outputs do we need??
-        genomeInputs = 12
-        genomeOutputs = 4
-
  
         # Create an image of the block, and fill it with a color.
         # This could also be an image loaded from the disk.
@@ -94,10 +89,13 @@ class Player(pygame.sprite.Sprite):
  
         # List of sprites we can bump against
         self.level = None
-
-
+    
+    def initializeNeuralNet(self):
+        #How many input/outputs do we need??
+        genomeInputs = 12
+        genomeOutputs = 4
         self.brain = NeuralNet(genomeInputs, genomeOutputs)
-        self.vision = self.look(self.enemy, screen)
+        self.vision = self.look(self.enemy, self.screen)
         self.decision = self.think(self.vision, None, False, None)
     
     def update(self):

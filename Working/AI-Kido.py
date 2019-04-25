@@ -24,7 +24,7 @@ BLUE = (0, 0, 255)
 WHITE = (255, 255, 255)
 
 FRAMERATE = 60
-TOTALTIME = 30
+TOTALTIME = 10
 
 SCREEN_WIDTH = 800
 SCREEN_HEIGHT = 600
@@ -155,12 +155,12 @@ def main():
                 for game in pop.games:
                     game.player.respawn()
                     game.player.updateFitness()
-                    print("K: " + str(game.player.numKills) + "\n")
-                    print("D: " + str(game.player.numDeaths) + "\n")
-                    print("G: " + str(game.player.numGoals) + "\n")
-                    print("EG: " + str(game.enemy.numGoals) + "\n")
-                    print("MD: " + str(game.player.maxDistance) + "\n")
-                    print("RD: " + str(game.player.runningDistance) + "\n")
+                    print("K: " + str(game.player.numKills))
+                    print("D: " + str(game.player.numDeaths))
+                    print("G: " + str(game.player.numGoals))
+                    print("EG: " + str(game.enemy.numGoals))
+                    print("MD: " + str(game.player.maxDistance))
+                    print("RD: " + str(game.player.runningDistance))
                     print("Fitness: " + str(game.player.fitness))
                     gameUI.done = True
     
@@ -168,7 +168,7 @@ def main():
             pygame.display.flip()
         gameUI.done = False
         timeremaining = FRAMERATE * TOTALTIME
-        #pop.NaturalSelection()
+        #pop.naturalSelection()
 
         # Be IDLE friendly. If you forget this line, the program will 'hang'
         # on exit.
