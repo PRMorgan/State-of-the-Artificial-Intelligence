@@ -2,14 +2,12 @@ import pygame
 from Level import *
 from Sword import *
 from NeuralNet import *
-from Enemy import * 
 import time
 import math
 import random
 
 # Screen dimensions
-SCREEN_WIDTH = 800
-SCREEN_HEIGHT = 600
+
 WHITE = (255, 255, 255)
 GREEN = (0, 255, 0)
 RED = (255, 0, 0)
@@ -20,11 +18,11 @@ PALEGREEN = (152,251,152)
 ROSYBROWN = (188,143,143)
 PALEVIOLET = (219,112,147)
 YELLOW = (255,255,0)
-heart = pygame.image.load('heart.png')
+heart = pygame.image.load('Images/heart.png')
+death = pygame.image.load('Images/skull.png')
 
-
-# *BUG* player doesn't move down when colliding with other players. 
-# This results in top player getting the kill 9 times out of 10.
+SCREEN_WIDTH = 800
+SCREEN_HEIGHT = 600
 
 class Player(pygame.sprite.Sprite):
     """ This class represents the bar at the bottom that the player
@@ -36,33 +34,33 @@ class Player(pygame.sprite.Sprite):
  
         # Call the parent's constructor
         super().__init__()
+
+        #How many input/outputs do we need??
+        genomeInputs = 12
+        genomeOutputs = 4
+
  
         # Create an image of the block, and fill it with a color.
         # This could also be an image loaded from the disk.
         self.width = 40
         self.height = 60
 
-        self.enemy = Enemy
-
-        ########WWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWW
-        #How many input/outputs do we need??
-        genomeInputs = 3
-        genomeOutputs = 4
-
-        self.brain = NeuralNet(genomeInputs, genomeOutputs)
-        self.vision = self.look(self.enemy, screen)
-        self.decision = self.think(self.vision, None, False, None)
-        ############################MMMMMMMMMMMMMMMMMMMMMM
-
         self.freeze = freeze
-    
 
+        self.enemy = None
         self.enemyPos = None
 
-        self.maxHealth = 40
-        self.health = 40
-        self.deadFlag = False
-        self.numLives = 3
+        self.maxHearts = 4
+        self.numHearts = 4
+        # self.deadFlag = False
+        # self.numLives = 3
+
+        self.numDeaths = 0
+        self.numKills = 0
+        self.numGoals = 0
+        self.runningDistance = 0
+        self.maxDistance = 0
+        self.fitness = 0.0
 
         self.color = color 
         self.playerID = playerID
@@ -71,15 +69,9 @@ class Player(pygame.sprite.Sprite):
         self.isAttacking = False
         self.attackDelay = 30 #30 frames between each attack
 
-        self.direction = "none"
-        # self.moveLeftEvent = pygame.event.Event(pygame.USEREVENT, action = "moveLeft", id = playerID)
-        # self.moveRightEvent = pygame.event.Event(pygame.USEREVENT, action = "moveRight", id = playerID)
-        # self.jumpEvent = pygame.event.Event(pygame.USEREVENT, action = "jump", id = playerID)
-        # self.stopEvent = pygame.event.Event(pygame.USEREVENT, action = "stop", id = playerID)
-        # self.killEvent = pygame.event.Event(pygame.USEREVENT, action = "kill", id = playerID)
-        # self.attackEvent = pygame.event.Event(pygame.USEREVENT, action = "attack", id = playerID)
+        self.direction = "right"
 
-        self.damage = pygame.event.Event(pygame.USEREVENT, action = "damage", id= playerID)
+        # self.damage = pygame.event.Event(pygame.USEREVENT, action = "damage", id= playerID)
         self.sideJumpCount = 0
         self.image = pygame.Surface([self.width, self.height])
         self.image.fill(color)
@@ -88,11 +80,7 @@ class Player(pygame.sprite.Sprite):
         self.screen = screen
  
         # Set a referance to the image rect.
-        self.rect = self.image.get_rect() 
-        
-        #fitness 
-        self.runningFitness = 0
-        self.totalFitnessCalculations = 0
+        self.rect = self.image.get_rect()
 
         #coordinate point
         self.player_coord = (self.rect.x, self.rect.y)
@@ -106,12 +94,22 @@ class Player(pygame.sprite.Sprite):
  
         # List of sprites we can bump against
         self.level = None
+
+
+        self.brain = NeuralNet(genomeInputs, genomeOutputs)
+        self.vision = self.look(self.enemy, screen)
+        self.decision = self.think(self.vision, None, False, None)
     
     def update(self):
         # """ Update our position knowledge """
         if self.attackDelay != 0:
             self.attackDelay -= 1
             
+        if self.rect.x >= 760:
+            self.numGoals += 1
+            self.respawn()
+            self.enemy.respawn()
+
         mouse_pos = pygame.mouse.get_pos()
         self.enemyPos = (self.enemy.rect.x, self.enemy.rect.y)
      
@@ -139,9 +137,10 @@ class Player(pygame.sprite.Sprite):
 
         # """ Did we just get stabbed? """
         if pygame.sprite.spritecollide(self, self.level.enemy_attack_list, True):
-            self.change_x -= 20
+            # 4 hits to kill
+            self.change_x -= 10
             self.change_y -= 4
-            self.health -= 10
+            self.numHearts -= 1
             
     
         "---------------------- LOOKING AT PLAYER'S COLLISIONS WITH OTHER OBJECTS --------------------------"
@@ -183,6 +182,9 @@ class Player(pygame.sprite.Sprite):
                 # Otherwise if we are moving left, do the opposite.
                 self.rect.left = block.rect.right
 
+        if self.rect.x/7.6 > self.maxDistance:
+            self.maxDistance = self.rect.x/7.6
+
                 # Move up/down
                 
         "To implement side jumping"
@@ -190,195 +192,195 @@ class Player(pygame.sprite.Sprite):
         #     self.sideJumpCount = 0
 
     def entityCollision(self):
-        if self.enemy.deadFlag == False:
-            if pygame.sprite.collide_rect(self, self.enemy):
-                y_momentum_diff = abs(self.change_y) - abs(self.enemy.change_y)
-                x_momentum_diff = abs(self.change_x) - abs(self.enemy.change_x)
-                # print ("Collision! Player", self.rect.right, self.rect.left, self.rect.top, self.rect.bottom)
-                # print ("           Enemy", self.enemy.rect.right, self.enemy.rect.left, self.enemy.rect.top, self.enemy.rect.bottom)
+       
+        if pygame.sprite.collide_rect(self, self.enemy):
+            y_momentum_diff = abs(self.change_y) - abs(self.enemy.change_y)
+            x_momentum_diff = abs(self.change_x) - abs(self.enemy.change_x)
+            # print ("Collision! Player", self.rect.right, self.rect.left, self.rect.top, self.rect.bottom)
+            # print ("           Enemy", self.enemy.rect.right, self.enemy.rect.left, self.enemy.rect.top, self.enemy.rect.bottom)
+
+            #our right side is inside their left side and our bottom lower than their top
+            if (self.rect.right > self.enemy.rect.left) and self.rect.bottom > self.enemy.rect.top + 4:
+                #set our right to their left
+                # self.rect.right = self.enemy.rect.left
+                #if we have more momentum, push them back with the force of our velocity
+                if x_momentum_diff > 0:
+                    self.enemy.change_x = self.change_x - 4
+                    self.change_x = 0
+                    # self.enemy.change_y += self.change_y/2
+                elif x_momentum_diff < 0:
+                    self.change_x = self.enemy.change_x
+                    self.enemy.change_x = 0
+                else:
+                    self.change_x += -4
+                    self.enemy.change_x += 4
+
+            #our left side is inside their right side and our bottom lower than their top
+            if (self.rect.left < self.enemy.rect.right) and self.rect.bottom > self.enemy.rect.top + 10:
+                #set our left to their right
+                # self.rect.left = self.enemy.rect.right
+                #if we have more momentum, push them back with the force of our velocity
+                if x_momentum_diff > 0:
+                    self.enemy.change_x = self.change_x + 4
+                    self.change_x = 0
+                    # self.enemy.change_y += self.change_y/2
+                elif x_momentum_diff < 0:
+                    self.change_x = self.enemy.change_x
+                    self.enemy.change_x = 0
+                else:
+                    self.change_x += -4
+                    self.enemy.change_x += 4
+            
+            #our right side is inside their left side and our bottom is higher than their top
+            if (self.rect.right > self.enemy.rect.left) and self.rect.bottom < self.enemy.rect.top + 10:
+                #set our right to their left
+                self.rect.bottom = self.enemy.rect.top
+                #bounce a lil
+                self.change_y -= 1
+            
+            if (self.rect.right > self.enemy.rect.left) and self.rect.top > self.enemy.rect.bottom - 10:
+                self.enemy.rect.bottom = self.rect.top
+                self.enemy.change_y -= 1
+
+            
+            #our left side is inside their right side and our bottom is higher than their top
+            if (self.rect.left < self.enemy.rect.right) and self.rect.bottom < self.enemy.rect.top + 10:
+                #set our bottom to their top
+                self.rect.bottom = self.enemy.rect.top
+                #bounce a lil
+                self.change_y -= 1
+
+            if (self.rect.left < self.enemy.rect.right) and self.rect.top > self.enemy.rect.bottom - 10:
+                self.enemy.rect.bottom = self.rect.top
+                self.enemy.change_y -= 1
+
+            if self.rect.left == self.enemy.rect.left and self.rect.top > self.enemy.rect.bottom - 10:
+                self.enemy.rect.bottom = self.rect.top
+                self.enemy.change_y -= 1
+            
+            if self.rect.left == self.enemy.rect.left and self.rect.bottom < self.enemy.rect.top + 10:
+                self.rect.bottom = self.enemy.rect.top
+                self.change_y -= 4
 
 
-                #our right side is inside their left side and our bottom lower than their top
-                if (self.rect.right > self.enemy.rect.left) and self.rect.bottom > self.enemy.rect.top + 4:
-                    #set our right to their left
-                    # self.rect.right = self.enemy.rect.left
-                    #if we have more momentum, push them back with the force of our velocity
-                    if x_momentum_diff >= 0:
-                        self.enemy.change_x = self.change_x - 15
-                        self.change_x = 0
-                        # self.enemy.change_y += self.change_y/2
-                    else:
-                        self.change_x = self.enemy.change_x
-                        self.enemy.change_x = 0
-                #our left side is inside their right side and our bottom lower than their top
-                if (self.rect.left < self.enemy.rect.right) and self.rect.bottom > self.enemy.rect.top + 10:
-                    #set our left to their right
-                    # self.rect.left = self.enemy.rect.right
-                    #if we have more momentum, push them back with the force of our velocity
-                    if x_momentum_diff >= 0:
-                        self.enemy.change_x = self.change_x + 15
-                        self.change_x = 0
-                        # self.enemy.change_y += self.change_y/2
-                    else:
-                        self.change_x = self.enemy.change_x
-                        self.enemy.change_x = 0
-                
-                #our right side is inside their left side and our bottom is higher than their top
-                if (self.rect.right > self.enemy.rect.left) and self.rect.bottom < self.enemy.rect.top + 10:
-                    #set our right to their left
-                    self.rect.bottom = self.enemy.rect.top
-                    #bounce a lil
-                    self.change_y -= 1
-                
-                if (self.rect.right > self.enemy.rect.left) and self.rect.top > self.enemy.rect.bottom - 10:
-                    self.enemy.rect.bottom = self.rect.top
-                    self.enemy.change_y -= 1
-
-                
-                #our left side is inside their right side and our bottom is higher than their top
-                if (self.rect.left < self.enemy.rect.right) and self.rect.bottom < self.enemy.rect.top + 10:
-                    #set our bottom to their top
-                    self.rect.bottom = self.enemy.rect.top
-                    #bounce a lil
-                    self.change_y -= 1
-
-                if (self.rect.left < self.enemy.rect.right) and self.rect.top > self.enemy.rect.bottom - 10:
-                    self.enemy.rect.bottom = self.rect.top
-                    self.enemy.change_y -= 1
-
-                if self.rect.left == self.enemy.rect.left and self.rect.top > self.enemy.rect.bottom - 10:
-                    self.enemy.rect.bottom = self.rect.top
-                    self.enemy.change_y -= 1
-                
-                if self.rect.left == self.enemy.rect.left and self.rect.bottom < self.enemy.rect.top + 10:
-                    self.rect.bottom = self.enemy.rect.top
-                    self.change_y -= 4
-
-
-
-
-    def think(self, point, mousePoint = None, mouseFlag = False,  freeze = False,):
+    def think(self):
         """
         Converts output of neural net into events
         that generate actions for the specific player
         in the main driver class
-        """
-        #WWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWW
-        max = 0
-        maxIndex = 0
+        """        
+
+        float max = 0
+        int maxIndex = 0
+        
+        #look around 
+        self.vision = self.look()
+
         #get the output of the neural network
-        decision = self.brain.feedForward(self.vision)
+        decision = self.brain.feedForward(vision);
+
+        j = 0
         for i in decision:
-            if (decision[i] > max):
+            j += 1
+            if (decision[i] = > max):
                 max = decision[i]
-                maxIndex = i
-        #MMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMM
-        
-        if freeze:
-            return
-        else:
-            action = random.randint(0,10)
-            self.executeAction(action)
-        if mouseFlag == True:
-          if (self.rect.x < mousePoint[0] and self.rect.x + self.width > mousePoint[0]) and (self.rect.y < mousePoint[1] and self.rect.y + self.height > mousePoint[1]):
-            self.health -= 10 
-            # pygame.event.post(self.damage)
-
-        #WWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWW
-        if (self.rect.x < self.vision[0] and self.rect.x + self.width > self.vision[0]) and (self.rect.y < self.vision[1] and self.rect.y + self.height > self.vision[1]):
-            # print("Player ", self.playerID, " has ", self.health)
-            pygame.event.post(self.damage)
-
-        if self.rect.x > self.vision[0]:
-            pygame.event.post(self.moveRightEvent)
-        elif self.rect.x < self.vision[0]:
-            pygame.event.post(self.moveLeftEvent)
-        elif self.distanceToPoint(point) < 100:
-            pygame.event.post(self.jumpEvent)
-        #MMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMM
+                maxIndex = j
             
-        # if self.distanceToPoint(point, True, RED, "X") < 50:
-        #     self.attack()
-        
-        if self.enemy.deadFlag:
+
+        if maxIndex == 0:
+            self.go_left()
+        if maxIndex == 1:
             self.go_right()
-        else:
-            if self.rect.x < point[0]:
-                self.go_right()
-                # pygame.event.post(self.moveRightEvent)
-            elif self.rect.x > point[0]:
-                self.go_left()
-                # pygame.event.post(self.moveLeftEvent)
-            elif self.distanceToPoint(point) < 100:
-                self.jump()
-                # pygame.event.post(self.jumpEvent)
-            #add to next statement when debugged:
-            else:
-                self.stop()
-                # pygame.event.post(self.stopEvent)
+        if maxIndex == 2:
+            self.jump()
+        if maxIndex == 3:
+            self.attack()
+
+    def look(self):
+        vision = []
+        #player_x
+        vision.append(self.rect.x)
+        #player_y
+        vision.append(self.rect.y)
+        #player_x_velocity
+        vision.append(self.change_x)
+        #player_y_velocity
+        vision.append(self.change_y)
+        #player_is_attacking
+        vision.append(self.isAttacking)
+        #player_attack_delay
+        vision.append(self.attackDelay)
+        #player_health
+        vision.append(self.numHearts)
+        #enemy_x
+        vision.append(self.enemy.rect.x)
+        #enemy_y
+        vision.append(self.enemy.rect.y)
+        #enemy_x_velocity
+        vision.append(self.enemy.change_x)
+        #enemy_y_velocity
+        vision.append(self.enemy.change_y)
+        #enemy_is_attacking
+        vision.append(self.enemy.isAttacking)
+        #enemy_attack_delay
+        vision.append(self.enemy.attackDelay)
+        #enemy_health
+        vision.append(self.enemy.numHearts)
+        return vision
     
     def setEnemy(self, enemy):
         if enemy == None:
             self.enemy = None
         self.enemy = enemy
 
-    #WWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWW
-    def look(self, otherPlayers, gameWidth):
-        min = 10000
-        minIndex = -1
-        vision = [ "", "", ""]
-    
-        poscalc = Enemy.enemy.rect.x + Enemy.enemy.rect.y / 2 - (self.posX - gameWidth / 2)
-        if(poscalc < min and poscalc > 0):
-            min = poscalc
-    
-        vision[1] = poscalc ##This is the distance between the players
-        vision[2] = self.otherPlayer.direction ##We might have to fix this <---- direction other player is facing
-        vision[0] = 1.0/(min/10.0) # <----What does this calculate?
-        return self.vision #<--- this wasn't returned inthe dino run c version  
-        
-#MMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMM
+    def updateFitness(self):
+      self.fitness = (50 * self.numKills) - (50 * self.numDeaths)
+      self.fitness += (100 * self.numGoals) - (100*self.enemy.numGoals)
+      self.fitness += self.runningDistance/(self.numDeaths + 1)
 
-    def calculateFitness(self):
-        progressToGoal = self.distanceToPoint((800,500), False, RED, "X") / 500
-        timeAlive = self.framesAlive / 60
-        health = self.health / self.maxHealth
-        fitness = timeAlive - progressToGoal + health
-        self.runningFitness += fitness
-        self.totalFitnessCalculations += 1
-        return fitness
+        # progressToGoal = self.distanceToPoint((800,500), False, RED, "X") / 500
+        # timeAlive = self.framesAlive / 60
+        # numHearts = self.health / self.maxHealth
+        # fitness = timeAlive - progressToGoal + health
+        # self.runningFitness += fitness
+        # self.totalFitnessCalculations += 1
+        # return fitness
     
-    def determineAvgFitness(self):
-        return self.runningFitness / self.totalFtinessCalculations
-
     def updateHealth(self):
+        for hearts in range(self.numHearts):
+            self.screen.blit(heart,((self.startx + (hearts * 40)), 35))
+        for deaths in range(self.numDeaths):
+            self.screen.blit(death,((self.startx + ((deaths % 6) * 40)), (110 + (int(deaths/6)*40))))
+        if self.numHearts <= 0:
+            self.respawn()
+            self.numDeaths += 1
+    
+
+
         # print(self.playerID, " is updating health: ", self.health)
         """Heart Code"""
-        for heartCount in range(self.numLives):
-            self.screen.blit(heart, (self.startx + (heartCount*40),35))
+        # for heartCount in range(self.numLives):
+        #     self.screen.blit(heart, (self.startx + (heartCount*40),35))
 
-        """Health Bar Code"""
-        healthBarLength = (self.health/self.maxHealth) * self.width
+        """Health Bar Code -- placed at top"""
+        # healthBarLength = (self.health/self.maxHealth) * self.width
 
-        if (self.health <= 0) and (self.numLives == 0):
-            print("Killing player: ", self.playerID)
-            self.deadFlag = True
-            self.level.player_list.remove(self)
-        else:
+        # if (self.health <= 0) and (self.numLives == 0):
+        #     print("Killing player: ", self.playerID)
+        #     self.deadFlag = True
+        #     self.level.player_list.remove(self)
             # Display a health bar with colors corresponding to the player's remaining health
-            if self.health <= 0 and self.numLives > 0:
-                self.respawn()
-            else:
-                if self.health/self.maxHealth > .8:
-                    pygame.draw.line(self.screen, GREEN, (self.rect.x, self.rect.y - 10), (self.rect.x + healthBarLength, self.rect.y - 10), 4)
-                elif self.health/self.maxHealth > .5:
-                    pygame.draw.line(self.screen, PALEGREEN, (self.rect.x, self.rect.y - 10), (self.rect.x + healthBarLength, self.rect.y - 10), 4)
-                elif self.health/self.maxHealth > .2:
-                    healthBarLength = (self.health/self.maxHealth) * self.width
-                    pygame.draw.line(self.screen, YELLOW, (self.rect.x, self.rect.y - 10), (self.rect.x + healthBarLength, self.rect.y - 10), 4)
-                else: 
-                    pygame.draw.line(self.screen, RED, (self.rect.x, self.rect.y - 10), (self.rect.x + healthBarLength, self.rect.y - 10), 4)  
-        
+            # if self.health/self.maxHealth > .8:
+            #     #
+            #     pygame.draw.line(self.screen, GREEN, (self.rect.x, self.rect.y - 10), (self.rect.x + healthBarLength, self.rect.y - 10), 4)
+            # elif self.health/self.maxHealth > .5:
+            #     pygame.draw.line(self.screen, PALEGREEN, (self.rect.x, self.rect.y - 10), (self.rect.x + healthBarLength, self.rect.y - 10), 4)
+            # elif self.health/self.maxHealth > .2:
+            #     healthBarLength = (self.health/self.maxHealth) * self.width
+            #     pygame.draw.line(self.screen, YELLOW, (self.rect.x, self.rect.y - 10), (self.rect.x + healthBarLength, self.rect.y - 10), 4)
+            # else: 
+            #     pygame.draw.line(self.screen, RED, (self.rect.x, self.rect.y - 10), (self.rect.x + healthBarLength, self.rect.y - 10), 4)  
+    
     def distanceToPoint(self, point, drawFlag = False, color = WHITE, axis = "BOTH"):
         x_goal = point[0]
         y_goal = point[1]
@@ -460,16 +462,10 @@ class Player(pygame.sprite.Sprite):
         if len(platform_hit_list) > 0 or self.rect.bottom >= SCREEN_HEIGHT:
                 self.change_y = -10
     
-    def boost(self):
-        """Moves faster!"""
-        if self.direction == "left":
-            self.change_x -= 10
-        elif self.direction == "right":
-            self.change_x += 10   
-
     def go_left(self):
         """ Called when the user hits the left arrow. """
         self.direction = "left"
+        self.image = pygame.image.load('Images/playerleftangry.png')
         if self.change_x < -8:
             self.change_x = -8
         else:
@@ -478,15 +474,11 @@ class Player(pygame.sprite.Sprite):
     def go_right(self):
         """ Called when the user hits the right arrow. """
         self.direction = "right"
-        if self.change_x > 8:
-            self.change_x = 8
+        self.image = pygame.image.load('Images/playerrightangry.png')
+        if self.change_x > 4:
+            self.change_x = 4
         else:
             self.change_x += .5
-
-    def stop(self):
-        """ Called when the user lets off the keyboard. """
-        self.direction = "none"
-        self.change_x = 0
 
     def attack(self):
         if self.isAttacking == True:
@@ -513,67 +505,13 @@ class Player(pygame.sprite.Sprite):
             self.go_right()
         elif action == 2:
             self.jump()
-        # elif action == 3:
-        #     self.stop()
         elif (action == 4):
             self.attack()
 
     def respawn(self):
-        # Respawn back to starting point
-        self.numLives -= 1
-    
-        # if self.numDeaths < 3:
-        if self.numLives != 0:
-            self.rect.x = self.startx
-            self.rect.y = self.starty
-            self.health = 40
-            
-
-
-
-            
-
-        #     self.rect.x += self.change_x
-            # POSSIBLE BUG FIX
-        """
-        Compare player and enemy change_y (which is based on gravity, so not static)
-        Whichecher is larger, tells the other what to do. 
-        Possibly set enemy's change_y to player's if player's larger
-        """
-
-            # elif self.change_y < 0:
-            #     self.change_y += 3
-            # #going down
-            # elif self.change_y > 0:
-            #     self.change_y += 3
-
-        # if self.enemy.deadFlag == False:
-        #     if pygame.sprite.collide_rect(self, self.enemy):
-        #             # moving right - we are not above or below enemy
-        #         if self.change_x > 0 and ((self.rect.bottom > self.enemy.rect.bottom and self.rect.top < self.enemy.rect.bottom) or (self.rect.bottom > self.enemy.rect.top and self.rect.top > self.enemy.rect.bottom)):
-        #             # self.rect.right = self.enemy.rect.left
-        #             self.change_x = -3
-        #             self.enemy.change_x = -5
-        #         #moving left - we are not above or below the enemy
-        #         elif self.change_x < 0 and ((self.rect.bottom > self.enemy.rect.bottom and self.rect.top < self.enemy.rect.bottom) or (self.rect.bottom > self.enemy.rect.top and self.rect.top > self.enemy.rect.bottom)):
-        #             # self.rect.left = self.enemy.rect.right
-        #             self.change_x = 3
-        #             self.enemy.change_x = 5
-        #         #moving right - we are above enemy moving down
-        #         if (self.change_x > 0 and self.change_y > 0) and (self.rect.bottom > self.enemy.rect.top and self.rect.right > self.enemy.rect.right):
-        #             # self.rect.bottom = self.enemy.rect.top
-        #             self.change_y = -8
-        #             self.change_x = 3
-        #         #moving left - we are above enemy moving down
-        #         if (self.change_x < 0 and self.change_y > 0) and (self.rect.bottom > self.enemy.rect.top and self.rect.left < self.enemy.rect.left):
-        #             # self.rect.bottom = self.enemy.rect.top
-        #             self.change_y = -8
-        #             self.change_x = -3
-        #         #moving right - we are below enemy moving up
-        #         if self.change_x > 0 and self.change_y < 0 and self.rect.bottom > self.enemy.rect.bottom and self.rect.right > self.enemy.rect.right:
-        #             self.enemy.rect.bottom = self.rect.top
-        #             self.enemy.change_y = 3
-        #         #moving left - we are below enemy moving up
-        #         if self.change_x < 0 and self.change_y < 0 and self.rect.bottom > self.enemy.rect.bottom and self.rect.left < self.enemy.rect.left:
-        #             self.enemy.rect.bottom = self.rect.top
-        #             self.enemy.change_y = 3
+        # Respawn back to starting point       
+        self.rect.x = self.startx
+        self.rect.y = self.starty
+        self.numHearts = self.maxHearts
+        self.runningDistance += self.maxDistance
+        self.maxDistance = 0
