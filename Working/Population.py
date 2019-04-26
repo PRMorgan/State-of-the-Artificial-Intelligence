@@ -181,3 +181,13 @@ class Population():
         for i in range(5, len(self.species)):
                 self.species.remove(i) #sad
                 i -= 1
+    
+    def draw(self, showNothing, showIndex):
+        if not showNothing:
+            if showIndex == -1: #showAll
+                self.games[0].level.drawBG(self.games[0])
+                for game in self.games:
+                    game.level.draw() #draw elements
+            else: #use index - show only that game
+                self.games[showIndex].level.drawBG(self.games[showIndex])
+                self.games[showIndex].level.draw()

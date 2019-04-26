@@ -47,8 +47,8 @@ class Game():
         self.intiializeGame()
     
     def updateAllHealth(self):
-        self.player.updateHealth
-        self.enemy.updateHealth
+        self.player.updateHealth()
+        self.enemy.updateHealth()
         
 
     def intiializeGame(self):
@@ -57,7 +57,7 @@ class Game():
         self.player = Player(darkcolors[random.randint(0,len(darkcolors) - 1)], self.screen, (0,450))
         self.player.rect.x = 0 # x-position
         self.player.rect.y =  450 # y-position
-        self.level = Level_01(self.player)
+        self.level = Level_01(self.player,self.screen)
         self.player.level = self.level
 
         enemyID = str(self.gameNum) + str(2)
@@ -76,3 +76,4 @@ class Game():
         self.enemy.setEnemy(self.player)
 
         self.player.initializeNeuralNet()
+

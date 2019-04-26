@@ -15,8 +15,6 @@ PALEGREEN = (152,251,152)
 ROSYBROWN = (188,143,143)
 PALEVIOLET = (219,112,147)
 YELLOW = (255,255,0)
-heart = pygame.image.load('Images/heart.png')
-death = pygame.image.load('Images/skull.png')
 
 #hurtSound = pygame.mixer.Sound("SFX/LinkHurtEnemy.wav")
 #attackSound = pygame.mixer.Sound("SFX/LinkAttackEnemy.wav")
@@ -90,6 +88,8 @@ class Enemy(pygame.sprite.Sprite):
 
         if self.attackDelay != 0:
             self.attackDelay -= 1
+        if self.attackDelay == 0:
+            self.attack()
 
         self.enemyPos = (self.enemy.rect.x, self.enemy.rect.y)
         self.think(self.enemyPos, mouse_pos, True, self.freeze)
@@ -171,8 +171,8 @@ class Enemy(pygame.sprite.Sprite):
             if (self.rect.x < mousePoint[0] and self.rect.x + self.width > mousePoint[0]) and (self.rect.y < mousePoint[1] and self.rect.y + self.height > mousePoint[1]):
                 self.numHearts -= 1
 
-        if self.distanceToPoint(point, True, RED, "X") < 50:
-            self.attack()
+        # if self.distanceToPoint(point, True, RED, "X") < 50:
+        #     self.attack()
 
         if self.rect.y > point[1]:
             self.jump()
@@ -187,58 +187,58 @@ class Enemy(pygame.sprite.Sprite):
         self.enemy = enemy
 
     def updateHealth(self):
-        for hearts in range(self.numHearts):
-                self.screen.blit(heart, ((self.startx - 160 + (hearts * 40)), 90))
-        for deaths in range(self.enemy.numKills):
-            self.screen.blit(death,((self.startx - 40 + ((deaths % 6) * -40)), (130 + (int(deaths/6)*40))))
+        # for hearts in range(self.numHearts):
+        #         self.screen.blit(heart, ((self.startx - 160 + (hearts * 40)), 90))
+        # for deaths in range(self.enemy.numKills):
+        #     self.screen.blit(death,((self.startx - 40 + ((deaths % 6) * -40)), (130 + (int(deaths/6)*40))))
         if self.numHearts <= 0:
             self.respawn()
             self.enemy.numKills += 1
         
-    def distanceToPoint(self, point, drawFlag = False, color = WHITE, axis = "BOTH"):
-        x_goal = point[0]
-        y_goal = point[1]
+    # def distanceToPoint(self, point, drawFlag = False, color = WHITE, axis = "BOTH"):
+    #     x_goal = point[0]
+    #     y_goal = point[1]
 
-        player_pos = (self.rect.x + (self.width/2), self.rect.y + (self.height/2))
-        x_player = player_pos[0]
-        y_player = player_pos[1]
+    #     player_pos = (self.rect.x + (self.width/2), self.rect.y + (self.height/2))
+    #     x_player = player_pos[0]
+    #     y_player = player_pos[1]
 
-        x_distance = abs(x_goal - x_player)
-        y_distance = abs(y_goal - y_player)
+    #     x_distance = abs(x_goal - x_player)
+    #     y_distance = abs(y_goal - y_player)
 
-        if axis == "BOTH":
-            total_distance = x_distance*x_distance + y_distance*y_distance
-            total_distance = math.sqrt(total_distance)
-            total_distance = int(total_distance)
-        if axis == "X":
-            total_distance = x_distance
-        if axis == "Y":
-            total_distance = y_distance
+    #     if axis == "BOTH":
+    #         total_distance = x_distance*x_distance + y_distance*y_distance
+    #         total_distance = math.sqrt(total_distance)
+    #         total_distance = int(total_distance)
+    #     if axis == "X":
+    #         total_distance = x_distance
+    #     if axis == "Y":
+    #         total_distance = y_distance
 
-        if drawFlag == True:
-            font = pygame.font.SysFont('tahoma', 15, False, False)
-            # HIT TEXT
-            distanceText = font.render(str(total_distance), True, WHITE)
-            x_mid = x_player
-            y_mid = y_player
-            if x_player <= x_goal:
-                x_mid += x_distance/2
-            else:
-                x_mid -= x_distance/2
-            if y_player <= y_goal:
-                y_mid += y_distance/2
-            else:
-                y_mid -= y_distance/2
+    #     if drawFlag == True:
+    #         font = pygame.font.SysFont('tahoma', 15, False, False)
+    #         # HIT TEXT
+    #         distanceText = font.render(str(total_distance), True, WHITE)
+    #         x_mid = x_player
+    #         y_mid = y_player
+    #         if x_player <= x_goal:
+    #             x_mid += x_distance/2
+    #         else:
+    #             x_mid -= x_distance/2
+    #         if y_player <= y_goal:
+    #             y_mid += y_distance/2
+    #         else:
+    #             y_mid -= y_distance/2
 
-            if axis =="X":
-                pygame.draw.line(self.screen, color, player_pos, (x_goal, y_player), 1)
-                midPoint = (x_mid, y_player)
-            else:
-                pygame.draw.line(self.screen, self.color, player_pos, point, 1)
-                midPoint = (x_mid, y_mid)
-            self.screen.blit(distanceText, midPoint)
+    #         if axis =="X":
+    #             pygame.draw.line(self.screen, color, player_pos, (x_goal, y_player), 1)
+    #             midPoint = (x_mid, y_player)
+    #         else:
+    #             pygame.draw.line(self.screen, self.color, player_pos, point, 1)
+    #             midPoint = (x_mid, y_mid)
+    #         self.screen.blit(distanceText, midPoint)
 
-        return total_distance
+    #     return total_distance
 
     def calc_friction(self):
         if self.change_x > 0:
