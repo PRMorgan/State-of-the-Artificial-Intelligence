@@ -61,7 +61,8 @@ class NeuralNet:
         #the outputs are nodes[inputs] to nodes [inputs+outputs-1]
         outs = []
         for i in range(self.outputs):
-            outs.append(self.nodes[self.inputs + i].outputValue)
+            tempNode = self.getNode(self.inputs + i)
+            outs.append(tempNode.outputValue)
         for i in self.nodes: #reset all the nodes for the next feed forward
             i.inputSum = 0
         return outs

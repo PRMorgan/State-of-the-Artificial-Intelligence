@@ -1,6 +1,7 @@
 from Player import *
 from Enemy import *
 from Level import *
+
 import random
 import pygame
 
@@ -86,6 +87,3 @@ class Game():
 
         self.player.setEnemy(self.enemy)
         self.enemy.setEnemy(self.player)
-
-        self.player.brain.generateNetwork()
-        #self.player.brain.mutate()

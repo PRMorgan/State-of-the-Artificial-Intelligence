@@ -13,15 +13,15 @@ class Node():
   #---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
   #the node sends its output to the inputs of the nodes its connected to
   def engage(self):
-    outputValue = 0
     if self.layer != 0: #no sigmoid for the inputs and bias
-      outputValue = self.sigmoid(self.inputSum)
+      self.outputValue = self.sigmoid(self.inputSum)
 
     for i in self.outputConnections: #for each connection
         if i.enabled: #dont do shit if not enabled
-            i.toNode.inputSum += i.weight * outputValue #add the weighted output to the sum of the inputs of whatever node this node is connected to
+            i.toNode.inputSum += i.weight * self.outputValue #add the weighted output to the sum of the inputs of whatever node this node is connected to
 
-#----------------------------------------------------------------------------------------------------------------------------------------
+#---------------------------------------
+# -------------------------------------------------------------------------------------------------
 #not used
   def stepFunction(self, x):
     if x < 0:
@@ -31,8 +31,11 @@ class Node():
 #---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
 #sigmoid activation function
   def sigmoid(self, x):
-    y = 1 / (1 + pow(math.e, -4.9*x))
-    return y
+    ##OG was -4.9 * x
+    if x < 0:
+      return 1 / (1 + math.exp(4.9 * x))
+    else:
+      return 1/(1 + math.exp((-4.9) * x))
  #----------------------------------------------------------------------------------------------------------------------------------------------------------
  #returns whether this node connected to the parameter node
  #used when adding a new connection 
