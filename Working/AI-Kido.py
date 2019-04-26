@@ -24,7 +24,7 @@ BLUE = (0, 0, 255)
 WHITE = (255, 255, 255)
 
 FRAMERATE = 60
-TOTALTIME = 30
+TOTALTIME = 5
 
 SCREEN_WIDTH = 800
 SCREEN_HEIGHT = 600
@@ -156,7 +156,7 @@ def main():
             if timeremaining <= 0:
                 for game in pop.games:
                     game.player.respawn()
-                    game.player.updateFitness()
+                    game.player.calculateFitness()
                     print("K: " + str(game.player.numKills))
                     print("D: " + str(game.player.numDeaths))
                     print("G: " + str(game.player.numGoals))
@@ -170,7 +170,7 @@ def main():
             pygame.display.flip()
         gameUI.done = False
         timeremaining = FRAMERATE * TOTALTIME
-        #pop.naturalSelection()
+        pop.naturalSelection()
 
         # Be IDLE friendly. If you forget this line, the program will 'hang'
         # on exit.
@@ -202,7 +202,7 @@ class Interface():
 
     def displayText(self, screen, msg,x,y,w,h,color):
         #pygame.draw.rect(screen, color,(x,y,w,h))
-        font = pygame.font.SysFont('Noteworthy', 24, True, False)
+        font = pygame.font.SysFont('Georgia', 24, True, False)
         text = font.render(msg, True, WHITE)
         pos = [x,y]
         screen.blit(text, pos)

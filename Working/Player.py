@@ -29,7 +29,7 @@ class Player(pygame.sprite.Sprite):
         controls. """
  
     # -- Methods
-    def __init__(self, playerID, color, screen, startPos, freeze = False):
+    def __init__(self, color, screen, startPos):
         """ Constructor function """
  
         # Call the parent's constructor
@@ -39,16 +39,11 @@ class Player(pygame.sprite.Sprite):
         # This could also be an image loaded from the disk.
         self.width = 40
         self.height = 60
-
-        self.freeze = freeze
-
         self.enemy = None
         self.enemyPos = None
 
         self.maxHearts = 4
         self.numHearts = 4
-        # self.deadFlag = False
-        # self.numLives = 3
 
         self.numDeaths = 0
         self.numKills = 0
@@ -58,7 +53,6 @@ class Player(pygame.sprite.Sprite):
         self.fitness = 0.0
 
         self.color = color 
-        self.playerID = playerID
 
         self.sword = None
         self.isAttacking = False
@@ -66,19 +60,18 @@ class Player(pygame.sprite.Sprite):
 
         self.direction = "right"
 
-        # self.damage = pygame.event.Event(pygame.USEREVENT, action = "damage", id= playerID)
-        self.sideJumpCount = 0
         self.image = pygame.Surface([self.width, self.height])
         self.image.fill(color)
 
         # So our player can modify the overall screen
         self.screen = screen
- 
+
+        self.brain = None
+
         # Set a referance to the image rect.
         self.rect = self.image.get_rect()
 
         #coordinate point
-        self.player_coord = (self.rect.x, self.rect.y)
         self.startPos = startPos
         self.startx = self.startPos[0]
         self.starty = self.startPos[1]
@@ -89,14 +82,28 @@ class Player(pygame.sprite.Sprite):
  
         # List of sprites we can bump against
         self.level = None
+
+    def clone(self):
+        clone = Player(self.color, self.screen, self.startPos)
+        clone.brain = self.brain.clone()
+        clone.brain.generateNetwork()
+        return clone
+
+    def cloneForReplay(self):
+        clone = Player(self.color, self.screen, self.startPos)
+        clone.brain = self.brain.clone()
+        clone.brain.generateNetwork()
+        clone.fitness = self.fitness
+        return clone
+
     
     def initializeNeuralNet(self):
         #How many input/outputs do we need??
         genomeInputs = 12
         genomeOutputs = 4
         self.brain = NeuralNet(genomeInputs, genomeOutputs)
-        self.vision = self.look(self.enemy, self.screen)
-        self.decision = self.think(self.vision, None, False, None)
+        self.vision = self.look()
+        self.decision = self.think(self.vision, None, False)
     
     def update(self):
         # """ Update our position knowledge """
@@ -111,13 +118,7 @@ class Player(pygame.sprite.Sprite):
         mouse_pos = pygame.mouse.get_pos()
         self.enemyPos = (self.enemy.rect.x, self.enemy.rect.y)
      
-        # """ Who is alive """
-        # if self.enemy.numLives == 0:
-        #     self.level.enemy_list.remove(self.enemy)
-    
-        # """ Pass environment data to think """
-        #self.think(self.enemyPos, mouse_pos, True, self.freeze)
-        self.think([800], mouse_pos, True, self.freeze)
+        self.think([800], mouse_pos, True)
 
         # """ Move the player. """
         # Gravity
@@ -186,10 +187,6 @@ class Player(pygame.sprite.Sprite):
 
                 # Move up/down
                 
-        "To implement side jumping"
-        # if len(block_hit_list) > 0 or self.rect.bottom >= SCREEN_HEIGHT:
-        #     self.sideJumpCount = 0
-
     def entityCollision(self):
        
         if pygame.sprite.collide_rect(self, self.enemy):
@@ -262,17 +259,15 @@ class Player(pygame.sprite.Sprite):
                 self.change_y -= 4
 
 
-    def think(self, point, mousePoint = None, mouseFlag = False,  freeze = False,):
+    def think(self, point, mousePoint = None, mouseFlag = False):
         """
         Converts output of neural net into events
         that generate actions for the specific player
         in the main driver class
         """
-        if freeze:
-            return
-        else:
-            action = random.randint(0,10)
-            self.executeAction(action)
+
+        action = random.randint(0,10)
+        self.executeAction(action)
         if mouseFlag == True:
           if (self.rect.x < mousePoint[0] and self.rect.x + self.width > mousePoint[0]) and (self.rect.y < mousePoint[1] and self.rect.y + self.height > mousePoint[1]):
             self.numHearts -= 1
@@ -288,7 +283,7 @@ class Player(pygame.sprite.Sprite):
         elif self.distanceToPoint(point) < 100:
             self.jump()
 
-    def look(self, otherPlayers, gameWidth):
+    def look(self):
         vision = []
         #player_x
         vision.append(self.rect.x)
@@ -325,7 +320,7 @@ class Player(pygame.sprite.Sprite):
             self.enemy = None
         self.enemy = enemy
 
-    def updateFitness(self):
+    def calculateFitness(self):
       self.fitness = (50 * self.numKills) - (50 * self.numDeaths)
       self.fitness += (100 * self.numGoals) - (100*self.enemy.numGoals)
       self.fitness += self.runningDistance/(self.numDeaths + 1)
@@ -446,9 +441,8 @@ class Player(pygame.sprite.Sprite):
         platform_hit_list = pygame.sprite.spritecollide(self, self.level.platform_list, False)
         self.rect.y -= 4
 
-        if (self.rect.left == 0 or self.rect.right == SCREEN_WIDTH) and self.sideJumpCount == 0:
+        if (self.rect.left == 0 or self.rect.right == SCREEN_WIDTH):
                 self.change_y = -10
-                self.sideJumpCount = 1
  
         # If it is ok to jump, set our speed upwards
         if len(platform_hit_list) > 0 or self.rect.bottom >= SCREEN_HEIGHT:

@@ -44,29 +44,17 @@ class Game():
 
         self.entities = []
 
-        self.createPopulation()
+        self.intiializeGame()
     
     def updateAllHealth(self):
         self.player.updateHealth
         self.enemy.updateHealth
         
-    # def isOver(self):
-    #     if self.player.deadFlag == True:
-    #         return True
-    #     else:
-    #         return False
-    
-    # def enemyKilled(self):
-    #     if self.enemy.deadFlag == True:
-    #         return True
-    #     else:
-    #         return False
 
-    def createPopulation(self):
+    def intiializeGame(self):
         """ Generate any number of players and add them to an environment"""
         #create player 1
-        playerID = str(self.gameNum) + str(1)
-        self.player = Player(playerID, darkcolors[random.randint(0,len(darkcolors) - 1)], self.screen, (0,450))
+        self.player = Player(darkcolors[random.randint(0,len(darkcolors) - 1)], self.screen, (0,450))
         self.player.rect.x = 0 # x-position
         self.player.rect.y =  450 # y-position
         self.level = Level_01(self.player)
