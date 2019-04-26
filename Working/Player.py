@@ -82,6 +82,10 @@ class Player(pygame.sprite.Sprite):
         # List of sprites we can bump against
         self.level = None
 
+        genomeInputs = 12
+        genomeOutputs = 4
+        self.brain = NeuralNet(genomeInputs, genomeOutputs)
+
     def clone(self):
         clone = Player(self.color, self.screen, self.startPos)
         clone.brain = self.brain.clone()
@@ -506,3 +510,9 @@ class Player(pygame.sprite.Sprite):
         self.numHearts = self.maxHearts
         self.runningDistance += self.maxDistance
         self.maxDistance = 0
+    
+    def crossover(self, parent2):
+        child = Player(self.color, self.screen, self.startPos)
+        child.brain = self.brain.crossover(parent2.brain)
+        child.brain.generateNetwork()
+        return child

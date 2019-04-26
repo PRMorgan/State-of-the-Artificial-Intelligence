@@ -30,7 +30,7 @@ class Enemy(pygame.sprite.Sprite):
         controls. """
  
     # -- Methods
-    def __init__(self, playerID, color, screen, startPos, freeze = False):
+    def __init__(self, color, screen, startPos, freeze = False):
         """ Constructor function """
  
         # Call the parent's constructor
@@ -51,7 +51,6 @@ class Enemy(pygame.sprite.Sprite):
         self.numGoals = 0
 
         self.color = color 
-        self.playerID = playerID
 
         self.sword = None
         self.isAttacking = False

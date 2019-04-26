@@ -238,25 +238,27 @@ class NeuralNet:
         isEnabled = [] 
 
         #all inherited genes
-        for i in range(len(self.genes)):
+        for gene in self.genes:
             setEnabled = True #is this node in the chlid going to be enabled
 
-            parent2gene = self.matchingGene(parent2, self.genes[i].innovationNo)
+            parent2gene = self.matchingGene(parent2, gene.innovationNo)
+
             if parent2gene != -1: #if the genes match
-                if not self.genes[i].enabled or not parent2.genes[parent2gene].enabled: 
+                #print("len ", str(len(parent2.genes)), " parent2gene ", parent2gene)
+                if not gene.enabled or not parent2.genes[parent2gene].enabled: 
                     #if either of the matching genes are disabled
                     if random.uniform(0,1) < 0.75: #75% of the time disabel the childs gene
                         setEnabled = False
                 rand = random.uniform(0,1)
                 if rand<0.5 :
-                    childGenes.append(self.genes[i])
+                    childGenes.append(gene)
                     #get gene
                 else:
                     #get gene from parent2
                     childGenes.append(parent2.genes[parent2gene])
             else: #disjoint or excess gene
-                childGenes.append(self.genes[i])
-                setEnabled = self.genes[i].enabled
+                childGenes.append(gene)
+                setEnabled = gene.enabled
             isEnabled.append(setEnabled)
 
         #since all excess and disjoint genes are inherrited from the more fit parent (this Genome) 
@@ -280,8 +282,8 @@ class NeuralNet:
     """
     # returns whether or not there is a gene matching the input innovation number  in the input genome
     def matchingGene(self, parent2, innovationNumber):
-        for i in self.genes:
-            if i.innovationNo == innovationNumber:
+        for i in range(len(self.genes)):
+            if self.genes[i].innovationNo == innovationNumber:
                 return i
         return -1 #no matching gene found
 

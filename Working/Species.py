@@ -16,6 +16,9 @@ class Species():
         self.bestFitness = p.fitness
         self.rep = p.brain.clone()
         self.champ = p.cloneForReplay()
+        self.staleness = 0
+        self.bestFitness = 0.0
+        self.averageFitness = 0.0
 
 
 #------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------ 
@@ -42,9 +45,9 @@ class Species():
     #i.e. returns the number of genes which dont match
     def getExcessDisjoint(self, brain1, brain2):
         matching = 0.0
-        for i in range(len(brain1.genes)):
+        for i in brain1.genes:
             for j in brain2.genes:
-                if i.innovationNo == brain2.genes[j].innovationNo:
+                if i.innovationNo == j.innovationNo:
                     matching += 1
                     break
         return len(brain1.genes) + len(brain2.genes) - 2 * (matching) # return no of excess and disjoint genes
@@ -80,11 +83,11 @@ class Species():
                 if self.players[j].fitness > maxScore:
                     maxScore = self.players[j].fitness
                     maxIndex = j
-
             temp.append(self.players[maxIndex])
-            self.players.remove(maxIndex)
+            self.players.pop(maxIndex)
             i -= 1
-        self.players = temp[:]
+
+        self.players = temp.copy()
         if len(self.players) == 0:
             self.staleness = 200
             return
@@ -101,6 +104,7 @@ class Species():
     #simple stuff
     def setAverage(self):
         sumScores = 0.0
+        print(len(self.players))
         for i in range(len(self.players)):
             sumScores += self.players[i].fitness
         self. averageFitness = sumScores / len(self.players)
@@ -109,7 +113,7 @@ class Species():
     # gets baby from the players in this species
     def giveMeBaby(self, innovationHistory):
         baby = None
-        if random.random(1) < 0.25: # 25% of the time there is no crossover and the child is simply a clone of a random(ish) player
+        if random.uniform(0,1) < 0.25: # 25% of the time there is no crossover and the child is simply a clone of a random(ish) player
             baby = self.selectPlayer().clone()
         else: # 75% of the time do crossover 
             # get 2 random(ish) parents 
@@ -131,7 +135,7 @@ class Species():
         for i in range(len(self.players)):
             fitnessSum += self.players[i].fitness
         
-        rand = random.random(fitnessSum)
+        rand = random.uniform(0,fitnessSum)
         runningSum = 0.0
 
         for i in range(len(self.players)):
@@ -146,9 +150,10 @@ class Species():
     #kills off bottom half of the species
     def cull(self):
         if len(self.players) > 2:
-            for i in range(len(self.players)/2, len(self.players)):
-                self.players.remove(i)
-                i -= 1
+            i = int(len(self.players)/2)
+            while i < len(self.players):
+                self.players.pop(i)
+
 
 #------------------------------------------------------------------------------------------------------------------------------------------
     #in order to protect unique players, the fitnesses of each player is divided by the number of players in the species that that player belongs to 

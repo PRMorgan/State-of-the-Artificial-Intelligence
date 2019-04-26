@@ -103,7 +103,7 @@ class Level(object):
 
         #draw enemy stats
         for hearts in range(game.enemy.numHearts):
-            self.screen.blit(heart, ((game.enemy.startx - 160 + (hearts * 40)), 90))
+            self.screen.blit(heart, ((game.enemy.startx -40 + (hearts * -40)), 90))
         for deaths in range(game.player.numKills):
             self.screen.blit(death,((game.enemy.startx - 40 + ((deaths % 6) * -40)), (130 + (int(deaths/6)*40))))
 
