@@ -265,21 +265,23 @@ class Player(pygame.sprite.Sprite):
         that generate actions for the specific player
         in the main driver class
         """
+        max = 0
+        maxIndex = 0
+        
         #look around 
         self.vision = self.look()
 
         #get the output of the neural network
         decision = self.brain.feedForward(self.vision);
 
+        for i in range(len(decision)):
+            if (decision[i] >= max):
+                max = decision[i]
+                maxIndex = i
 
-        #print(decision)
-        #Do some actions
-        for i in decision:
-            if(i > 1.0):
-                print(i)
-            self.executeAction(int(i))
-
-    
+        print("The action chosen is: ")
+        print (maxIndex)  
+        self.executeAction(maxIndex)
 
     def look(self):
         vision = []
@@ -486,11 +488,11 @@ class Player(pygame.sprite.Sprite):
     def executeAction(self, action):
         if action == 0:
             self.go_left()
-        elif action == 1:
+        elif action == 3:
             self.go_right()
         elif action == 2:
             self.jump()
-        elif action == 3:
+        elif action == 1:
             self.attack()
 
     def respawn(self):
