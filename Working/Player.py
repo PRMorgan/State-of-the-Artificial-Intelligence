@@ -55,6 +55,7 @@ class Player(pygame.sprite.Sprite):
         self.sword = None
         self.isAttacking = False
         self.attackDelay = 30 #30 frames between each attack
+        self.respawnDelay = 30 #Don't redraw the player upon death for 30 frames
 
         self.direction = "right"
 
@@ -337,8 +338,14 @@ class Player(pygame.sprite.Sprite):
         # for deaths in range(self.numDeaths):
         #     self.screen.blit(death,((self.startx + ((deaths % 6) * 40)), (130 + (int(deaths/6)*40))))
         if self.numHearts <= 0:
-            self.respawn()
-            self.numDeaths += 1
+            if self.respawnDelay == 0:
+                self.respawn() #Respawn on death
+                self.numDeaths += 1
+                self.respawnDelay = 30
+            else:
+                self.respawnDelay -= 1
+                self.rect.x = self.startx
+                self.rect.y = -self.height
     
 
 
@@ -493,7 +500,7 @@ class Player(pygame.sprite.Sprite):
             self.attack()
 
     def respawn(self):
-        # Respawn back to starting point       
+        # Respawn back to starting point
         self.rect.x = self.startx
         self.rect.y = self.starty
         self.numHearts = self.maxHearts

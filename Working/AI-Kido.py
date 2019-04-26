@@ -24,10 +24,10 @@ BLUE = (0, 0, 255)
 WHITE = (255, 255, 255)
 
 FRAMERATE = 60
-TOTALTIME = 5
+TOTALTIME = 20
 
 SCREEN_WIDTH = 800
-SCREEN_HEIGHT = 600
+SCREEN_HEIGHT = 624
 
 SCREEN_WIDTH_EXT = 1300
 
@@ -48,7 +48,7 @@ def main():
     showNothing = [False]
     showIndex = [-1] #default showAll
 
-    numGames = 3
+    numGames = 10
     pop = Population(numGames, screen)
 
     # Used to manage how fast the screen updates
@@ -71,6 +71,7 @@ def main():
             for event in pygame.event.get():
                 if event.type == pygame.QUIT:
                     gameUI.done = True
+                    gameUI.satisfied = True
                 
             # Update items in the level
             for game in pop.games:
@@ -92,12 +93,12 @@ def main():
             #     pop.games[showIndex[0]].updateAllHealth()
 
             #screen, text, x, y, width, height, color1, color, function
-            gameUI.button(screen, "Show Best",315,10,70,20,RED,BLUE,gameUI.showChamp, showIndex)
-            gameUI.button(screen, "Next",390,10,70,20,RED,BLUE,gameUI.nextGame, showIndex)
-            gameUI.button(screen, "Prev",465,10,70,20,RED,BLUE,gameUI.prevGame, showIndex)
-            gameUI.button(screen, "Show All",240,10,70,20,RED,BLUE,gameUI.showAll,showIndex)
-            gameUI.button(screen, "Show None",165,10,70,20,RED,BLUE,gameUI.showNothing,[],showNothing)
-            gameUI.button(screen, "Quit", 5, 575, 50, 20, RED, BLUE, gameUI.endGame)
+            gameUI.button(screen, "Show Best",315,602,70,20,RED,BLUE,gameUI.showChamp, showIndex)
+            gameUI.button(screen, "Next",390,602,70,20,RED,BLUE,gameUI.nextGame, showIndex)
+            gameUI.button(screen, "Prev",465,602,70,20,RED,BLUE,gameUI.prevGame, showIndex)
+            gameUI.button(screen, "Show All",240,602,70,20,RED,BLUE,gameUI.showAll,showIndex)
+            gameUI.button(screen, "Show None",165,602,70,20,RED,BLUE,gameUI.showNothing,[],showNothing)
+            gameUI.button(screen, "Quit", 5, 602, 50, 20, RED, BLUE, gameUI.endGame, True)
             
             if not showNothing[0]:
                 timemsg = str(int(timeremaining/FRAMERATE))
@@ -141,27 +142,29 @@ class Interface():
         self.numGames = numGames
         self.satisfied = False
         self.done = False
-    def button(self, screen, msg,x,y,w,h,ic,ac,action=None,showAll=[],showNothing=[]):
+        self.buttonsDrawn = False
+        self.font = pygame.font.SysFont('Georgia', 15, False, False)
+
+    def button(self, screen, msg,x,y,w,h,ic,ac,action=None,showAll=[],showNothing=[],lastButton = False):
+        if lastButton == True:
+            self.buttonsDrawn = True
+        if self.buttonsDrawn == False:
+            pygame.draw.rect(screen, ic,(x,y,w,h))
+            text = self.font.render(msg, True, WHITE)
+            pos = [x,y]
+            screen.blit(text, pos)
+        #else:
         mouse = pygame.mouse.get_pos()
         click = pygame.mouse.get_pressed()
         if x+w > mouse[0] > x and y+h > mouse[1] > y:
-            pygame.draw.rect(screen, ac,(x,y,w,h))
-
+            #pygame.draw.rect(screen, ac,(x,y,w,h))
             if click[0] == 1 and action != None:
                 if len(showAll) > 0:
-                      action(showAll)
+                    action(showAll)
                 elif len(showNothing) > 0:
                     action(showNothing)
                 else:
                     action()
-        else:
-            pygame.draw.rect(screen, ic,(x,y,w,h))
-        
-        font = pygame.font.SysFont('tahoma', 15, False, False)
-
-        text = font.render(msg, True, WHITE)
-        pos = [x,y]
-        screen.blit(text, pos)
 
     def displayText(self, screen, msg,x,y,w,h,color):
         #pygame.draw.rect(screen, color,(x,y,w,h))

@@ -35,6 +35,7 @@ maps = ["FinalRuins.gif",
         "Temple.gif",
         "FinalJudgement.gif"]
 overlay = pygame.image.load('Images/Backgrounds/MapForeground.png')
+bg = pygame.image.load('Images/Backgrounds/OriginalDojo.png')
 heart = pygame.image.load('Images/heart.png')
 death = pygame.image.load('Images/skull.png')
 
@@ -83,12 +84,14 @@ class Level(object):
         self.player_list.draw(self.screen)
 
     def drawBG(self, game):
+        """
         currentmapindex = (game.player.numGoals - game.enemy.numGoals) + 10
         if currentmapindex > 20:
             currentmapindex = 20
         elif currentmapindex < 0:
             currentmapindex = 0
         bg = pygame.image.load('Images/Backgrounds/' + maps[currentmapindex])
+        """
         self.screen.blit(bg, (0,0))
         self.screen.blit(overlay, (0,0))
         

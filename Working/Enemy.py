@@ -56,6 +56,7 @@ class Enemy(pygame.sprite.Sprite):
         self.sword = None
         self.isAttacking = False
         self.attackDelay = 30 #30 frames between each attack
+        self.respawnDelay = 30 #Don't redraw the enemy upon death for 30 frames
 
         self.direction = "left"
 
@@ -191,9 +192,21 @@ class Enemy(pygame.sprite.Sprite):
         #         self.screen.blit(heart, ((self.startx - 160 + (hearts * 40)), 90))
         # for deaths in range(self.enemy.numKills):
         #     self.screen.blit(death,((self.startx - 40 + ((deaths % 6) * -40)), (130 + (int(deaths/6)*40))))
+        
+        if self.numHearts <= 0:
+            if self.respawnDelay == 0:
+                self.respawn() #Respawn on death
+                self.enemy.numKills += 1
+                self.respawnDelay = 30
+            else:
+                self.respawnDelay -= 1
+                self.rect.x = self.startx
+                self.rect.y = -self.height
+        """
         if self.numHearts <= 0:
             self.respawn()
             self.enemy.numKills += 1
+        """
         
     # def distanceToPoint(self, point, drawFlag = False, color = WHITE, axis = "BOTH"):
     #     x_goal = point[0]
