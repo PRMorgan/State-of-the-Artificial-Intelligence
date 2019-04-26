@@ -5,7 +5,7 @@ class Population():
 
 #------------------------------------------------------------------------------------------------------------------------------------------
     #constructor
-    def __init__(self,size, screen):
+    def __init__(self, size, screen):
         self.games = []
         self.bestPlayer = None
         self.bestScore = 0
