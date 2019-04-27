@@ -34,46 +34,35 @@ TOMATO = (255,99,71)
 darkcolors = [BLUE, MEDIUMBLUE, MIDNIGHTBLUE, ROYALBLUE, INDIGO, DARKSLATE, SLATEBLUE]
 warmcolors = [MAROON, BROWN, FIREBRICK, CRIMSON, RED, ORANGERED, TOMATO]
 class Game():
-    def __init__(self, screen, gameNum):
+    def __init__(self, screen, player=None):
         """ Creates a game that contains two players and a level """
-        self.gameNum = gameNum
+        #self.gameNum = gameNum
         self.screen = screen
-        self.player = None
+        self.player = player
         self.enemy = None
         self.level = None
 
         self.entities = []
 
-        self.createPopulation()
-    
-    def updateAllHealth(self):
-        self.player.updateHealth
-        self.enemy.updateHealth
-        
-    # def isOver(self):
-    #     if self.player.deadFlag == True:
-    #         return True
-    #     else:
-    #         return False
-    
-    # def enemyKilled(self):
-    #     if self.enemy.deadFlag == True:
-    #         return True
-    #     else:
-    #         return False
+        self.intiializeGame()
 
-    def createPopulation(self):
+
+    def updateAllHealth(self):
+        self.player.updateHealth()
+        self.enemy.updateHealth()
+        
+
+    def intiializeGame(self):
         """ Generate any number of players and add them to an environment"""
         #create player 1
-        playerID = str(self.gameNum) + str(1)
-        self.player = Player(playerID, darkcolors[random.randint(0,len(darkcolors) - 1)], self.screen, (0,450))
+        self.player = Player(darkcolors[random.randint(0,len(darkcolors) - 1)], self.screen, (0,450))
         self.player.rect.x = 0 # x-position
         self.player.rect.y =  450 # y-position
-        self.level = Level_01(self.player)
+        self.level = Level_01(self.player,self.screen)
         self.player.level = self.level
 
-        enemyID = str(self.gameNum) + str(2)
-        self.enemy = Enemy(enemyID, warmcolors[random.randint(0,len(warmcolors) - 1)], self.screen, (800,450))
+        #enemyID = str(self.gameNum) + str(2)
+        self.enemy = Enemy(warmcolors[random.randint(0,len(warmcolors) - 1)], self.screen, (800,450))
         self.enemy.rect.x = 800 # x-position
         self.enemy.rect.y =  450 # y-position
         self.enemy.level = self.level
@@ -87,5 +76,3 @@ class Game():
         self.player.setEnemy(self.enemy)
         self.enemy.setEnemy(self.player)
 
-        self.player.brain.generateNetwork()
-        #self.player.brain.mutate()

@@ -18,8 +18,6 @@ PALEGREEN = (152,251,152)
 ROSYBROWN = (188,143,143)
 PALEVIOLET = (219,112,147)
 YELLOW = (255,255,0)
-heart = pygame.image.load('Images/heart.png')
-death = pygame.image.load('Images/skull.png')
 
 SCREEN_WIDTH = 800
 SCREEN_HEIGHT = 600
@@ -29,7 +27,7 @@ class Player(pygame.sprite.Sprite):
         controls. """
  
     # -- Methods
-    def __init__(self, playerID, color, screen, startPos, freeze = False):
+    def __init__(self, color, screen, startPos):
         """ Constructor function """
  
         # Call the parent's constructor
@@ -39,16 +37,11 @@ class Player(pygame.sprite.Sprite):
         # This could also be an image loaded from the disk.
         self.width = 40
         self.height = 60
-
-        self.freeze = freeze
-
         self.enemy = None
         self.enemyPos = None
 
         self.maxHearts = 4
         self.numHearts = 4
-        # self.deadFlag = False
-        # self.numLives = 3
 
         self.numDeaths = 0
         self.numKills = 0
@@ -58,28 +51,26 @@ class Player(pygame.sprite.Sprite):
         self.fitness = 0.0
 
         self.color = color 
-        self.playerID = playerID
 
         self.sword = None
         self.isAttacking = False
         self.attackDelay = 30 #30 frames between each attack
+        self.respawnDelay = 30 #Don't redraw the player upon death for 30 frames
 
         self.direction = "right"
 
-        # self.damage = pygame.event.Event(pygame.USEREVENT, action = "damage", id= playerID)
-        self.sideJumpCount = 0
         self.image = pygame.image.load("Images/playerrightangry.png")
-        #self.image = pygame.Surface([self.width, self.height])
         #self.image.fill(color)
 
         # So our player can modify the overall screen
         self.screen = screen
- 
+
+        self.brain = None
+
         # Set a referance to the image rect.
         self.rect = self.image.get_rect()
 
         #coordinate point
-        self.player_coord = (self.rect.x, self.rect.y)
         self.startPos = startPos
         self.startx = self.startPos[0]
         self.starty = self.startPos[1]
@@ -90,11 +81,23 @@ class Player(pygame.sprite.Sprite):
  
         # List of sprites we can bump against
         self.level = None
-    
+
         genomeInputs = 12
         genomeOutputs = 4
         self.brain = NeuralNet(genomeInputs, genomeOutputs)
- 
+
+    def clone(self):
+        clone = Player(self.color, self.screen, self.startPos)
+        clone.brain = self.brain.clone()
+        clone.brain.generateNetwork()
+        return clone
+
+    def cloneForReplay(self):
+        clone = Player(self.color, self.screen, self.startPos)
+        clone.brain = self.brain.clone()
+        clone.brain.generateNetwork()
+        clone.fitness = self.fitness
+        return clone
     
     def update(self):
         # """ Update our position knowledge """
@@ -106,14 +109,9 @@ class Player(pygame.sprite.Sprite):
             self.respawn()
             self.enemy.respawn()
 
+        mouse_pos = pygame.mouse.get_pos()
         self.enemyPos = (self.enemy.rect.x, self.enemy.rect.y)
      
-        # """ Who is alive """
-        # if self.enemy.numLives == 0:
-        #     self.level.enemy_list.remove(self.enemy)
-    
-        # """ Pass environment data to think """
-        #self.think(self.enemyPos, mouse_pos, True, self.freeze)
         self.think()
 
         # """ Move the player. """
@@ -183,10 +181,6 @@ class Player(pygame.sprite.Sprite):
 
                 # Move up/down
                 
-        "To implement side jumping"
-        # if len(block_hit_list) > 0 or self.rect.bottom >= SCREEN_HEIGHT:
-        #     self.sideJumpCount = 0
-
     def entityCollision(self):
        
         if pygame.sprite.collide_rect(self, self.enemy):
@@ -265,23 +259,22 @@ class Player(pygame.sprite.Sprite):
         that generate actions for the specific player
         in the main driver class
         """
-        max = 0
-        maxIndex = 0
-        
+
         #look around 
         self.vision = self.look()
 
         #get the output of the neural network
         decision = self.brain.feedForward(self.vision);
 
-        for i in range(len(decision)):
-            if (decision[i] >= max):
-                max = decision[i]
-                maxIndex = i
+        print(decision) #We can see which action has been mutated during the first run, 
+                        #Then we can see when the function changes due to invironmental influences.
+        #Do some actions
+        j = 0
+        for i in decision:
+            if(i != 0.0):
+                self.executeAction(j)
+            j += 1
 
-        print("The action chosen is: ")
-        print (maxIndex)  
-        self.executeAction(maxIndex)
 
     def look(self):
         vision = []
@@ -320,7 +313,7 @@ class Player(pygame.sprite.Sprite):
             self.enemy = None
         self.enemy = enemy
 
-    def updateFitness(self):
+    def calculateFitness(self):
       self.fitness = (50 * self.numKills) - (50 * self.numDeaths)
       self.fitness += (100 * self.numGoals) - (100*self.enemy.numGoals)
       self.fitness += self.runningDistance/(self.numDeaths + 1)
@@ -334,13 +327,19 @@ class Player(pygame.sprite.Sprite):
         # return fitness
     
     def updateHealth(self):
-        for hearts in range(self.numHearts):
-            self.screen.blit(heart,((self.startx + (hearts * 40)), 90))
-        for deaths in range(self.numDeaths):
-            self.screen.blit(death,((self.startx + ((deaths % 6) * 40)), (130 + (int(deaths/6)*40))))
+        # for hearts in range(self.numHearts):
+        #     self.screen.blit(heart,((self.startx + (hearts * 40)), 90))
+        # for deaths in range(self.numDeaths):
+        #     self.screen.blit(death,((self.startx + ((deaths % 6) * 40)), (130 + (int(deaths/6)*40))))
         if self.numHearts <= 0:
-            self.respawn()
-            self.numDeaths += 1
+            if self.respawnDelay == 0:
+                self.respawn() #Respawn on death
+                self.numDeaths += 1
+                self.respawnDelay = 30
+            else:
+                self.respawnDelay -= 1
+                self.rect.x = self.startx
+                self.rect.y = -self.height
     
 
 
@@ -368,50 +367,50 @@ class Player(pygame.sprite.Sprite):
             # else: 
             #     pygame.draw.line(self.screen, RED, (self.rect.x, self.rect.y - 10), (self.rect.x + healthBarLength, self.rect.y - 10), 4)  
     
-    def distanceToPoint(self, point, drawFlag = False, color = WHITE, axis = "BOTH"):
-        x_goal = point[0]
-        y_goal = point[1]
+    # def distanceToPoint(self, point, drawFlag = False, color = WHITE, axis = "BOTH"):
+    #     x_goal = point[0]
+    #     y_goal = point[1]
 
-        player_pos = (self.rect.x + (self.width/2), self.rect.y + (self.height/2))
-        x_player = player_pos[0]
-        y_player = player_pos[1]
+    #     player_pos = (self.rect.x + (self.width/2), self.rect.y + (self.height/2))
+    #     x_player = player_pos[0]
+    #     y_player = player_pos[1]
 
-        x_distance = abs(x_goal - x_player)
-        y_distance = abs(y_goal - y_player)
+    #     x_distance = abs(x_goal - x_player)
+    #     y_distance = abs(y_goal - y_player)
 
-        if axis == "BOTH":
-            total_distance = x_distance*x_distance + y_distance*y_distance
-            total_distance = math.sqrt(total_distance)
-            total_distance = int(total_distance)
-        if axis == "X":
-            total_distance = x_distance
-        if axis == "Y":
-            total_distance = y_distance
+    #     if axis == "BOTH":
+    #         total_distance = x_distance*x_distance + y_distance*y_distance
+    #         total_distance = math.sqrt(total_distance)
+    #         total_distance = int(total_distance)
+    #     if axis == "X":
+    #         total_distance = x_distance
+    #     if axis == "Y":
+    #         total_distance = y_distance
 
-        if drawFlag == True:
-            font = pygame.font.SysFont('tahoma', 15, False, False)
-            # HIT TEXT
-            distanceText = font.render(str(total_distance), True, WHITE)
-            x_mid = x_player
-            y_mid = y_player
-            if x_player <= x_goal:
-                x_mid += x_distance/2
-            else:
-                x_mid -= x_distance/2
-            if y_player <= y_goal:
-                y_mid += y_distance/2
-            else:
-                y_mid -= y_distance/2
+    #     if drawFlag == True:
+    #         font = pygame.font.SysFont('tahoma', 15, False, False)
+    #         # HIT TEXT
+    #         distanceText = font.render(str(total_distance), True, WHITE)
+    #         x_mid = x_player
+    #         y_mid = y_player
+    #         if x_player <= x_goal:
+    #             x_mid += x_distance/2
+    #         else:
+    #             x_mid -= x_distance/2
+    #         if y_player <= y_goal:
+    #             y_mid += y_distance/2
+    #         else:
+    #             y_mid -= y_distance/2
 
-            if axis =="X":
-                pygame.draw.line(self.screen, color, player_pos, (x_goal, y_player), 1)
-                midPoint = (x_mid, y_player)
-            else:
-                pygame.draw.line(self.screen, self.color, player_pos, point, 1)
-                midPoint = (x_mid, y_mid)
-            self.screen.blit(distanceText, midPoint)
+    #         if axis =="X":
+    #             pygame.draw.line(self.screen, color, player_pos, (x_goal, y_player), 1)
+    #             midPoint = (x_mid, y_player)
+    #         else:
+    #             pygame.draw.line(self.screen, self.color, player_pos, point, 1)
+    #             midPoint = (x_mid, y_mid)
+    #         self.screen.blit(distanceText, midPoint)
 
-        return total_distance
+        #return total_distance
 
     def calc_friction(self):
         if self.change_x > 0:
@@ -441,9 +440,8 @@ class Player(pygame.sprite.Sprite):
         platform_hit_list = pygame.sprite.spritecollide(self, self.level.platform_list, False)
         self.rect.y -= 4
 
-        if (self.rect.left == 0 or self.rect.right == SCREEN_WIDTH) and self.sideJumpCount == 0:
+        if (self.rect.left == 0 or self.rect.right == SCREEN_WIDTH):
                 self.change_y = -10
-                self.sideJumpCount = 1
  
         # If it is ok to jump, set our speed upwards
         if len(platform_hit_list) > 0 or self.rect.bottom >= SCREEN_HEIGHT:
@@ -488,17 +486,23 @@ class Player(pygame.sprite.Sprite):
     def executeAction(self, action):
         if action == 0:
             self.go_left()
-        elif action == 3:
+        elif action == 1:
             self.go_right()
         elif action == 2:
             self.jump()
-        elif action == 1:
+        elif action == 3:
             self.attack()
 
     def respawn(self):
-        # Respawn back to starting point       
+        # Respawn back to starting point
         self.rect.x = self.startx
         self.rect.y = self.starty
         self.numHearts = self.maxHearts
         self.runningDistance += self.maxDistance
         self.maxDistance = 0
+    
+    def crossover(self, parent2):
+        child = Player(self.color, self.screen, self.startPos)
+        child.brain = self.brain.crossover(parent2.brain)
+        child.brain.generateNetwork()
+        return child

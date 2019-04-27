@@ -13,15 +13,15 @@ class Node():
   #---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
   #the node sends its output to the inputs of the nodes its connected to
   def engage(self):
-    outputValue = 0
     if self.layer != 0: #no sigmoid for the inputs and bias
-      outputValue = self.sigmoid(self.inputSum)
+      self.outputValue = self.sigmoid(self.inputSum)
 
     for i in self.outputConnections: #for each connection
         if i.enabled: #dont do shit if not enabled
-            i.toNode.inputSum += i.weight * outputValue #add the weighted output to the sum of the inputs of whatever node this node is connected to
+            i.toNode.inputSum += i.weight * self.outputValue #add the weighted output to the sum of the inputs of whatever node this node is connected to
 
-#----------------------------------------------------------------------------------------------------------------------------------------
+#---------------------------------------
+# -------------------------------------------------------------------------------------------------
 #not used
   def stepFunction(self, x):
     if x < 0:
@@ -30,8 +30,15 @@ class Node():
       return 1
 #---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
 #sigmoid activation function
-  def sigmoid(self, x):
-    y = 1 / (1 + pow(math.e, -4.9*x))
+  def sigmoid(self, x): ## Decimal ????
+    ##OG was -4.9 * x
+    #We subtract 0.5 to have a true zero
+    try: 
+      y = (1 / (1 + math.e ** (-4.9 * x))) - 0.50
+    except OverflowError:
+      y = 0.0 - 0.5 #The number is going to infinity in the denominator,
+            #so really its going to 0. We'll replace it with this 
+            #negative value for now. 
     return y
  #----------------------------------------------------------------------------------------------------------------------------------------------------------
  #returns whether this node connected to the parameter node

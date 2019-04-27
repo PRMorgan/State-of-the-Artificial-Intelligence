@@ -243,7 +243,7 @@ class NeuralNet:
 
             parent2gene = self.matchingGene(parent2, self.genes[i].innovationNo)
             if parent2gene != -1: #if the genes match
-                if not self.genes[i].enabled or not parent2.genes[parent2gene].enabled: 
+                if not self.genes[i].enabled or not parent2gene.enabled: 
                     #if either of the matching genes are disabled
                     if random.uniform(0,1) < 0.75: #75% of the time disabel the childs gene
                         setEnabled = False
@@ -253,7 +253,7 @@ class NeuralNet:
                     #get gene
                 else:
                     #get gene from parent2
-                    childGenes.append(parent2.genes[parent2gene])
+                    childGenes.append(parent2gene)
             else: #disjoint or excess gene
                 childGenes.append(self.genes[i])
                 setEnabled = self.genes[i].enabled
@@ -285,19 +285,19 @@ class NeuralNet:
                 return i
         return -1 #no matching gene found
 
-    """
+
     #prints out info about the genome to the console 
     def printGenome(self):
-        print("Print genome  layers:", self.layers, "\n")
-        print ("bias node: ", self.biasNode, "\n")
+        print("Print genome     layers =" + str(self.layers) + "\n")
+        print ("bias node: " + str(self.biasNode) + "\n")
         print("nodes\n")
-        for i in range(len(self.nodes)):
-            print(self.nodes[i].number, ",")
+        for i in self.nodes:
+            print(str(i.number), end=",")
         print("\nGenes\n")
-        for i in range(len(self.genes)): #for each connectionGene 
-            print("gene ", self.genes[i].innovationNo, "From node ", self.genes[i].fromNode.number, "To node ", self.genes[i].toNode.number, "is enabled ", self.genes.[i].enabled, "from layer ", self.genes[i].fromNode.layer, "to layer ", self.genes[i].toNode.layer, "weight: ", self.genes[i].weight, "\n")
+        for i in self.genes: #for each connectionGene 
+            print("Gene Num:" + str(i.innovationNo) + " From node " + str(i.fromNode.number) + " To node " + str(i.toNode.number) +  " is enabled " + str(i.enabled) +  " from layer " + str(i.fromNode.layer) + " to layer " + str(i.toNode.layer) + " weight: " + str(i.weight) + "\n")
         print("\n")
-    """
+
     # returns a copy of this genome
     def clone(self):
         clone = NeuralNet(self.inputs, self.outputs)
@@ -313,5 +313,3 @@ class NeuralNet:
         clone.biasNode = self.biasNode
         clone.connectNodes()
         return clone
-
-

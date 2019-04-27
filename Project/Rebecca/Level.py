@@ -35,13 +35,16 @@ maps = ["FinalRuins.gif",
         "Temple.gif",
         "FinalJudgement.gif"]
 overlay = pygame.image.load('Images/Backgrounds/MapForeground.png')
+bg = pygame.image.load('Images/Backgrounds/OriginalDojo.png')
+heart = pygame.image.load('Images/heart.png')
+death = pygame.image.load('Images/skull.png')
 
 class Level(object):
     """ This is a generic super-class used to define a level.
         Create a child class for each level with level-specific
         info. """
  
-    def __init__(self, player):
+    def __init__(self, player,screen):
         """ Constructor. Pass in a handle to player. Needed for when moving platforms
             collide with the player. """
         self.active_sprite_list = pygame.sprite.Group()
@@ -51,6 +54,7 @@ class Level(object):
         self.player = player
         self.player_attack_list = pygame.sprite.Group()
         self.enemy_attack_list = pygame.sprite.Group()
+        self.screen = screen
          
         # Background image
         self.background = None
@@ -69,28 +73,39 @@ class Level(object):
         # self.attack_list.update()
         # self.player.update()
  
-    def draw(self, screen):
+    def draw(self):
         """ Draw everything on this level. """
  
-        # Draw the background
-        # screen.fill(BLACK)
- 
         # Draw all the sprite lists that we have
-        self.player_attack_list.draw(screen) 
-        self.enemy_attack_list.draw(screen) 
-        self.platform_list.draw(screen)
-        self.enemy_list.draw(screen)
-        self.player_list.draw(screen)
+        self.player_attack_list.draw(self.screen) 
+        self.enemy_attack_list.draw(self.screen) 
+        self.platform_list.draw(self.screen)
+        self.enemy_list.draw(self.screen)
+        self.player_list.draw(self.screen)
 
-    def drawBG(self, screen, game):
+    def drawBG(self, game):
+        """
         currentmapindex = (game.player.numGoals - game.enemy.numGoals) + 10
         if currentmapindex > 20:
             currentmapindex = 20
         elif currentmapindex < 0:
             currentmapindex = 0
         bg = pygame.image.load('Images/Backgrounds/' + maps[currentmapindex])
-        screen.blit(bg, (0,0))
-        screen.blit(overlay, (0,0))
+        """
+        self.screen.blit(bg, (0,0))
+        self.screen.blit(overlay, (0,0))
+        
+        #draw player stats
+        for hearts in range(game.player.numHearts):
+            self.screen.blit(heart,((game.player.startx + (hearts * 40)), 90))
+        for deaths in range(game.player.numDeaths):
+            self.screen.blit(death,((game.player.startx + ((deaths % 6) * 40)), (130 + (int(deaths/6)*40))))
+
+        #draw enemy stats
+        for hearts in range(game.enemy.numHearts):
+            self.screen.blit(heart, ((game.enemy.startx -40 + (hearts * -40)), 90))
+        for deaths in range(game.player.numKills):
+            self.screen.blit(death,((game.enemy.startx - 40 + ((deaths % 6) * -40)), (130 + (int(deaths/6)*40))))
 
        
         
@@ -100,11 +115,11 @@ class Level(object):
 class Level_01(Level):
     """ Definition for level 1. """
  
-    def __init__(self, player):
+    def __init__(self, player,screen):
         """ Create level 1. """
  
         # Call the parent constructor
-        Level.__init__(self, player)
+        Level.__init__(self, player,screen)
  
         # Array with width, height, x, and y of platform
         """
