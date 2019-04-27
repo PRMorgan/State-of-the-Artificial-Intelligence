@@ -22,6 +22,7 @@ class Population():
             self.games.append(Game(screen))
             self.games[i].player.brain.generateNetwork()
             self.games[i].player.brain.mutate(self.innovationHistory)
+            self.games[i].player.brain.mutate(self.innovationHistory)
 
 #------------------------------------------------------------------------------------------------------------------------------------------
     #update all the players which are alive
@@ -62,8 +63,8 @@ class Population():
 #------------------------------------------------------------------------------------------------------------------------------------------------
     # this function is called when all the players in the population are dead and a new generation needs to be made
     def naturalSelection(self):
-        self.speciate() #seperate the population into species 
         self.calculateFitness() #calculate the fitness of each player
+        self.speciate() #seperate the population into species 
         self.sortSpecies() #sort the species to be ranked in fitness order, best first
         if self.massExtinctionEvent:
             self.massExtinction()
@@ -77,31 +78,34 @@ class Population():
         print("generation", self.gen, "Number of mutations", len(self.innovationHistory), 
             "species: ", len(self.species), "<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<\n")
         
+        self.calculateFitness() #calculate the fitness of each player
         averageSum = self.getAvgFitnessSum()
         children = [] #the next generation
 
         print("Species:\n")              
-        for j in range(len(self.species)): #for each species
-            print("best unadjusted fitness:", self.species[j].bestFitness)
-            for i in range(len(self.species[j].players)):
-                print("player ", i, "fitness: ", self.species[j].players[i].fitness, ' ')
+        for species in self.species: #for each species
+            print("best unadjusted fitness:", species.bestFitness)
+            for i in range(len(species.players)):
+                print("player ", i, "fitness: ", species.players[i].fitness, ' ')
             print("\n")
             
-            children.append(self.species[j].champ.clone()) #add champion without any mutation
-            NoOfChildren = math.floor(self.species[j].averageFitness / averageSum * len(self.games)) -1 # the number of children this species is allowed, note -1 is because the champ is already added
+            children.append(species.champ.clone()) #add champion without any mutation
+            NoOfChildren = math.floor(species.averageFitness / averageSum * len(self.games)) -1 # the number of children this species is allowed, note -1 is because the champ is already added
             for i in range(NoOfChildren): #get the calculated amount of children from this species
-                children.append(self.species[j].giveMeBaby(self.innovationHistory))
+                children.append(species.giveMeBaby(self.innovationHistory))
+                #print("A BABY IS BORN")
             
         while len(children) < len(self.games): #if not enough babies (due to flooring the number of children to get a whole int) 
             children.append(self.species[0].giveMeBaby(self.innovationHistory)) #get babies from the best species
+            #print("A BABY IS BORN")
         self.games.clear()
 
         for child in children: #set the children as the current population
             self.games.append(Game(self.screen, child))
         #self.games = children[:] #set the children as the current population
 
-        
-        self.gen += 1 
+        self.resetFitness()
+        self.gen += 1
         for game in self.games: # generate networks for each of the children
             game.player.brain.generateNetwork()
         populationLife = 0
@@ -136,17 +140,18 @@ class Population():
         
         # sort the species by the fitness of its best player
         # using selection sort like a loser
-        temp = []
-        for i in self.species:
-            maxScore = 0.0
-            maxIndex = 0
-            for j in range(len(self.species)): 
-                if self.species[j].bestFitness > maxScore:
-                    maxScore = self.species[j].bestFitness
-                    maxIndex = j
-            temp.append(self.species[maxIndex])
-            self.species.pop(maxIndex)
-        self.species = temp[:]
+        # temp = []
+        # for i in self.species:
+        #     maxScore = self.species[i].bestFitness
+        #     maxIndex = 0
+        #     for j in range(len(self.species)): 
+        #         if self.species[j].bestFitness > maxScore:
+        #             maxScore = self.species[j].bestFitness
+        #             maxIndex = j
+        #     temp.append(self.species[maxIndex])
+        #     self.species.pop(maxIndex)
+        # self.species = temp.copy()
+        self.species = self.merge_sort(self.species)
 
 #------------------------------------------------------------------------------------------------------------------------------------------
     #kills all species which haven't improved in 15 generations
@@ -195,3 +200,41 @@ class Population():
             else: #use index - show only that game
                 self.games[showIndex].level.drawBG(self.games[showIndex])
                 self.games[showIndex].level.draw()
+
+    def resetFitness(self):
+        for game in self.games:
+            game.player.resetFitness()
+
+    # merge sort algorithm
+    #https://medium.com/@george.seif94/a-tour-of-the-top-5-sorting-algorithms-with-python-code-43ea9aa02889
+    def merge_sort(self, arr):
+        # The last array split
+        if len(arr) <= 1:
+            return arr
+        mid = len(arr) // 2
+        # Perform merge_sort recursively on both halves
+        left, right = self.merge_sort(arr[:mid]), self.merge_sort(arr[mid:])
+
+        # Merge each side together
+        return self.merge(left, right, arr.copy())
+
+
+    def merge(self, left, right, merged):
+        left_cursor, right_cursor = 0, 0
+        while left_cursor < len(left) and right_cursor < len(right):
+        
+            # Sort each one and place into the result
+            if left[left_cursor].bestFitness >= right[right_cursor].bestFitness:
+                merged[left_cursor+right_cursor]=left[left_cursor]
+                left_cursor += 1
+            else:
+                merged[left_cursor + right_cursor] = right[right_cursor]
+                right_cursor += 1
+                
+        for left_cursor in range(left_cursor, len(left)):
+            merged[left_cursor + right_cursor] = left[left_cursor]
+            
+        for right_cursor in range(right_cursor, len(right)):
+            merged[left_cursor + right_cursor] = right[right_cursor]
+
+        return merged

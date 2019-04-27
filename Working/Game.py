@@ -38,7 +38,10 @@ class Game():
         """ Creates a game that contains two players and a level """
         #self.gameNum = gameNum
         self.screen = screen
-        self.player = player
+        if player != None:
+            self.player = player.clone()
+        else:
+            self.player = None
         self.enemy = None
         self.level = None
 
@@ -55,7 +58,8 @@ class Game():
     def intiializeGame(self):
         """ Generate any number of players and add them to an environment"""
         #create player 1
-        self.player = Player(darkcolors[random.randint(0,len(darkcolors) - 1)], self.screen, (0,450))
+        if self.player == None:
+            self.player = Player(darkcolors[random.randint(0,len(darkcolors) - 1)], self.screen, (0,450))
         self.player.rect.x = 0 # x-position
         self.player.rect.y =  450 # y-position
         self.level = Level_01(self.player,self.screen)
@@ -75,6 +79,4 @@ class Game():
 
         self.player.setEnemy(self.enemy)
         self.enemy.setEnemy(self.player)
-
-        #self.player.initializeNeuralNet()
 

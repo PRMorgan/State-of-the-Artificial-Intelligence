@@ -1,24 +1,22 @@
 import random
 
 class Species():
-#--------------------------------------------
-    # coefficients for testing compatibility 
-    excessCoeff = 1.0
-    weightDiffCoeff = 0.5
-    compatibilityThreshold = 3.0
-
 #------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------ 
     # constructor which takes in the player which belongs to the species
-    def __init__(self, p = 0):
+    def __init__(self, p):
         self.players = []
         self.players.append(p) 
         #since it is the only one in the species it is by default the best
         self.bestFitness = p.fitness
+        self.averageFitness = p.fitness
         self.rep = p.brain.clone()
         self.champ = p.cloneForReplay()
         self.staleness = 0
-        self.bestFitness = 0.0
-        self.averageFitness = 0.0
+        
+        # coefficients for testing compatibility 
+        self.excessCoeff = 1.0
+        self.weightDiffCoeff = 0.5
+        self.compatibilityThreshold = 3.0
 
 
 #------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------ 
@@ -73,21 +71,7 @@ class Species():
 #-------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
     # sorts the species by fitness 
     def sortSpecies(self):
-        temp = []
-        
-        #selection short 
-        for i in range(len(self.players)):
-            maxScore = 0.0
-            maxIndex = 0
-            for j in range(len(self.players)):
-                if self.players[j].fitness > maxScore:
-                    maxScore = self.players[j].fitness
-                    maxIndex = j
-            temp.append(self.players[maxIndex])
-            self.players.pop(maxIndex)
-            i -= 1
-
-        self.players = temp.copy()
+        self.players = self.merge_sort(self.players)
         if len(self.players) == 0:
             self.staleness = 200
             return
@@ -103,11 +87,14 @@ class Species():
 #-------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
     #simple stuff
     def setAverage(self):
-        sumScores = 0.0
-        print(len(self.players))
-        for i in range(len(self.players)):
-            sumScores += self.players[i].fitness
-        self. averageFitness = sumScores / len(self.players)
+        if len(self.players) > 0:
+            #print(len(self.players))
+            sumScores = 0.0
+            for player in self.players:
+                sumScores += player.fitness
+            self. averageFitness = sumScores / len(self.players)
+        else:
+            print("Oops - something went wrong. This species has", str(len(self.players)), "players but it should have more.")
 
 #-------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
     # gets baby from the players in this species
@@ -132,8 +119,8 @@ class Species():
     # selects a player based on it fitness
     def selectPlayer(self):
         fitnessSum = 0.0
-        for i in range(len(self.players)):
-            fitnessSum += self.players[i].fitness
+        for player in self.players:
+            fitnessSum += player.fitness
         
         rand = random.uniform(0,fitnessSum)
         runningSum = 0.0
@@ -144,6 +131,7 @@ class Species():
                 return self.players[i]
 
         # unreachable code to make the parser happy
+        print("Oops - something went wrong. This species has", str(len(self.players)), "players but it should have more.")
         return self.players[0]
 
 #------------------------------------------------------------------------------------------------------------------------------------------
@@ -160,3 +148,38 @@ class Species():
     def fitnessSharing(self):
         for i in range(len(self.players)):
             self.players[i].fitness /= len(self.players)
+
+
+    # merge sort algorithm
+    #https://medium.com/@george.seif94/a-tour-of-the-top-5-sorting-algorithms-with-python-code-43ea9aa02889
+    def merge_sort(self, arr):
+        # The last array split
+        if len(arr) <= 1:
+            return arr
+        mid = len(arr) // 2
+        # Perform merge_sort recursively on both halves
+        left, right = self.merge_sort(arr[:mid]), self.merge_sort(arr[mid:])
+
+        # Merge each side together
+        return self.merge(left, right, arr.copy())
+
+
+    def merge(self, left, right, merged):
+        left_cursor, right_cursor = 0, 0
+        while left_cursor < len(left) and right_cursor < len(right):
+        
+            # Sort each one and place into the result
+            if left[left_cursor].fitness >= right[right_cursor].fitness:
+                merged[left_cursor+right_cursor]=left[left_cursor]
+                left_cursor += 1
+            else:
+                merged[left_cursor + right_cursor] = right[right_cursor]
+                right_cursor += 1
+                
+        for left_cursor in range(left_cursor, len(left)):
+            merged[left_cursor + right_cursor] = left[left_cursor]
+            
+        for right_cursor in range(right_cursor, len(right)):
+            merged[left_cursor + right_cursor] = right[right_cursor]
+
+        return merged

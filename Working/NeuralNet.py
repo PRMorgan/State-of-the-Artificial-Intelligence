@@ -59,7 +59,10 @@ class NeuralNet:
             i.engage()
 
         #the outputs are nodes[inputs] to nodes [inputs+outputs-1]
-        outs = [self.outputs]
+        outs = []
+        for i in range(self.outputs):
+            outs.append(0.0)
+        
         for i in range(self.outputs):
             outs[i] = self.nodes[self.inputs + i].outputValue
         for i in self.nodes: #reset all the nodes for the next feed forward
@@ -85,7 +88,8 @@ class NeuralNet:
         if len(self.genes) == 0:
             self.addConnection(innovationHistory)
             return
-        randomConnection = math.floor(random.randint(0, len(self.genes) - 1))
+        randomConnection = math.floor(random.randint(0, len(self.genes)))
+        print("index ",str(randomConnection), " size ", str(len(self.genes)), " bias ", str(self.biasNode), " node size ", str(self.nodes))
         
         while self.genes[randomConnection].fromNode == self.nodes[self.biasNode] and len(self.genes) !=1 : #dont disconnect bias
             randomConnection = math.floor(random.randint(1, len(self.genes)))
@@ -234,7 +238,7 @@ class NeuralNet:
         child.layers = self.layers
         child.nextNode = self.nextNode
         child.biasNode = self.biasNode
-        childGenes = [] #list of genes to be inherrited form the parents
+        #childGenes = [] #list of genes to be inherrited form the parents
         isEnabled = [] 
 
         #all inherited genes
@@ -247,30 +251,30 @@ class NeuralNet:
                 #print("len ", str(len(parent2.genes)), " parent2gene ", parent2gene)
                 if not gene.enabled or not parent2.genes[parent2gene].enabled: 
                     #if either of the matching genes are disabled
-                    if random.uniform(0,1) < 0.75: #75% of the time disabel the childs gene
+                    if random.uniform(0,1) < 0.75: #75% of the time disable the childs gene
                         setEnabled = False
                 rand = random.uniform(0,1)
                 if rand<0.5 :
-                    childGenes.append(gene)
+                    child.genes.append(gene.clone(gene.fromNode, gene.toNode))
                     #get gene
                 else:
                     #get gene from parent2
-                    childGenes.append(parent2.genes[parent2gene])
+                    child.genes.append(parent2.genes[parent2gene].clone(parent2.genes[parent2gene].fromNode,parent2.genes[parent2gene].toNode))
             else: #disjoint or excess gene
-                childGenes.append(gene)
+                child.genes.append(gene.clone(gene.fromNode, gene.toNode))
                 setEnabled = gene.enabled
             isEnabled.append(setEnabled)
 
         #since all excess and disjoint genes are inherrited from the more fit parent (this Genome) 
         # the childs structure is no different from this parent | with exception of dormant connections 
         # being enabled but this wont effect nodes so all the nodes can be inherrited from this parent
-        for i in range(len(self.nodes)):
-            child.nodes.append(self.nodes[i].clone())
+        for node in self.nodes:
+            child.nodes.append(node.clone())
 
         #clone all the connections so that they connect the childs new nodes
-        for i in range(len(childGenes)):
-            child.genes.append(childGenes[i].clone(child.getNode(childGenes[i].fromNode.number), child.getNode(childGenes[i].toNode.number)))
-            child.genes[i].enabled = isEnabled[i]
+        # for gene in childGenes:
+        #     child.genes.append(gene.clone(child.getNode(childGenes[i].fromNode.number), child.getNode(childGenes[i].toNode.number)))
+        #     gene.enabled = isEnabled[i]
         child.connectNodes()
         return child
     """
@@ -315,6 +319,18 @@ class NeuralNet:
         clone.biasNode = self.biasNode
         clone.connectNodes()
         return clone
+
+    #prints out info about the genome to the console 
+    def printGenome(self):
+        print("Print genome     layers =" + str(self.layers) + "\n")
+        print ("bias node: " + str(self.biasNode) + "\n")
+        print("nodes\n")
+        for i in self.nodes:
+            print(str(i.number), end=",")
+        print("\nGenes\n")
+        for i in self.genes: #for each connectionGene 
+            print("Gene Num:" + str(i.innovationNo) + " From node " + str(i.fromNode.number) + " To node " + str(i.toNode.number) +  " is enabled " + str(i.enabled) +  " from layer " + str(i.fromNode.layer) + " to layer " + str(i.toNode.layer) + " weight: " + str(i.weight) + "\n")
+        print("\n")
 
 #     # draw the neural net on the screen
 #     def draw(self, startX, startY, w, h):

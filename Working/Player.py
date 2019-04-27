@@ -27,7 +27,7 @@ class Player(pygame.sprite.Sprite):
         controls. """
  
     # -- Methods
-    def __init__(self, color, screen, startPos):
+    def __init__(self, color, screen, startPos, fitness=0.0):
         """ Constructor function """
  
         # Call the parent's constructor
@@ -48,7 +48,7 @@ class Player(pygame.sprite.Sprite):
         self.numGoals = 0
         self.runningDistance = 0
         self.maxDistance = 0
-        self.fitness = 0.0
+        self.fitness = fitness
 
         self.color = color 
 
@@ -57,10 +57,11 @@ class Player(pygame.sprite.Sprite):
         self.attackDelay = 30 #30 frames between each attack
         self.respawnDelay = 30 #Don't redraw the player upon death for 30 frames
 
-        self.direction = "right"
+        # self.image = pygame.Surface([self.width, self.height])
+        # self.image.fill(color)
 
-        self.image = pygame.Surface([self.width, self.height])
-        self.image.fill(color)
+        self.direction = "right"
+        self.image = pygame.image.load('Images/playerrightangry.png')
 
         # So our player can modify the overall screen
         self.screen = screen
@@ -82,31 +83,23 @@ class Player(pygame.sprite.Sprite):
         # List of sprites we can bump against
         self.level = None
 
-        genomeInputs = 12
+        genomeInputs = 14
         genomeOutputs = 4
         self.brain = NeuralNet(genomeInputs, genomeOutputs)
+        self.vision = []
 
+    #right now clone and clone for replay are the same - should they be?
     def clone(self):
-        clone = Player(self.color, self.screen, self.startPos)
+        clone = Player(self.color, self.screen, self.startPos, self.fitness)
         clone.brain = self.brain.clone()
         clone.brain.generateNetwork()
         return clone
 
     def cloneForReplay(self):
-        clone = Player(self.color, self.screen, self.startPos)
+        clone = Player(self.color, self.screen, self.startPos,self.fitness)
         clone.brain = self.brain.clone()
         clone.brain.generateNetwork()
-        clone.fitness = self.fitness
         return clone
-
-    
-    def initializeNeuralNet(self):
-        #How many input/outputs do we need??
-        genomeInputs = 12
-        genomeOutputs = 4
-        self.brain = NeuralNet(genomeInputs, genomeOutputs)
-        self.vision = self.look()
-        self.decision = self.think(self.vision, None, False)
     
     def update(self):
         # """ Update our position knowledge """
@@ -121,7 +114,9 @@ class Player(pygame.sprite.Sprite):
         mouse_pos = pygame.mouse.get_pos()
         self.enemyPos = (self.enemy.rect.x, self.enemy.rect.y)
      
-        self.think([800], mouse_pos, True)
+        #self.think([800], mouse_pos, True)
+        self.look()
+        self.think()
 
         # """ Move the player. """
         # Gravity
@@ -262,61 +257,89 @@ class Player(pygame.sprite.Sprite):
                 self.change_y -= 4
 
 
-    def think(self, point, mousePoint = None, mouseFlag = False):
-        """
-        Converts output of neural net into events
-        that generate actions for the specific player
-        in the main driver class
-        """
+    # def think(self, point, mousePoint = None, mouseFlag = False):
+    #     """
+    #     Converts output of neural net into events
+    #     that generate actions for the specific player
+    #     in the main driver class
+    #     """
 
-        action = random.randint(0,10)
-        self.executeAction(action)
-        if mouseFlag == True:
-          if (self.rect.x < mousePoint[0] and self.rect.x + self.width > mousePoint[0]) and (self.rect.y < mousePoint[1] and self.rect.y + self.height > mousePoint[1]):
-            self.numHearts -= 1
-            # pygame.event.post(self.damage)
+    #     action = random.randint(0,10)
+    #     self.executeAction(action)
+    #     if mouseFlag == True:
+    #       if (self.rect.x < mousePoint[0] and self.rect.x + self.width > mousePoint[0]) and (self.rect.y < mousePoint[1] and self.rect.y + self.height > mousePoint[1]):
+    #         self.numHearts -= 1
+    #         # pygame.event.post(self.damage)
 
-        # if self.distanceToPoint(point, True, RED, "X") < 50:
-        #     self.attack()
+    #     # if self.distanceToPoint(point, True, RED, "X") < 50:
+    #     #     self.attack()
  
-        if self.rect.x < point[0]:
-            self.go_right()
-        elif self.rect.x > point[0]:
-            self.go_left()
-        # elif self.distanceToPoint(point) < 100:
-        #     self.jump()
+    #     if self.rect.x < point[0]:
+    #         self.go_right()
+    #     elif self.rect.x > point[0]:
+    #         self.go_left()
+    #     # elif self.distanceToPoint(point) < 100:
+    #     #     self.jump()
 
-    def look(self):
-        vision = []
+    def think(self): #execute action(s) returned from the neural net
+        #get the output of the neural network
+        decision = self.brain.feedForward(self.vision)
+
+        #print(str(decision))
+
+        for i in range(len(decision)):
+            if decision[i] > 0.7:
+                if i == 0:
+                    self.go_right()
+                elif i == 1:
+                    self.go_left()
+                elif i == 2:
+                    self.jump()
+                elif i == 3:
+                    self.attack()
+
+    def look(self): #get inputs for neural net
+        self.vision = []
         #player_x
-        vision.append(self.rect.x)
+        x = (self.rect.x + 100) / 100
+        self.vision.append(x)
         #player_y
-        vision.append(self.rect.y)
+        y = (self.rect.y + 100) / 100
+        self.vision.append(y)
         #player_x_velocity
-        vision.append(self.change_x)
+        self.vision.append(self.change_x)
         #player_y_velocity
-        vision.append(self.change_y)
+        self.vision.append(self.change_y)
         #player_is_attacking
-        vision.append(self.isAttacking)
+        if self.isAttacking:
+            self.vision.append(1)
+        else:
+            self.vision.append(0)
         #player_attack_delay
-        vision.append(self.attackDelay)
+        self.vision.append(self.attackDelay)
         #player_health
-        vision.append(self.numHearts)
+        self.vision.append(self.numHearts)
         #enemy_x
-        vision.append(self.enemy.rect.x)
+        x = (self.enemy.rect.x + 100) / 100
+        self.vision.append(x)
         #enemy_y
-        vision.append(self.enemy.rect.y)
+        y = (self.enemy.rect.y + 100) / 100
+        self.vision.append(y)
         #enemy_x_velocity
-        vision.append(self.enemy.change_x)
+        self.vision.append(self.enemy.change_x)
         #enemy_y_velocity
-        vision.append(self.enemy.change_y)
+        self.vision.append(self.enemy.change_y)
         #enemy_is_attacking
-        vision.append(self.enemy.isAttacking)
+        if self.enemy.isAttacking:
+            self.vision.append(1)
+        else:
+            self.vision.append(0)
         #enemy_attack_delay
-        vision.append(self.enemy.attackDelay)
+        self.vision.append(self.enemy.attackDelay)
         #enemy_health
-        vision.append(self.enemy.numHearts)
-        return vision
+        self.vision.append(self.enemy.numHearts)
+
+        #print("vision ", str(self.vision))
     
     def setEnemy(self, enemy):
         if enemy == None:
@@ -324,9 +347,9 @@ class Player(pygame.sprite.Sprite):
         self.enemy = enemy
 
     def calculateFitness(self):
-      self.fitness = (50 * self.numKills) - (50 * self.numDeaths)
-      self.fitness += (100 * self.numGoals) - (100*self.enemy.numGoals)
-      self.fitness += self.runningDistance/(self.numDeaths + 1)
+        self.fitness = (50 * self.numKills) - (50 * self.numDeaths)
+        self.fitness += (100 * self.numGoals) - (100*self.enemy.numGoals)
+        self.fitness += self.runningDistance/(self.numDeaths + 1)
 
         # progressToGoal = self.distanceToPoint((800,500), False, RED, "X") / 500
         # timeAlive = self.framesAlive / 60
@@ -337,10 +360,6 @@ class Player(pygame.sprite.Sprite):
         # return fitness
     
     def updateHealth(self):
-        # for hearts in range(self.numHearts):
-        #     self.screen.blit(heart,((self.startx + (hearts * 40)), 90))
-        # for deaths in range(self.numDeaths):
-        #     self.screen.blit(death,((self.startx + ((deaths % 6) * 40)), (130 + (int(deaths/6)*40))))
         if self.numHearts <= 0:
             if self.respawnDelay == 0:
                 self.respawn() #Respawn on death
@@ -516,3 +535,11 @@ class Player(pygame.sprite.Sprite):
         child.brain = self.brain.crossover(parent2.brain)
         child.brain.generateNetwork()
         return child
+
+    def resetFitness(self):
+        self.numDeaths = 0
+        self.numKills = 0
+        self.numGoals = 0
+        self.runningDistance = 0
+        self.maxDistance = 0
+        self.fitness = 0.0

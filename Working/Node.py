@@ -14,11 +14,11 @@ class Node():
   #the node sends its output to the inputs of the nodes its connected to
   def engage(self):
     if self.layer != 0: #no sigmoid for the inputs and bias
-      outputValue = self.sigmoid(self.inputSum)
+      self.outputValue = self.sigmoid(self.inputSum)
 
     for i in self.outputConnections: #for each connection
         if i.enabled: #dont do shit if not enabled
-            i.toNode.inputSum += i.weight * outputValue #add the weighted output to the sum of the inputs of whatever node this node is connected to
+            i.toNode.inputSum += i.weight * self.outputValue #add the weighted output to the sum of the inputs of whatever node this node is connected to
 
 #----------------------------------------------------------------------------------------------------------------------------------------
 #not used

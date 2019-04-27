@@ -24,7 +24,7 @@ BLUE = (0, 0, 255)
 WHITE = (255, 255, 255)
 
 FRAMERATE = 60
-TOTALTIME = 30
+TOTALTIME = 10
 
 SCREEN_WIDTH = 800
 SCREEN_HEIGHT = 624
@@ -48,7 +48,7 @@ def main():
     showNothing = [False]
     showIndex = [-1] #default showAll
 
-    numGames = 10
+    numGames = 25
     pop = Population(numGames, screen)
 
     # Used to manage how fast the screen updates
@@ -115,6 +115,7 @@ def main():
             if timeremaining <= 0:
                 for game in pop.games:
                     game.player.respawn()
+                    game.enemy.respawn()
                     game.player.calculateFitness()
                     # print("K: " + str(game.player.numKills))
                     # print("D: " + str(game.player.numDeaths))
@@ -122,8 +123,15 @@ def main():
                     # print("EG: " + str(game.enemy.numGoals))
                     # print("MD: " + str(game.player.maxDistance))
                     # print("RD: " + str(game.player.runningDistance))
-                    # print("Fitness: " + str(game.player.fitness))
+                    print("Fitness: " + str(game.player.fitness))
+                    # game.player.brain.printGenome()
                     gameUI.done = True
+
+                #test crossover
+                # print("testing crossover")
+                # newbrain = pop.games[0].player.brain.crossover(pop.games[1].player.brain)
+                # newbrain.printGenome()
+
     
             # Go ahead and update the screen with what we've drawn.
             pygame.display.flip()

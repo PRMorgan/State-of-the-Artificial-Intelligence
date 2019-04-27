@@ -27,6 +27,6 @@ class Gene():
 #----------------------------------------------------------------------------------------------------------
     #returns a copy of this connectionGene
     def clone(self,fromNode,toNode):
-        clone = Gene(self.fromNode, self.toNode, self.weight, self.innovationNo)
+        clone = Gene(fromNode, toNode, self.weight, self.innovationNo)
         clone.enabled = self.enabled
         return clone
