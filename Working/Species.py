@@ -84,8 +84,8 @@ class Species():
             for player in self.players:
                 sumScores += player.fitness
             self. averageFitness = sumScores / len(self.players)
-        else:
-            print("Oops - something went wrong. This species has", str(len(self.players)), "players but it should have more.")
+        #else:
+            #print("Oops - something went wrong. This species has", str(len(self.players)), "players but it should have more.")
 
     # gets baby from the players in this species
     def giveMeBaby(self, innovationHistory):
@@ -120,7 +120,7 @@ class Species():
                 return self.players[i]
 
         # unreachable code to make the parser happy
-        print("Oops - something went wrong. This species has", str(len(self.players)), "players but it should have more.")
+        #print("Oops - something went wrong. This species has", str(len(self.players)), "players but it should have more.")
         return self.players[0]
 
     #kills off bottom half of the species

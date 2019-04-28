@@ -114,18 +114,16 @@ class Population():
 
     #kills all species which haven't improved in 15 generations
     def killStaleSpecies(self):
-        for i in range(2,len(self.species)):
-            if self.species[i].staleness >= 15:
+        for i in reversed(self.species):
+            if (i.staleness >= 15 and (len(self.species) > 1)):
                 self.species.remove(i)
-                i -= 1
 
     #if a species sucks so much that it wont even be allocated 1 child for the next generation then kill it now
     def killBadSpecies(self):
         averageSum = self.getAvgFitnessSum()
-        for i in range(len(self.species)):
-            if self.species[i].averageFitness / averageSum * len(self.games) < 1: #if wont be given a single child 
-                self.species.pop(i) # sad
-                i = i - 1
+        for i in reversed(self.species):
+            if i.averageFitness / averageSum * len(self.games) < 1: #if wont be given a single child 
+                self.species.remove(i) # sad
 
     # returns the sum of each species average fitness
     def getAvgFitnessSum(self):
