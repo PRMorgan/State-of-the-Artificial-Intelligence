@@ -187,10 +187,11 @@ class NeuralNet:
         nodesInLayers = [] #array which stored the amount of nodes in each layer
         
         #loop through layers and add the number of nodes in each layer
-        for i in range(self.layers):
+        for l in range(self.layers):
             i = 0
             for node in self.nodes:
-                i += 1
+                if node.layer == l:
+                    i += 1
             nodesInLayers.append(i)
 
         #for each layer the maximum amount of connections is the number in this layer * the number of nodes infront of it
