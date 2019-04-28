@@ -35,6 +35,7 @@ class Player(pygame.sprite.Sprite):
         self.sword = None
         self.isAttacking = False
         self.attackDelay = 30 #30 frames between each attack
+        self.jumpDelay = 30
         self.respawnDelay = 30 #Don't redraw the player upon death for 30 frames
 
         self.direction = "right"
@@ -83,8 +84,9 @@ class Player(pygame.sprite.Sprite):
     #Update the screen with the AI's and enemy's decisions
     def update(self):
         if self.attackDelay != 0:
+            self.attackDelay -= 1 
+        if self.jumpDelay != 0:
             self.attackDelay -= 1
-            
         if self.rect.x >= 760:
             self.numGoals += 1
             self.respawn()
@@ -327,21 +329,24 @@ class Player(pygame.sprite.Sprite):
         # move down a bit and see if there is a platform below us.
         # Move down 2 pixels because it doesn't work well if we only move down
         # 1 when working with a platform moving down.
-        self.rect.y += 4
-        platform_hit_list = pygame.sprite.spritecollide(self, self.level.platform_list, False)
-        self.rect.y -= 4
+        if self.jumpDelay == 0:
+            self.rect.y += 4
+            platform_hit_list = pygame.sprite.spritecollide(self, self.level.platform_list, False)
+            self.rect.y -= 4
 
-        if (self.rect.left == 0 or self.rect.right == SCREEN_WIDTH):
-                self.change_y = -10
- 
-        # If it is ok to jump, set our speed upwards
-        if len(platform_hit_list) > 0 or self.rect.bottom >= SCREEN_HEIGHT:
-                self.change_y = -10
+            if (self.rect.left == 0 or self.rect.right == SCREEN_WIDTH):
+                    self.change_y = -10
+    
+            # If it is ok to jump, set our speed upwards
+            if len(platform_hit_list) > 0 or self.rect.bottom >= SCREEN_HEIGHT:
+                    self.change_y = -10
+            self.jumpDelay = 0
+        else: 
+            return
     
     #Move to the left
     def go_left(self):
         self.direction = "left"
-        self.image = pygame.image.load('Images/playerleftangry.png')
         if self.change_x < -8:
             self.change_x = -8
         else:
@@ -350,7 +355,6 @@ class Player(pygame.sprite.Sprite):
     #Move to the right
     def go_right(self):
         self.direction = "right"
-        self.image = pygame.image.load('Images/playerrightangry.png')
         if self.change_x > 4:
             self.change_x = 4
         else:

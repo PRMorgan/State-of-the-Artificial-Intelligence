@@ -208,7 +208,6 @@ class Enemy(pygame.sprite.Sprite):
     #Move to the left
     def go_left(self):
         self.direction = "left"
-        self.image = pygame.image.load('Images/enemyleftangry.png')
         if self.change_x < -4:
             self.change_x = -4
         else:
@@ -217,7 +216,6 @@ class Enemy(pygame.sprite.Sprite):
     #Move to the right
     def go_right(self):
         self.direction = "right"
-        self.image = pygame.image.load('Images/enemyrightangry.png')
         if self.change_x > 4:
             self.change_x = 4
         else:
@@ -229,10 +227,8 @@ class Enemy(pygame.sprite.Sprite):
             pass
         elif self.attackDelay == 0:
             if self.direction == "left":
-                self.image = pygame.image.load('Images/enemyleftangry.png')
                 facing = -1
             if self.direction == "right":
-                self.image = pygame.image.load('Images/enemyrightangry.png')
                 facing = 1
             if self.direction == "none":
                 facing = 0

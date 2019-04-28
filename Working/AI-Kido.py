@@ -88,10 +88,10 @@ def main():
             #Display our game stats on the screen
             if not showNothing[0]:
                 timemsg = str(int(timeremaining/FRAMERATE))
-                gameUI.displayText(screen, timemsg,397,143,140,20, BLUE)
+                gameUI.displayText(screen, timemsg,388,110,140,20, BLUE)
 
                 numGoalsMsg = str(game.player.numGoals - game.enemy.numGoals)
-                gameUI.displayText(screen, numGoalsMsg, 403, 207, 120, 20, False)
+                gameUI.displayText(screen, numGoalsMsg, 388, 175, 120, 20, False)
 
             # Limit to 60 frames per second
             clock.tick(FRAMERATE)

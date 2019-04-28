@@ -31,6 +31,10 @@ overlay = pygame.image.load('Images/Backgrounds/MapForeground.png')
 bg = pygame.image.load('Images/Backgrounds/OriginalDojo.png')
 heart = pygame.image.load('Images/heart.png')
 death = pygame.image.load('Images/skull.png')
+playerleft = pygame.image.load('Images/playerleftangry.png')
+playerright = pygame.image.load('Images/playerrightangry.png')
+enemyleft = pygame.image.load('Images/enemyleftangry.png')
+enemyright = pygame.image.load('Images/enemyrightangry.png')
 
 class Level(object):
     """ This is a generic super-class used to define a level.
@@ -48,6 +52,9 @@ class Level(object):
         self.player_attack_list = pygame.sprite.Group()
         self.enemy_attack_list = pygame.sprite.Group()
         self.screen = screen
+
+        self.playerdirection = "right"
+        self.enemydirection = "left"
          
         # Background image
         self.background = None
@@ -63,7 +70,22 @@ class Level(object):
         self.enemy_attack_list.update()
  
     #Draws all of the sprite lists 
-    def draw(self):
+    def draw(self, game):
+        #choose player sprite if theyve changed direction
+        if game.player.direction != self.playerdirection:
+            if game.player.direction == "right":
+                game.player.image = playerright
+            else:
+                game.player.image = playerleft
+            self.playerdirection = game.player.direction
+        
+        if game.enemy.direction != self.enemydirection:
+            if game.enemy.direction == "right":
+                game.enemy.image = enemyright
+            else:
+                game.enemy.image = enemyleft
+            self.enemydirection = game.enemy.direction
+
         self.player_attack_list.draw(self.screen) 
         self.enemy_attack_list.draw(self.screen) 
         self.platform_list.draw(self.screen)
@@ -77,15 +99,15 @@ class Level(object):
         
         #draw player stats
         for hearts in range(game.player.numHearts):
-            self.screen.blit(heart,((game.player.startx + (hearts * 40)), 90))
+            self.screen.blit(heart,((game.player.startx + (hearts * 40)), 75))
         for deaths in range(game.player.numDeaths):
-            self.screen.blit(death,((game.player.startx + ((deaths % 6) * 40)), (130 + (int(deaths/6)*40))))
+            self.screen.blit(death,((game.player.startx + ((deaths % 6) * 40)), (115 + (int(deaths/6)*40))))
 
         #draw enemy stats
         for hearts in range(game.enemy.numHearts):
-            self.screen.blit(heart, ((game.enemy.startx -40 + (hearts * -40)), 90))
+            self.screen.blit(heart, ((game.enemy.startx -40 + (hearts * -40)), 75))
         for deaths in range(game.player.numKills):
-            self.screen.blit(death,((game.enemy.startx - 40 + ((deaths % 6) * -40)), (130 + (int(deaths/6)*40))))
+            self.screen.blit(death,((game.enemy.startx - 40 + ((deaths % 6) * -40)), (115 + (int(deaths/6)*40))))
  
 # Create platforms for the level
 class Level_01(Level):
