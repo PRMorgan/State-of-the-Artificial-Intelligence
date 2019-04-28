@@ -56,7 +56,7 @@ class Level(object):
 
         self.playerdirection = "right"
         self.enemydirection = "left"
-        self.currentmap = 10
+        self.currentmap = -1
          
         # Background image
         self.background = None
