@@ -188,14 +188,13 @@ class NeuralNet:
     def fullyConnected(self):
         maxConnections = 0
         nodesInLayers = [] #array which stored the amount of nodes in each layer
+        
+        #loop through layers and add the number of nodes in each layer
         for i in range(self.layers):
-            nodesInLayers.append(0)
-
-        #populate array
-        for node in self.nodes:
-            #print("numlayers:" + str(self.layers))
-            #print(str(node.layer))
-            nodesInLayers[node.layer] += 1
+            i = 0
+            for node in self.nodes:
+                i += 1
+            nodesInLayers.append(i)
 
         #for each layer the maximum amount of connections is the number in this layer * the number of nodes infront of it
         #so lets add the max for each layer together and then we will get the maximum amount of connections in the network
@@ -246,7 +245,7 @@ class NeuralNet:
             parent2gene = self.matchingGene(parent2, gene.innovationNo)
 
             if parent2gene != -1: #if the genes match
-                if not gene.enabled or not parent2.genes[parent2gene].enabled: 
+                if not gene.enabled or not parent2.genes[parent2gene - 1].enabled: 
                     #if either of the matching genes are disabled
                     if random.uniform(0,1) < 0.75: #75% of the time disable the childs gene
                         setEnabled = False
