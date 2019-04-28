@@ -18,7 +18,6 @@ import time
 os.environ['SDL_VIDEO_CENTERED'] = '1'
  
 # Global constants
-
 RED = (255, 0, 0)
 BLUE = (0, 0, 255)
 WHITE = (255, 255, 255)
@@ -31,24 +30,21 @@ SCREEN_HEIGHT = 624
 
 SCREEN_WIDTH_EXT = 1300
 
-colors = [RED,BLUE,WHITE]
-
+#Main 
 def main():
-
-    """ Main Program """
     pygame.init()
  
     # Set the height and width of the screen
     size = [SCREEN_WIDTH_EXT, SCREEN_HEIGHT]
     screen = pygame.display.set_mode(size)
  
-    pygame.display.set_caption("State of the Art-ificial Intelligence")
+    pygame.display.set_caption("State of the Art-ificial Intelligence: AI-Kido")
 
     # <insert large block of code at bottom if shit goes south>
     showNothing = [False]
     showIndex = [-1] #default showAll
 
-    numGames = 25
+    numGames = 25 #This is the number of sets of players
     pop = Population(numGames, screen)
 
     # Used to manage how fast the screen updates
@@ -80,18 +76,7 @@ def main():
 
             pop.draw(showNothing[0],showIndex[0])
 
-            #pop.games[0].level.drawBG(screen,pop.games[0])
-
-            # if showIndex[0] == -1: #show all
-            #     for game in pop.games:
-            #         game.level.draw(screen)
-            #         game.player.updateHealth()
-            #         game.enemy.updateHealth()
-            #         game.updateAllHealth()
-            # elif len(pop.games) != 0:
-            #     pop.games[showIndex[0]].level.draw(screen)
-            #     pop.games[showIndex[0]].updateAllHealth()
-
+            #Put our buttons on the screen
             #screen, text, x, y, width, height, color1, color, function
             gameUI.button(screen, "Show Best",315,602,70,20,RED,BLUE,gameUI.showChamp, showIndex)
             gameUI.button(screen, "Next",390,602,70,20,RED,BLUE,gameUI.nextGame, showIndex)
@@ -100,6 +85,7 @@ def main():
             gameUI.button(screen, "Show None",165,602,70,20,RED,BLUE,gameUI.showNothing,[],showNothing)
             gameUI.button(screen, "Quit", 5, 602, 50, 20, RED, BLUE, gameUI.endGame,[],[],True)
             
+            #Display our game stats on the screen
             if not showNothing[0]:
                 timemsg = str(int(timeremaining/FRAMERATE))
                 gameUI.displayText(screen, timemsg,397,143,140,20, BLUE)
@@ -107,8 +93,6 @@ def main():
                 numGoalsMsg = str(game.player.numGoals - game.enemy.numGoals)
                 gameUI.displayText(screen, numGoalsMsg, 403, 207, 120, 20, False)
 
-            # ALL CODE TO DRAW SHOULD GO ABOVE THIS COMMENT
-    
             # Limit to 60 frames per second
             clock.tick(FRAMERATE)
 
@@ -117,21 +101,8 @@ def main():
                     game.player.respawn()
                     game.enemy.respawn()
                     game.player.calculateFitness()
-                    # print("K: " + str(game.player.numKills))
-                    # print("D: " + str(game.player.numDeaths))
-                    # print("G: " + str(game.player.numGoals))
-                    # print("EG: " + str(game.enemy.numGoals))
-                    # print("MD: " + str(game.player.maxDistance))
-                    # print("RD: " + str(game.player.runningDistance))
                     print("Fitness: " + str(game.player.fitness))
-                    # game.player.brain.printGenome()
                     gameUI.done = True
-
-                #test crossover
-                # print("testing crossover")
-                # newbrain = pop.games[0].player.brain.crossover(pop.games[1].player.brain)
-                # newbrain.printGenome()
-
     
             # Go ahead and update the screen with what we've drawn.
             pygame.display.flip()
@@ -140,20 +111,19 @@ def main():
             gameUI.done = False
             timeremaining = FRAMERATE * TOTALTIME
             pop.naturalSelection()
-    # Be IDLE friendly. If you forget this line, the program will 'hang'
-   # on exit.
+    # Be IDLE friendly. If you forget this line, the program will 'hang' on exit.
     pygame.quit()
 
 class Interface():
     def __init__(self, screen, numGames):
         self.screen = screen
-        #self.gameScreen = -1
         self.numGames = numGames
         self.satisfied = False
         self.done = False
         self.buttonsDrawn = False
         self.font = pygame.font.SysFont('Georgia', 15, False, False)
 
+    #Buttons to control what we see on the screen
     def button(self, screen, msg,x,y,w,h,ic,ac,action=None,showAll=[],showNothing=[],lastButton = False):
         if lastButton == True:
             self.buttonsDrawn = True
@@ -162,21 +132,19 @@ class Interface():
             text = self.font.render(msg, True, WHITE)
             pos = [x,y]
             screen.blit(text, pos)
-        #else:
         mouse = pygame.mouse.get_pos()
         click = pygame.mouse.get_pressed()
-        if x+w > mouse[0] > x and y+h > mouse[1] > y:
-            #pygame.draw.rect(screen, ac,(x,y,w,h))
+        if x + w > mouse[0] > x and y + h > mouse[1] > y:
             if click[0] == 1 and action != None:
                 if len(showAll) > 0:
                     action(showAll)
                 elif len(showNothing) > 0:
                     action(showNothing)
                 else:
-                    action()
+                    action() 
 
-    def displayText(self, screen, msg,x,y,w,h,color):
-        #pygame.draw.rect(screen, color,(x,y,w,h))
+#These next few relate to the buttons shown on the screen
+    def displayText(self, screen, msg, x, y, w, h, color):
         font = pygame.font.SysFont('Georgia', 24, True, False)
         text = font.render(msg, True, WHITE)
         pos = [x,y]
@@ -210,7 +178,6 @@ class Interface():
         self.satisfied = True
         self.done = True
     
-
-    
+#Main
 if __name__ == "__main__":
     main()

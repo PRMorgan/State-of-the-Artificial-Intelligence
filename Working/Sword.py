@@ -1,7 +1,8 @@
 import pygame
 
+#The Sword that the AI and enemy use
 class Sword(pygame.sprite.Sprite):
-    def __init__(self,x,y,width,height,color,facing):
+    def __init__(self,x,y,width,height,facing):
 
         super().__init__()
         self.facing = facing

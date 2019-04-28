@@ -62,7 +62,6 @@ class NeuralNet:
         outs = []
         for i in range(self.outputs):
             outs.append(0.0)
-        
         for i in range(self.outputs):
             outs[i] = self.nodes[self.inputs + i].outputValue
         for i in self.nodes: #reset all the nodes for the next feed forward
@@ -153,9 +152,6 @@ class NeuralNet:
         self.connectNodes()
 
     def randomConnectionNodesAreBad(self, r1, r2):
-        #print("r1: " + str(r1))
-        #print("r2: " + str(r2))
-        #print("numNodes: " + str(len(self.nodes)))
         if self.nodes[r1].layer == self.nodes[r2].layer:
             return True #if the nodes are in the same layer 
         if self.nodes[r1].isConnectedTo(self.nodes[r2]): 
@@ -238,7 +234,6 @@ class NeuralNet:
         child.layers = self.layers
         child.nextNode = self.nextNode
         child.biasNode = self.biasNode
-        #childGenes = [] #list of genes to be inherrited form the parents
         isEnabled = [] 
 
         #all inherited genes
@@ -248,7 +243,6 @@ class NeuralNet:
             parent2gene = self.matchingGene(parent2, gene.innovationNo)
 
             if parent2gene != -1: #if the genes match
-                #print("len ", str(len(parent2.genes)), " parent2gene ", parent2gene)
                 if not gene.enabled or not parent2.genes[parent2gene].enabled: 
                     #if either of the matching genes are disabled
                     if random.uniform(0,1) < 0.75: #75% of the time disable the childs gene
@@ -271,19 +265,10 @@ class NeuralNet:
         for node in self.nodes:
             child.nodes.append(node.clone())
 
-        #clone all the connections so that they connect the childs new nodes
-        # for gene in childGenes:
-        #     child.genes.append(gene.clone(child.getNode(childGenes[i].fromNode.number), child.getNode(childGenes[i].toNode.number)))
-        #     gene.enabled = isEnabled[i]
+        #Connect the nodes for the child's neural net
         child.connectNodes()
         return child
-    """
-    # create an empty genome
-    def __init__(self,inputs,outputs):
-        #set input number and output number
-        self.inputs = inputs 
-        self.outputs = outputs
-    """
+
     # returns whether or not there is a gene matching the input innovation number  in the input genome
     def matchingGene(self, parent2, innovationNumber):
         for i in range(len(self.genes)):
@@ -291,19 +276,6 @@ class NeuralNet:
                 return i
         return -1 #no matching gene found
 
-    """
-    #prints out info about the genome to the console 
-    def printGenome(self):
-        print("Print genome  layers:", self.layers, "\n")
-        print ("bias node: ", self.biasNode, "\n")
-        print("nodes\n")
-        for i in range(len(self.nodes)):
-            print(self.nodes[i].number, ",")
-        print("\nGenes\n")
-        for i in range(len(self.genes)): #for each connectionGene 
-            print("gene ", self.genes[i].innovationNo, "From node ", self.genes[i].fromNode.number, "To node ", self.genes[i].toNode.number, "is enabled ", self.genes.[i].enabled, "from layer ", self.genes[i].fromNode.layer, "to layer ", self.genes[i].toNode.layer, "weight: ", self.genes[i].weight, "\n")
-        print("\n")
-    """
     # returns a copy of this genome
     def clone(self):
         clone = NeuralNet(self.inputs, self.outputs)
@@ -332,6 +304,8 @@ class NeuralNet:
             print("Gene Num:" + str(i.innovationNo) + " From node " + str(i.fromNode.number) + " To node " + str(i.toNode.number) +  " is enabled " + str(i.enabled) +  " from layer " + str(i.fromNode.layer) + " to layer " + str(i.toNode.layer) + " weight: " + str(i.weight) + "\n")
         print("\n")
 
+
+"""This is the only dead code I left in case we want to draw the neural net later """
 #     # draw the neural net on the screen
 #     def draw(self, startX, startY, w, h):
 #         allNodes = []

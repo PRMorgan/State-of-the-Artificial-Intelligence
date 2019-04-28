@@ -1,7 +1,6 @@
 import random
 
 class Species():
-#------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------ 
     # constructor which takes in the player which belongs to the species
     def __init__(self, p):
         self.players = []
@@ -18,8 +17,6 @@ class Species():
         self.weightDiffCoeff = 0.5
         self.compatibilityThreshold = 3.0
 
-
-#------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------ 
     # returns whether the parameter genome is in this species
     def sameSpecies(self, g):
         compatibility = 0.0
@@ -33,12 +30,10 @@ class Species():
         compatibility =  (self.excessCoeff* excessAndDisjoint / largeGenomeNormalizer) + (self.weightDiffCoeff* averageWeightDiff) #compatablilty formula
         return self.compatibilityThreshold > compatibility
 
-#------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------ 
     #add a player to the species
     def addToSpecies(self, p):
         self.players.append(p)
 
-#------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------ 
     #returns the number of excess and disjoint genes between the 2 input genomes
     #i.e. returns the number of genes which dont match
     def getExcessDisjoint(self, brain1, brain2):
@@ -50,7 +45,6 @@ class Species():
                     break
         return len(brain1.genes) + len(brain2.genes) - 2 * (matching) # return no of excess and disjoint genes
 
-#------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
     #returns the avereage weight difference between matching genes in the input genomes
     def averageWeightDiff(self, brain1, brain2):
         if len(brain1.genes) == 0 or len(brain2.genes) ==0:
@@ -68,7 +62,6 @@ class Species():
             return 100
         return totalDiff / matching
 
-#-------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
     # sorts the species by fitness 
     def sortSpecies(self):
         self.players = self.merge_sort(self.players)
@@ -84,8 +77,6 @@ class Species():
         else: # if no new best player
             self.staleness += 1
 
-#-------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
-    #simple stuff
     def setAverage(self):
         if len(self.players) > 0:
             #print(len(self.players))
@@ -96,7 +87,6 @@ class Species():
         else:
             print("Oops - something went wrong. This species has", str(len(self.players)), "players but it should have more.")
 
-#-------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
     # gets baby from the players in this species
     def giveMeBaby(self, innovationHistory):
         baby = None
@@ -112,10 +102,9 @@ class Species():
                 baby = parent2.crossover(parent1)
             else:
                 baby =  parent1.crossover(parent2)
-        baby.brain.mutate(innovationHistory) # mutate that baby brain
+        baby.brain.mutate(innovationHistory) # mutate the baby brain
         return baby
 
-#-------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
     # selects a player based on it fitness
     def selectPlayer(self):
         fitnessSum = 0.0
@@ -134,7 +123,6 @@ class Species():
         print("Oops - something went wrong. This species has", str(len(self.players)), "players but it should have more.")
         return self.players[0]
 
-#------------------------------------------------------------------------------------------------------------------------------------------
     #kills off bottom half of the species
     def cull(self):
         if len(self.players) > 2:
@@ -143,7 +131,6 @@ class Species():
                 self.players.pop(i)
 
 
-#------------------------------------------------------------------------------------------------------------------------------------------
     #in order to protect unique players, the fitnesses of each player is divided by the number of players in the species that that player belongs to 
     def fitnessSharing(self):
         for i in range(len(self.players)):

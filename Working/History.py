@@ -1,6 +1,4 @@
 class connectionHistory():
-#--------------------------------------------------------------------------------------------------------------------------------------------------------- 
-    #constructor
     def __init__(self, fromNode, toNode,inno,innovationNos):
         self.fromNode = fromNode
         self.toNode = toNode
@@ -10,7 +8,6 @@ class connectionHistory():
         # this represents the genome and allows us to test if another genoeme is the same
         # this is before this connection was added
 
-#---------------------------------------------------------------------------------------------------------------------------------------------------------
     #returns whether the genome matches the original genome and the connection is between the same nodes
     def matches(self, genome, fromNode, toNode):
         if len(genome.genes) == len(self.innovationNumbers): #if the number of connections are different then the genoemes aren't the same
