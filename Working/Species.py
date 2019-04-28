@@ -15,7 +15,7 @@ class Species():
         # coefficients for testing compatibility 
         self.excessCoeff = 1.0
         self.weightDiffCoeff = 0.5
-        self.compatibilityThreshold = 3.0
+        self.compatibilityThreshold = 2.0 #previously 3.0
 
     # returns whether the parameter genome is in this species
     def sameSpecies(self, g):

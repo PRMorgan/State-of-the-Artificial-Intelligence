@@ -56,6 +56,7 @@ class Level(object):
 
         self.playerdirection = "right"
         self.enemydirection = "left"
+        self.currentmap = 10
          
         # Background image
         self.background = None
@@ -100,11 +101,12 @@ class Level(object):
         # If player has more goals, we progress towards their 'goal.'
         # Each entity has a set of 10 maps and one neutral ground.
         currentMapIndex = (game.player.numGoals - game.enemy.numGoals) + 10
-        if currentMapIndex > 20:
-            currentMapIndex = 20
-        elif currentMapIndex < 0:
-            currentMapIndex = 0
-        bg = maps[currentMapIndex]
+        if currentMapIndex != self.currentmap:
+            if currentMapIndex > 20:
+                currentMapIndex = 20
+            elif currentMapIndex < 0:
+                currentMapIndex = 0
+            bg = maps[currentMapIndex]
         screen.blit(bg, (0,0))
         screen.blit(overlay, (0,0))
         

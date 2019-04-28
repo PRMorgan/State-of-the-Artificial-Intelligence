@@ -63,14 +63,15 @@ class Player(pygame.sprite.Sprite):
         # List of sprites we can bump against
         self.level = None
 
-        genomeInputs = 6
-        genomeOutputs = 4
-        self.brain = NeuralNet(genomeInputs, genomeOutputs)
+        self.genomeInputs = 6
+        self.genomeOutputs = 4
+        self.brain = NeuralNet(self.genomeInputs, self.genomeOutputs)
         self.vision = []
 
     #Make a clone of the player
     def clone(self):
         clone = Player(self.screen, self.startPos, self.fitness)
+        clone.brain = None
         clone.brain = self.brain.clone()
         clone.brain.generateNetwork()
         return clone
@@ -78,6 +79,7 @@ class Player(pygame.sprite.Sprite):
     #Make a close for a replay
     def cloneForReplay(self):
         clone = Player(self.screen, self.startPos,self.fitness)
+        clone.brain = []
         clone.brain = self.brain.clone()
         clone.brain.generateNetwork()
         return clone
