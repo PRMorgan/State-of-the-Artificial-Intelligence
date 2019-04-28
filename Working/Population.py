@@ -114,16 +114,18 @@ class Population():
 
     #kills all species which haven't improved in 15 generations
     def killStaleSpecies(self):
-        for i in reversed(self.species):
-            if (i.staleness >= 15 and (len(self.species) > 1)):
+        for i in range(2,len(self.species)):
+            if self.species[i].staleness >= 15:
                 self.species.remove(i)
+                i -= 1
 
     #if a species sucks so much that it wont even be allocated 1 child for the next generation then kill it now
     def killBadSpecies(self):
         averageSum = self.getAvgFitnessSum()
-        for i in reversed(self.species):
-            if i.averageFitness / averageSum * len(self.games) < 1: #if wont be given a single child 
-                self.species.remove(i) # sad
+        for i in range(len(self.species)):
+            if self.species[i].averageFitness / averageSum * len(self.games) < 1: #if wont be given a single child 
+                self.species.pop(i) # sad
+                i = i - 1
 
     # returns the sum of each species average fitness
     def getAvgFitnessSum(self):
@@ -147,12 +149,12 @@ class Population():
     def draw(self, showNothing, showIndex):
         if not showNothing:
             if showIndex == -1: #showAll
-                self.games[0].level.drawBG(self.games[0])
+                self.games[0].level.drawBG(self.screen, self.games[0])
                 for game in self.games:
                     game.level.draw(game) #draw elements
             else: #use index - show only that game
-                self.games[showIndex].level.drawBG(self.games[showIndex])
-                self.games[showIndex].level.draw(self.games[showIndex])
+                self.games[showIndex].level.drawBG(self.screen, self.games[showIndex])
+                self.games[showIndex].level.draw(self.screen, self.games[showIndex])
 
     def resetFitness(self):
         for game in self.games:

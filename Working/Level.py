@@ -5,28 +5,29 @@ import random
 SCREEN_WIDTH = 800
 SCREEN_HEIGHT = 600
 
-# Background image filenames
-maps = ["FinalRuins.gif",
-        "DesertRuins.gif",
-        "DojoRuins.gif",
-        "CityApocalypse.gif",
-        "TownOnFire.gif",
-        "HouseFire.gif",
-        "Rural.gif",
-        "Docks.gif",
-        "Forest.gif",
-        "Prairie.gif",
-        "OriginalDojo.png",
-        "Jungle.gif",
-        "Waterfall.gif",
-        "Beach.gif",
-        "Bridge.gif",
-        "Carnival.gif",
-        "Hanger.gif",
-        "Airport.gif",
-        "Naboo.gif",
-        "Temple.gif",
-        "FinalJudgement.gif"]
+# Load all background images
+maps = [pygame.image.load('Images/Backgrounds/FinalRuins.gif'),
+        pygame.image.load('Images/Backgrounds/DesertRuins.gif'),
+        pygame.image.load('Images/Backgrounds/DojoRuins.gif'),
+        pygame.image.load('Images/Backgrounds/CityApocalypse.gif'),
+        pygame.image.load('Images/Backgrounds/TownOnFire.gif'),
+        pygame.image.load('Images/Backgrounds/HouseFire.gif'),
+        pygame.image.load('Images/Backgrounds/Rural.gif'),
+        pygame.image.load('Images/Backgrounds/Docks.gif'),
+        pygame.image.load('Images/Backgrounds/Forest.gif'),
+        pygame.image.load('Images/Backgrounds/Prairie.gif'),
+        pygame.image.load('Images/Backgrounds/OriginalDojo.png'),
+        pygame.image.load('Images/Backgrounds/Jungle.gif'),
+        pygame.image.load('Images/Backgrounds/Waterfall.gif'),
+        pygame.image.load('Images/Backgrounds/Beach.gif'),
+        pygame.image.load('Images/Backgrounds/Bridge.gif'),
+        pygame.image.load('Images/Backgrounds/Carnival.gif'),
+        pygame.image.load('Images/Backgrounds/Hanger.gif'),
+        pygame.image.load('Images/Backgrounds/Airport.gif'),
+        pygame.image.load('Images/Backgrounds/Naboo.gif'),
+        pygame.image.load('Images/Backgrounds/Temple.gif'),
+        pygame.image.load('Images/Backgrounds/FinalJudgement.gif')]
+
 overlay = pygame.image.load('Images/Backgrounds/MapForeground.png')
 bg = pygame.image.load('Images/Backgrounds/OriginalDojo.png')
 heart = pygame.image.load('Images/heart.png')
@@ -93,9 +94,19 @@ class Level(object):
         self.player_list.draw(self.screen)
 
     #Draws the background and player and enemy stats
-    def drawBG(self, game):
-        self.screen.blit(bg, (0,0))
-        self.screen.blit(overlay, (0,0))
+    def drawBG(self, screen, game):
+        # Display the current map in terms of who has more kills.
+        # If enemy has more kills, we profress towards their 'goal.'
+        # If player has more goals, we progress towards their 'goal.'
+        # Each entity has a set of 10 maps and one neutral ground.
+        currentMapIndex = (game.player.numGoals - game.enemy.numGoals) + 10
+        if currentMapIndex > 20:
+            currentMapIndex = 20
+        elif currentMapIndex < 0:
+            currentMapIndex = 0
+        bg = maps[currentMapIndex]
+        screen.blit(bg, (0,0))
+        screen.blit(overlay, (0,0))
         
         #draw player stats
         for hearts in range(game.player.numHearts):
