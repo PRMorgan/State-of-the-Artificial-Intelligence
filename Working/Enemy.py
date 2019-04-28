@@ -98,6 +98,7 @@ class Enemy(pygame.sprite.Sprite):
             self.change_x += 10
             self.change_y -= 4
             self.numHearts -= 1
+            self.enemy.numHits += 1
 
 
         # ---------------------- INTERACTION WITH PLATFORMS AND SIDE --------------------------

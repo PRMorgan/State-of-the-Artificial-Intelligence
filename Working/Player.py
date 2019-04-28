@@ -28,6 +28,7 @@ class Player(pygame.sprite.Sprite):
         self.numDeaths = 0 #track how many times we've died 
         self.numKills = 0 #track how many times we've killed the opponent
         self.numGoals = 0 #How many times have we made it to the other side of the board?
+        self.numHits = 0 #How many times the player has made a successful attack
         self.runningDistance = 0 #How far have the player moved (running total per life)
         self.maxDistance = 0 #How far the player moved during the round
         self.fitness = fitness #the total fitness of this player
@@ -62,7 +63,7 @@ class Player(pygame.sprite.Sprite):
         # List of sprites we can bump against
         self.level = None
 
-        genomeInputs = 14
+        genomeInputs = 6
         genomeOutputs = 4
         self.brain = NeuralNet(genomeInputs, genomeOutputs)
         self.vision = []
@@ -244,44 +245,32 @@ class Player(pygame.sprite.Sprite):
     #Look around at the environment --> this is fed into the neural net
     def look(self): 
         self.vision = []
-        #player_x
+        # x difference between player and enemy
         x = (self.rect.x + 100) / 100
-        self.vision.append(x)
-        #player_y
+        enemyx = (self.enemy.rect.x + 100) / 100
+        self.vision.append(x - enemyx)
+        # y difference between player and enemy
         y = (self.rect.y + 100) / 100
-        self.vision.append(y)
-        #player_x_velocity
-        self.vision.append(self.change_x)
-        #player_y_velocity
-        self.vision.append(self.change_y)
+        enemyy = (self.enemy.rect.y + 100) / 100
+        self.vision.append(y - enemyy)
+        # x difference in velocity
+        vel = self.change_x
+        enemyvel = self.enemy.change_x
+        self.vision.append(vel - enemyvel)
+        # distance to goal
+        goalx = SCREEN_WIDTH - self.width
+        x = ((goalx - self.rect.x) + 100) / 100
+        self.vision.append(x)
         #player_is_attacking
         if self.isAttacking:
             self.vision.append(1)
         else:
             self.vision.append(0)
-        #player_attack_delay
-        self.vision.append(self.attackDelay)
-        #player_health
-        self.vision.append(self.numHearts)
-        #enemy_x
-        x = (self.enemy.rect.x + 100) / 100
-        self.vision.append(x)
-        #enemy_y
-        y = (self.enemy.rect.y + 100) / 100
-        self.vision.append(y)
-        #enemy_x_velocity
-        self.vision.append(self.enemy.change_x)
-        #enemy_y_velocity
-        self.vision.append(self.enemy.change_y)
         #enemy_is_attacking
         if self.enemy.isAttacking:
             self.vision.append(1)
         else:
             self.vision.append(0)
-        #enemy_attack_delay
-        self.vision.append(self.enemy.attackDelay)
-        #enemy_health
-        self.vision.append(self.enemy.numHearts)
     
     def setEnemy(self, enemy):
         if enemy == None:
@@ -292,6 +281,7 @@ class Player(pygame.sprite.Sprite):
     def calculateFitness(self):
         self.fitness = (50 * self.numKills) - (50 * self.numDeaths)
         self.fitness += (100 * self.numGoals) - (100*self.enemy.numGoals)
+        self.fitness += (12.5 * self.numHits)
         self.fitness += self.runningDistance/(self.numDeaths + 1)
     
     #Update the AI's health
