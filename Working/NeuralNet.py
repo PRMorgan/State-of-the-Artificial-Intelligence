@@ -87,15 +87,17 @@ class NeuralNet:
         if len(self.genes) == 0:
             self.addConnection(innovationHistory)
             return
+        #Bias is node 0, so we don't want to lose it
         if len(self.genes) > 1:
-            randomConnection = math.floor(random.randint(0, len(self.genes)) - 1)
-        else: randomConnection = 0
-        print("index ",str(randomConnection), " size ", str(len(self.genes)), " bias ", str(self.biasNode), " node size ", str(len(self.nodes)))
-        
-        while self.genes[randomConnection].fromNode == self.nodes[self.biasNode] and len(self.genes) !=1 : #dont disconnect bias
-            randomConnection = math.floor(random.randint(1, len(self.genes)))
+            randomConnection = math.floor(random.randint(1, len(self.genes) - 1))
+        else: 
+            randomConnection = 0
 
-        self.genes[randomConnection].enabled = False #disable it
+        try:
+            self.genes[randomConnection].enabled = False #disable it
+        except IndexError:
+            print("max length" + str(len(self.genes)))
+            print("index: " + str(randomConnection))
         newNodeNo = self.nextNode
         self.nodes.append(Node(newNodeNo))
         self.nextNode += 1
@@ -241,7 +243,6 @@ class NeuralNet:
         #all inherited genes
         for gene in self.genes:
             setEnabled = True #is this node in the chlid going to be enabled
-
             parent2gene = self.matchingGene(parent2, gene.innovationNo)
 
             if parent2gene != -1: #if the genes match
