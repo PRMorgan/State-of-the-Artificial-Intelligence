@@ -26,7 +26,7 @@ FRAMERATE = 60
 TOTALTIME = 10
 
 SCREEN_WIDTH = 800
-SCREEN_HEIGHT = 624
+SCREEN_HEIGHT = 600
 
 SCREEN_WIDTH_EXT = 1300
 
@@ -44,7 +44,7 @@ def main():
     showNothing = [False]
     showIndex = [-1] #default showAll
 
-    numGames = 1 #This is the number of sets of players
+    numGames = 50 #This is the number of sets of players
     pop = Population(numGames, screen)
 
     # Used to manage how fast the screen updates
@@ -78,12 +78,11 @@ def main():
 
             #Put our buttons on the screen
             #screen, text, x, y, width, height, color1, color, function
-            gameUI.button(screen, "Show Best",318,602,70,20,RED,BLUE,gameUI.showChamp, showIndex)
-            gameUI.button(screen, "Next",393,602,70,20,RED,BLUE,gameUI.nextGame, showIndex)
-            gameUI.button(screen, "Prev",468,602,70,20,RED,BLUE,gameUI.prevGame, showIndex)
-            gameUI.button(screen, "Show All",243,602,70,20,RED,BLUE,gameUI.showAll,showIndex)
-            gameUI.button(screen, "Show None",160, 602,78,20,RED,BLUE,gameUI.showNothing,[],showNothing)
-            gameUI.button(screen, "Quit", 5, 602, 50, 20, RED, BLUE, gameUI.endGame,[],[],True)
+            gameUI.button(screen, "Show None",845, 0,78,20,RED,BLUE,gameUI.showNothing,[],showNothing)
+            gameUI.button(screen, "Show All",935,0,70,20,RED,BLUE,gameUI.showAll,showIndex)
+            gameUI.button(screen, "Show Best",1017,0,70,20,RED,BLUE,gameUI.showChamp, showIndex)
+            gameUI.button(screen, "Next",1099,0,70,20,RED,BLUE,gameUI.nextGame, showIndex)
+            gameUI.button(screen, "Prev",1181,0,70,20,RED,BLUE,gameUI.prevGame, showIndex)
             
             #Display our game stats on the screen
             if not showNothing[0]:
@@ -173,10 +172,6 @@ class Interface():
             showNothing[0] = False
         else: 
             showNothing[0] = True
-    
-    def endGame(self):
-        self.satisfied = True
-        self.done = True
     
 #Main
 if __name__ == "__main__":
