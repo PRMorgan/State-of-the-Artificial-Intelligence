@@ -93,11 +93,8 @@ class NeuralNet:
         else: 
             randomConnection = 0
 
-        try:
-            self.genes[randomConnection].enabled = False #disable it
-        except IndexError:
-            print("max length" + str(len(self.genes)))
-            print("index: " + str(randomConnection))
+        self.genes[randomConnection].enabled = False #disable it
+        
         newNodeNo = self.nextNode
         self.nodes.append(Node(newNodeNo))
         self.nextNode += 1
