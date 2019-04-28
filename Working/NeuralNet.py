@@ -244,8 +244,10 @@ class NeuralNet:
             setEnabled = True #is this node in the chlid going to be enabled
             parent2gene = self.matchingGene(parent2, gene.innovationNo)
 
+            if(parent2gene > len(parent2.genes)):
+                parent2gene = len(parent2.genes) - 1
             if parent2gene != -1: #if the genes match
-                if not gene.enabled or not parent2.genes[parent2gene - 1].enabled: 
+                if not gene.enabled or not parent2.genes[parent2gene].enabled: 
                     #if either of the matching genes are disabled
                     if random.uniform(0,1) < 0.75: #75% of the time disable the childs gene
                         setEnabled = False
