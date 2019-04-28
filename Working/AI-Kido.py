@@ -78,11 +78,11 @@ def main():
 
             #Put our buttons on the screen
             #screen, text, x, y, width, height, color1, color, function
-            gameUI.button(screen, "Show Best",315,602,70,20,RED,BLUE,gameUI.showChamp, showIndex)
-            gameUI.button(screen, "Next",390,602,70,20,RED,BLUE,gameUI.nextGame, showIndex)
-            gameUI.button(screen, "Prev",465,602,70,20,RED,BLUE,gameUI.prevGame, showIndex)
-            gameUI.button(screen, "Show All",240,602,70,20,RED,BLUE,gameUI.showAll,showIndex)
-            gameUI.button(screen, "Show None",165,602,70,20,RED,BLUE,gameUI.showNothing,[],showNothing)
+            gameUI.button(screen, "Show Best",318,602,70,20,RED,BLUE,gameUI.showChamp, showIndex)
+            gameUI.button(screen, "Next",393,602,70,20,RED,BLUE,gameUI.nextGame, showIndex)
+            gameUI.button(screen, "Prev",468,602,70,20,RED,BLUE,gameUI.prevGame, showIndex)
+            gameUI.button(screen, "Show All",243,602,70,20,RED,BLUE,gameUI.showAll,showIndex)
+            gameUI.button(screen, "Show None",160, 602,78,20,RED,BLUE,gameUI.showNothing,[],showNothing)
             gameUI.button(screen, "Quit", 5, 602, 50, 20, RED, BLUE, gameUI.endGame,[],[],True)
             
             #Display our game stats on the screen
