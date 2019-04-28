@@ -87,8 +87,10 @@ class NeuralNet:
         if len(self.genes) == 0:
             self.addConnection(innovationHistory)
             return
-        randomConnection = math.floor(random.randint(0, len(self.genes)))
-        print("index ",str(randomConnection), " size ", str(len(self.genes)), " bias ", str(self.biasNode), " node size ", str(self.nodes))
+        if len(self.genes) > 1:
+            randomConnection = math.floor(random.randint(0, len(self.genes)) - 1)
+        else: randomConnection = 0
+        print("index ",str(randomConnection), " size ", str(len(self.genes)), " bias ", str(self.biasNode), " node size ", str(len(self.nodes)))
         
         while self.genes[randomConnection].fromNode == self.nodes[self.biasNode] and len(self.genes) !=1 : #dont disconnect bias
             randomConnection = math.floor(random.randint(1, len(self.genes)))
