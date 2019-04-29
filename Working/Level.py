@@ -95,7 +95,7 @@ class Level(object):
         self.player_list.draw(self.screen)
 
     #Draws the background and player and enemy stats
-    def drawBG(self, screen, game):
+    def drawBG(self, game):
         # Display the current map in terms of who has more kills.
         # If enemy has more kills, we profress towards their 'goal.'
         # If player has more goals, we progress towards their 'goal.'
@@ -107,8 +107,8 @@ class Level(object):
             elif currentMapIndex < 0:
                 currentMapIndex = 0
             bg = maps[currentMapIndex]
-        screen.blit(bg, (0,0))
-        screen.blit(overlay, (0,0))
+        self.screen.blit(bg, (0,0))
+        self.screen.blit(overlay, (0,0))
         
         #draw player stats
         for hearts in range(game.player.numHearts):

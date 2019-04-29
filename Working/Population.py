@@ -68,7 +68,6 @@ class Population():
             for i in range(len(species.players)):
                 print("player ", i, "fitness: ", species.players[i].fitness, ' ')
             print("\n")
-            
             children.append(species.champ.clone()) #add champion without any mutation
             NoOfChildren = math.floor(species.averageFitness / averageSum * len(self.games)) -1 # the number of children this species is allowed, note -1 is because the champ is already added
             for i in range(NoOfChildren): #get the calculated amount of children from this species
@@ -76,6 +75,7 @@ class Population():
             
         while len(children) < len(self.games): #if not enough babies (due to flooring the number of children to get a whole int) 
             children.append(self.species[0].giveMeBaby(self.innovationHistory)) #get babies from the best species
+
         self.games.clear()
 
         for child in children: #set the children as the current population
@@ -83,8 +83,8 @@ class Population():
 
         self.resetFitness()
         self.gen += 1
-        for game in self.games: # generate networks for each of the children
-            game.player.brain.generateNetwork()
+        # for game in self.games: # generate networks for each of the children
+        #     game.player.brain.generateNetwork()
 
     #seperate population into species based on how similar they are to the leaders of each species in the previous gen
     def speciate(self):
@@ -116,7 +116,7 @@ class Population():
     def killStaleSpecies(self):
         for i in range(2,len(self.species)):
             if self.species[i].staleness >= 15:
-                self.species.remove(i)
+                self.species.pop(i)
                 i -= 1
 
     #if a species sucks so much that it wont even be allocated 1 child for the next generation then kill it now
@@ -149,12 +149,12 @@ class Population():
     def draw(self, showNothing, showIndex):
         if not showNothing:
             if showIndex == -1: #showAll
-                self.games[0].level.drawBG(self.screen, self.games[0])
+                self.games[0].level.drawBG(self.games[0])
                 for game in self.games:
                     game.level.draw(game) #draw elements
             else: #use index - show only that game
-                self.games[showIndex].level.drawBG(self.screen, self.games[showIndex])
-                self.games[showIndex].level.draw(self.screen, self.games[showIndex])
+                self.games[showIndex].level.drawBG(self.games[showIndex])
+                self.games[showIndex].level.draw(self.games[showIndex])
 
     def resetFitness(self):
         for game in self.games:

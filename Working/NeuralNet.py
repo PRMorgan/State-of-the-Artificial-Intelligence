@@ -281,6 +281,7 @@ class NeuralNet:
     # returns a copy of this genome
     def clone(self):
         clone = NeuralNet(self.inputs, self.outputs)
+        clone.nodes = []
         for i in self.nodes: # copy nodes
             clone.nodes.append(i.clone())
         

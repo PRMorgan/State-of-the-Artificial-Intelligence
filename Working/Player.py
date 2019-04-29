@@ -71,15 +71,6 @@ class Player(pygame.sprite.Sprite):
     #Make a clone of the player
     def clone(self):
         clone = Player(self.screen, self.startPos, self.fitness)
-        clone.brain = None
-        clone.brain = self.brain.clone()
-        clone.brain.generateNetwork()
-        return clone
-
-    #Make a close for a replay
-    def cloneForReplay(self):
-        clone = Player(self.screen, self.startPos,self.fitness)
-        clone.brain = []
         clone.brain = self.brain.clone()
         clone.brain.generateNetwork()
         return clone
@@ -379,6 +370,7 @@ class Player(pygame.sprite.Sprite):
     
     def crossover(self, parent2):
         child = Player(self.screen, self.startPos)
+        child.brain = None
         child.brain = self.brain.crossover(parent2.brain)
         child.brain.generateNetwork()
         return child

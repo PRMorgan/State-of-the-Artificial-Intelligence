@@ -9,7 +9,7 @@ class Species():
         self.bestFitness = p.fitness
         self.averageFitness = p.fitness
         self.rep = p.brain.clone()
-        self.champ = p.cloneForReplay()
+        self.champ = p.clone()
         self.staleness = 0
         
         # coefficients for testing compatibility 
@@ -73,7 +73,7 @@ class Species():
             self.staleness = 0
             self.bestFitness = self.players[0].fitness
             self.rep = self.players[0].brain.clone()
-            self.champ = self.players[0].cloneForReplay()
+            self.champ = self.players[0].clone()
         else: # if no new best player
             self.staleness += 1
 
