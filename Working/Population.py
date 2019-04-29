@@ -122,10 +122,12 @@ class Population():
     #if a species sucks so much that it wont even be allocated 1 child for the next generation then kill it now
     def killBadSpecies(self):
         averageSum = self.getAvgFitnessSum()
-        for i in range(len(self.species)):
+        i = 0
+        while i < range(len(self.species)):
             if self.species[i].averageFitness / averageSum * len(self.games) < 1: #if wont be given a single child 
                 self.species.pop(i) # sad
-                i = i - 1
+            else: 
+                i += 1
 
     # returns the sum of each species average fitness
     def getAvgFitnessSum(self):
