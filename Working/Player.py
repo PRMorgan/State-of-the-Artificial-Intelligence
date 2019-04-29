@@ -312,20 +312,17 @@ class Player(pygame.sprite.Sprite):
         # move down a bit and see if there is a platform below us.
         # Move down 2 pixels because it doesn't work well if we only move down
         # 1 when working with a platform moving down.
-        if self.jumpDelay == 0:
-            self.rect.y += 4
-            platform_hit_list = pygame.sprite.spritecollide(self, self.level.platform_list, False)
-            self.rect.y -= 4
+        # if self.jumpDelay == 0:
+        self.rect.y += 4
+        platform_hit_list = pygame.sprite.spritecollide(self, self.level.platform_list, False)
+        self.rect.y -= 4
 
-            if (self.rect.left == 0 or self.rect.right == SCREEN_WIDTH):
-                    self.change_y = -10
-    
-            # If it is ok to jump, set our speed upwards
-            if len(platform_hit_list) > 0 or self.rect.bottom >= SCREEN_HEIGHT:
-                    self.change_y = -10
-            self.jumpDelay = 0
-        else: 
-            return
+        # If it is ok to jump, set our speed upwards
+        if len(platform_hit_list) > 0 or self.rect.bottom >= SCREEN_HEIGHT:
+                self.change_y = -10
+        self.jumpDelay = 0
+        # else: 
+        #     return
     
     #Move to the left
     def go_left(self):

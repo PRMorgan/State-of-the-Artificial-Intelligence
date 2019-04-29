@@ -22,7 +22,7 @@ RED = (255, 0, 0)
 BLUE = (0, 0, 255)
 WHITE = (255, 255, 255)
 
-FRAMERATE = 60
+FRAMERATE = 100
 TOTALTIME = 10
 
 SCREEN_WIDTH = 800
@@ -44,7 +44,7 @@ def main():
     showNothing = [False]
     showIndex = [1] #default showAll
 
-    numGames = 50 #This is the number of sets of players
+    numGames = 100 #This is the number of sets of players
     pop = Population(numGames, screen)
 
     # Used to manage how fast the screen updates

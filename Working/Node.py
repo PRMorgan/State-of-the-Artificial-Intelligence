@@ -3,6 +3,7 @@ import math
 class Node():
     #constructor
   def __init__(self, no):
+    self.pos = (0,0)
     self.title = None
     self.number = no
     self.inputSum = 0 #current sum i.e. before activation

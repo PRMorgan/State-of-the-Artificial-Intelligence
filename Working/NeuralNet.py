@@ -330,9 +330,11 @@ class NeuralNet:
         x_padding = 70
 
         x_padding = int(self.displayWidth / self.layers)
+
+        
         for l in range(self.layers):
             y_pad = 0
-            for node in self.nodes:
+            for node in self.network:
                 if node.layer == l:
                     node_x_pos = startx + (l*x_padding)
                     node_y_pos = starty + y_pad
@@ -345,6 +347,8 @@ class NeuralNet:
                         self.displayText(screen, node.title, node_x_pos + 30, node_y_pos - 10, 50, 20, WHITE)
 
         for gene in self.genes:
+            # if gene.fromNode.outputValue > .6:
+            #     color = RED
             if gene.weight < 0:
                     color = RED
             else:
