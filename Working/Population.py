@@ -123,7 +123,7 @@ class Population():
     def killBadSpecies(self):
         averageSum = self.getAvgFitnessSum()
         i = 0
-        while i < range(len(self.species)):
+        while i < len(self.species):
             if self.species[i].averageFitness / averageSum * len(self.games) < 1: #if wont be given a single child 
                 self.species.pop(i) # sad
             else: 
