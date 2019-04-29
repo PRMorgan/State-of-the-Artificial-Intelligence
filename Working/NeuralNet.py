@@ -234,12 +234,12 @@ class NeuralNet:
 
         # 8% of the time add a new connection
         rand2 = random.uniform(0,1)
-        if rand2 < 0.08:
+        if rand2 < 0.2:
             self.addConnection(innovationHistory)
             
         # 2% of the time add a node
         rand3 = random.uniform(0,1)
-        if rand3 < 0.02:
+        if rand3 < 0.05:
             self.addNode(innovationHistory)
 
     #called when this Genome is better that the other parent
@@ -305,6 +305,7 @@ class NeuralNet:
             clone.genes.append(i.clone(clone.getNode(i.fromNode.number), clone.getNode(i.toNode.number)))
 
         clone.layers = self.layers
+        clone.nodes = self.nodes
         clone.nextNode = self.nextNode
         clone.biasNode = self.biasNode
         clone.connectNodes()
