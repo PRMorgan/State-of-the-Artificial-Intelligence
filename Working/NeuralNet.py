@@ -232,15 +232,15 @@ class NeuralNet:
             for i in range(len(self.genes)):
                 self.genes[i].mutateWeight()
 
-        # 8% of the time add a new connection
+        # 10% of the time add a new connection
         rand2 = random.uniform(0,1)
-        if rand2 < 0.2:
+        if rand2 < 0.1:
             self.addConnection(innovationHistory)
             
         # 2% of the time add a node
-        rand3 = random.uniform(0,1)
-        if rand3 < 0.05:
-            self.addNode(innovationHistory)
+        # rand3 = random.uniform(0,1)
+        # if rand3 < 0.05:
+        #     self.addNode(innovationHistory)
 
     #called when this Genome is better that the other parent
     def crossover(self, parent2):
