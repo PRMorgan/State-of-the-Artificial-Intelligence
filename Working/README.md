@@ -24,3 +24,7 @@ Once one player wins by getting to the opposite side sa many times as possible b
 
 1) Download the repository
 2) Run AI-Kido.py
+
+## Background Images
+
+All background images were pulled from [this imgur gallery.](https://imgur.com/gallery/GPlx4) Sprite images were made by hand.
