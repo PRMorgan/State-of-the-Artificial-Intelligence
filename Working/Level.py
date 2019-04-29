@@ -37,6 +37,8 @@ playerright = pygame.image.load('Images/playerrightangry.png')
 enemyleft = pygame.image.load('Images/enemyleftangry.png')
 enemyright = pygame.image.load('Images/enemyrightangry.png')
 
+NeuralNetBG = pygame.Surface((400,500))
+
 class Level(object):
     """ This is a generic super-class used to define a level.
         Create a child class for each level with level-specific
@@ -93,6 +95,8 @@ class Level(object):
         self.platform_list.draw(self.screen)
         self.enemy_list.draw(self.screen)
         self.player_list.draw(self.screen)
+        self.screen.blit(NeuralNetBG, (800,50))
+        
 
     #Draws the background and player and enemy stats
     def drawBG(self, game):
@@ -121,7 +125,8 @@ class Level(object):
             self.screen.blit(heart, ((game.enemy.startx -40 + (hearts * -40)), 75))
         for deaths in range(game.player.numKills):
             self.screen.blit(death,((game.enemy.startx - 40 + ((deaths % 6) * -40)), (115 + (int(deaths/6)*40))))
- 
+
+
 # Create platforms for the level
 class Level_01(Level):
     """ Definition for level 1. """

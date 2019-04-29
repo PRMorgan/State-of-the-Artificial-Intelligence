@@ -1,11 +1,22 @@
 from Node import *
 from Gene import *
 from History import *
-
+import pygame
 import random
+
+RED = (255, 0, 0)
+BLUE = (0, 0, 255)
+WHITE = (255, 255, 255)
+
 
 class NeuralNet:
     def __init__(self, inputs, outputs):
+
+        inputTitles = ["x_diff", "y_diff", "vel_diff", "to_goal", "attack","threat"]
+        outputTitles = ["move_right","move_left", "jump", "attack"]
+        self.displayWidth = 400
+
+
         #set input number and output number
         self.inputs = inputs
         self.outputs = outputs
@@ -23,16 +34,20 @@ class NeuralNet:
             self.nodes.append(Node(i))
             self.nextNode += 1
             self.nodes[i].layer = 0
+            self.nodes[i].title = inputTitles[i]
         
         #create output nodes
         for i in range(self.outputs):
             self.nodes.append(Node(i + self.inputs))
             self.nodes[i + self.inputs].layer = 1
             self.nextNode += 1
+            self.nodes[i + self.inputs].title = outputTitles[i]
         self.nodes.append(Node(self.nextNode)) #bias node
         self.biasNode = self.nextNode
         self.nextNode += 1
         self.nodes[self.biasNode].layer = 0
+
+
 
     #returns the node with a matching number
     #sometimes the nodes will not be in order
@@ -306,6 +321,41 @@ class NeuralNet:
         for i in self.genes: #for each connectionGene 
             print("Gene Num:" + str(i.innovationNo) + " From node " + str(i.fromNode.number) + " To node " + str(i.toNode.number) +  " is enabled " + str(i.enabled) +  " from layer " + str(i.fromNode.layer) + " to layer " + str(i.toNode.layer) + " weight: " + str(i.weight) + "\n")
         print("\n")
+
+    def draw(self, screen):
+        startx = 900
+        starty = 100
+        y_padding = 40
+        x_padding = 70
+
+        x_padding = int(self.displayWidth / self.layers)
+        for l in range(self.layers):
+            y_pad = 0
+            for node in self.nodes:
+                if node.layer == l:
+                    node_x_pos = startx + (l*x_padding)
+                    node_y_pos = starty + y_pad
+                    node.pos = (node_x_pos, node_y_pos)
+                    pygame.draw.circle(screen, WHITE, node.pos, 5)
+                    y_pad += y_padding
+                    if node.layer == 0 and node.title != None:
+                        self.displayText(screen,node.title, node_x_pos - 50, node_y_pos - 10, 50, 20, WHITE)
+                    if node.layer == self.layers - 1 and node.title != None:
+                        self.displayText(screen, node.title, node_x_pos + 30, node_y_pos - 10, 50, 20, WHITE)
+
+        for gene in self.genes:
+            if gene.weight < 0:
+                    color = RED
+            else:
+                color = BLUE
+            pygame.draw.line(screen, color, gene.fromNode.pos, gene.toNode.pos, int(gene.fromNode.outputValue))
+
+    def displayText(self, screen, msg, x, y, w, h, color):
+        font = pygame.font.SysFont('Georgia', 10, True, False)
+        text = font.render(msg, True, WHITE)
+        pos = [x,y]
+        screen.blit(text, pos)
+
 
 
 """This is the only dead code I left in case we want to draw the neural net later """

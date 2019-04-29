@@ -42,7 +42,7 @@ def main():
 
     # <insert large block of code at bottom if shit goes south>
     showNothing = [False]
-    showIndex = [-1] #default showAll
+    showIndex = [1] #default showAll
 
     numGames = 50 #This is the number of sets of players
     pop = Population(numGames, screen)
@@ -90,14 +90,15 @@ def main():
                 gameUI.displayText(screen, timemsg,388,110,140,20, BLUE)
 
                 numGoalsMsg = str(game.player.numGoals - game.enemy.numGoals)
-                if showIndex == -1: #showAll
-                    pop.games[0].level.drawBG(pop.games[0])
-                    for game in pop.games:
-                        game.level.draw(game) #draw elements
-                else: #use index - show only that game
-                    pop.games[showIndex[0]].level.drawBG(pop.games[showIndex[0]])
-                    pop.games[showIndex[0]].level.draw(pop.games[showIndex[0]])
-                gameUI.displayText(screen, numGoalsMsg, 388, 175, 120, 20, False)
+                # if showIndex == -1: #showAll
+                #     pop.games[0].level.drawBG(pop.games[0])
+                #     for game in pop.games:
+                #         game.level.draw(game) #draw elements
+                # else: #use index - show only that game
+                #     pop.games[showIndex[0]].level.drawBG(pop.games[showIndex[0]])
+                #     pop.games[showIndex[0]].level.draw(pop.games[showIndex[0]])
+                #     pop.games[showIndex[0]].player.brain.draw(screen)
+                # gameUI.displayText(screen, numGoalsMsg, 388, 175, 120, 20, False)
 
             # Limit to 60 frames per second
             clock.tick(FRAMERATE)
