@@ -114,10 +114,12 @@ class Population():
 
     #kills all species which haven't improved in 15 generations
     def killStaleSpecies(self):
-        for i in range(2,len(self.species)):
+        i = 2
+        while i < len(self.species):
             if self.species[i].staleness >= 15:
                 self.species.pop(i)
-                i -= 1
+            else:
+                i += 1
 
     #if a species sucks so much that it wont even be allocated 1 child for the next generation then kill it now
     def killBadSpecies(self):

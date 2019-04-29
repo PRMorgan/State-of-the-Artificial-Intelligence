@@ -109,13 +109,13 @@ class Species():
     def selectPlayer(self):
         fitnessSum = 0.0
         for player in self.players:
-            fitnessSum += player.fitness
+            fitnessSum += abs(player.fitness)
         
         rand = random.uniform(0,fitnessSum)
         runningSum = 0.0
 
         for i in range(len(self.players)):
-            runningSum += self.players[i].fitness 
+            runningSum += abs(self.players[i].fitness)
             if runningSum > rand:
                 return self.players[i]
 

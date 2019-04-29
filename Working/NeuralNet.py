@@ -257,9 +257,10 @@ class NeuralNet:
             setEnabled = True #is this node in the chlid going to be enabled
             parent2gene = self.matchingGene(parent2, gene.innovationNo)
 
-            if(parent2gene > len(parent2.genes)):
+            if(parent2gene >= len(parent2.genes)):
                 parent2gene = len(parent2.genes) - 1
-            if parent2gene != -1: #if the genes match
+            if parent2gene >= 0: #if the genes match
+                # print("parent2gene ", parent2gene, " parent2.genes ", len(parent2.genes))
                 if not gene.enabled or not parent2.genes[parent2gene].enabled: 
                     #if either of the matching genes are disabled
                     if random.uniform(0,1) < 0.75: #75% of the time disable the childs gene
@@ -356,72 +357,3 @@ class NeuralNet:
         text = font.render(msg, True, WHITE)
         pos = [x,y]
         screen.blit(text, pos)
-
-
-
-"""This is the only dead code I left in case we want to draw the neural net later """
-#     # draw the neural net on the screen
-#     def draw(self, startX, startY, w, h):
-#         allNodes = []
-#         nodePoses = []
-#         nodeNumbers= []
-        
-#         # get the positions on the screen that each node is supposed to be in
-#         # split the nodes into layers
-#         for i in range(self.layers):
-#             temp = []
-#             for j in range(len(self.nodes)): #for each node 
-#                 if self.nodes[j].layer == i: #check if it is in this layer
-#                     temp.append(self.nodes[j]) #add it to this layer
-#             allNodes.append(temp) #add this layer to all nodes
-        
-#         #for each layer add the position of the node on the screen to the node posses arraylist
-#         for i in range(self.layers):
-#             fill(255, 0, 0)
-#       float x = startX + (float)((i)*w)/(float)(layers-1);
-#       for (int j = 0; j< allNodes.get(i).size(); j++) {//for the position in the layer
-#         float y = startY + ((float)(j + 1.0) * h)/(float)(allNodes.get(i).size() + 1.0);
-#         nodePoses.add(new PVector(x, y));
-#         nodeNumbers.add(allNodes.get(i).get(j).number);
-#         if(i == layers -1){
-#          println(i,j,x,y);
-#         }
-#       }
-#     }
-
-#     //draw connections 
-#     stroke(0);
-#     strokeWeight(2);
-#     for (int i = 0; i< genes.size(); i++) {
-#       if (genes.get(i).enabled) {
-#         stroke(0);
-#       } else {
-#         stroke(100);
-#       }
-#       PVector from;
-#       PVector to;
-#       from = nodePoses.get(nodeNumbers.indexOf(genes.get(i).fromNode.number));
-#       to = nodePoses.get(nodeNumbers.indexOf(genes.get(i).toNode.number));
-#       if (genes.get(i).weight > 0) {
-#         stroke(255, 0, 0);
-#       } else {
-#         stroke(0, 0, 255);
-#       }
-#       strokeWeight(map(abs(genes.get(i).weight), 0, 1, 0, 5));
-#       line(from.x, from.y, to.x, to.y);
-#     }
-
-#     //draw nodes last so they appear ontop of the connection lines
-#     for (int i = 0; i < nodePoses.size(); i++) {
-#       fill(255);
-#       stroke(0);
-#       strokeWeight(1);
-#       ellipse(nodePoses.get(i).x, nodePoses.get(i).y, 20, 20);
-#       textSize(10);
-#       fill(0);
-#       textAlign(CENTER, CENTER);
-
-
-#       text(nodeNumbers.get(i), nodePoses.get(i).x, nodePoses.get(i).y);
-#     }
-#   }

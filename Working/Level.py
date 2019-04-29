@@ -37,7 +37,7 @@ playerright = pygame.image.load('Images/playerrightangry.png')
 enemyleft = pygame.image.load('Images/enemyleftangry.png')
 enemyright = pygame.image.load('Images/enemyrightangry.png')
 
-NeuralNetBG = pygame.Surface((400,500))
+NeuralNetBG = pygame.Surface((500,500))
 
 class Level(object):
     """ This is a generic super-class used to define a level.

@@ -10,7 +10,7 @@ class Game():
         """ Creates a game that contains two players and a level """
         self.screen = screen
         if player != None:
-            self.player = player.clone()
+            self.player = player
         else:
             self.player = None
         self.enemy = None
