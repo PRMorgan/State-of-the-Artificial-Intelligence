@@ -9,14 +9,14 @@ class Species():
 
 #------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------ 
     # constructor which takes in the player which belongs to the species
-    def __init__(self, p = 0):
+    def __init__(self, p = None):
         self.players = []
         self.players.append(p) 
         #since it is the only one in the species it is by default the best
         self.bestFitness = p.fitness
         self.averageFitness = p.fitness
         self.rep = p.brain.clone()
-        self.champ = p.cloneForReplay()
+        self.champ = p.clone()
         self.staleness = 0
         #self.bestFitness = 0.0
         #self.averageFitness = 0.0
@@ -74,21 +74,8 @@ class Species():
 #-------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
     # sorts the species by fitness 
     def sortSpecies(self):
-        temp = []
-        
-        #selection short 
-        for i in range(len(self.players)):
-            maxScore = 0.0
-            maxIndex = 0
-            for j in range(len(self.players)):
-                if self.players[j].fitness > maxScore:
-                    maxScore = self.players[j].fitness
-                    maxIndex = j
-            temp.append(self.players[maxIndex])
-            self.players.pop(maxIndex)
-            i -= 1
+        self.players = self.merge_sort(self.players)
 
-        self.players = temp.copy()
         if len(self.players) == 0:
             self.staleness = 200
             return
@@ -97,7 +84,7 @@ class Species():
             self.staleness = 0
             self.bestFitness = self.players[0].fitness
             self.rep = self.players[0].brain.clone()
-            self.champ = self.players[0].cloneForReplay()
+            self.champ = self.players[0].clone()
         else: # if no new best player
             self.staleness += 1
 
@@ -162,3 +149,37 @@ class Species():
     def fitnessSharing(self):
         for i in range(len(self.players)):
             self.players[i].fitness /= len(self.players)
+
+
+      # merge sort algorithm
+    #https://medium.com/@george.seif94/a-tour-of-the-top-5-sorting-algorithms-with-python-code-43ea9aa02889
+    def merge_sort(self, arr):
+        # The last array split
+        if len(arr) <= 1:
+            return arr
+        mid = len(arr) // 2
+        # Perform merge_sort recursively on both halves
+        left, right = self.merge_sort(arr[:mid]), self.merge_sort(arr[mid:])
+        # Merge each side together
+        return self.merge(left, right, arr.copy())
+
+
+    def merge(self, left, right, merged):
+        left_cursor, right_cursor = 0, 0
+        while left_cursor < len(left) and right_cursor < len(right):
+        
+            # Sort each one and place into the result
+            if left[left_cursor].fitness >= right[right_cursor].fitness:
+                merged[left_cursor+right_cursor]=left[left_cursor]
+                left_cursor += 1
+            else:
+                merged[left_cursor + right_cursor] = right[right_cursor]
+                right_cursor += 1
+                
+        for left_cursor in range(left_cursor, len(left)):
+            merged[left_cursor + right_cursor] = left[left_cursor]
+            
+        for right_cursor in range(right_cursor, len(right)):
+            merged[left_cursor + right_cursor] = right[right_cursor]
+
+        return merged
