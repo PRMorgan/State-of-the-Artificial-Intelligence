@@ -22,7 +22,7 @@ class Node():
 
 #sigmoid activation function
   def sigmoid(self, x):
-    y = 1 / (1 + pow(math.e, -4.9*x))
+    y = 1 / (1 + pow(math.e, -4.9 * x))
     return y
 
  #returns whether this node connected to the parameter node

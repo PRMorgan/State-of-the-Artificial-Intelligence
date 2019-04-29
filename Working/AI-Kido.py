@@ -43,9 +43,9 @@ def main():
 
     # <insert large block of code at bottom if shit goes south>
     showNothing = [False]
-    showIndex = [-1] #default showAll
+    showIndex = [0] #default showBest
 
-    numGames = 100 #This is the number of sets of players
+    numGames = 25 #This is the number of sets of players
     pop = Population(numGames, screen)
 
     # Used to manage how fast the screen updates

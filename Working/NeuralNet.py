@@ -263,7 +263,7 @@ class NeuralNet:
                 # print("parent2gene ", parent2gene, " parent2.genes ", len(parent2.genes))
                 if not gene.enabled or not parent2.genes[parent2gene].enabled: 
                     #if either of the matching genes are disabled
-                    if random.uniform(0,1) < 0.5: #50% of the time disable the childs gene
+                    if random.uniform(0,1) < 0.01: #1% of the time disable the childs gene
                         setEnabled = False
                 rand = random.uniform(0,1)
                 if rand < 0.5 :
@@ -356,7 +356,7 @@ class NeuralNet:
                 color = RED
             else:
                 color = BLUE
-            if gene.fromNode.outputValue > .7:
+            if gene.toNode.inputSum > .7:
                 color = WHITE
             pygame.draw.line(screen, color, gene.fromNode.pos, gene.toNode.pos, int(gene.weight) + 1)
 

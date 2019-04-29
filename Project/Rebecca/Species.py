@@ -119,21 +119,23 @@ class Species():
 #-------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
     # selects a player based on it fitness
     def selectPlayer(self):
-        fitnessSum = 0.0
-        for i in range(len(self.players)):
-            fitnessSum += abs(self.players[i].fitness)
-        
-        rand = random.uniform(0,fitnessSum)
-        runningSum = 0.0
+        if len(self.players > 0):
+            fitnessSum = 0.0
+            for i in range(len(self.players)):
+                fitnessSum += abs(self.players[i].fitness)
+            
+            rand = random.uniform(0,fitnessSum)
+            runningSum = 0.0
 
-        for i in range(len(self.players)):
-            runningSum += abs(self.players[i].fitness)
-            if runningSum > rand:
-                return self.players[i]
+            for i in range(len(self.players)):
+                runningSum += abs(self.players[i].fitness)
+                if runningSum > rand:
+                    return self.players[i]
 
-        # unreachable code to make the parser happy
-        print("something went wrong - a random player was not selected")
-        return self.players[0]
+            # unreachable code to make the parser happy
+            return self.players[0]
+        else:
+            print("something went wrong - a random player was not selected")
 
 #------------------------------------------------------------------------------------------------------------------------------------------
     #kills off bottom half of the species

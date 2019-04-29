@@ -90,6 +90,7 @@ class Player(pygame.sprite.Sprite):
      
         #Update Neural Net and choose an action
         self.look()
+        self.brain.generateNetwork()
         self.think()
 
         # Gravity
@@ -222,10 +223,10 @@ class Player(pygame.sprite.Sprite):
     def think(self): #execute action(s) returned from the neural net
         #get the output of the neural network
         decision = self.brain.feedForward(self.vision)
-
+        print(str(decision))
         #Choose an action
         for i in range(len(decision)):
-            if decision[i] > 0.7:
+            if decision[i] > 0.5:
                 if i == 0:
                     self.go_right()
                 elif i == 1:
