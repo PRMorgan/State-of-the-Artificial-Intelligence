@@ -10,6 +10,7 @@ class Node():
     self.outputValue = 0.0 #after activation function is applied
     self.outputConnections = []
     self.layer = 0
+    self.pos = (0,0)
 
   #the node sends its output to the inputs of the nodes its connected to
   def engage(self):
@@ -45,4 +46,6 @@ class Node():
   def clone(self):
     clone = Node(self.number)
     clone.layer = self.layer
+    clone.pos = self.pos
+    clone.title = self.title
     return clone
