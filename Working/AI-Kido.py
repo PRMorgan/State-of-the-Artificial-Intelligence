@@ -23,7 +23,7 @@ BLUE = (0, 0, 255)
 WHITE = (255, 255, 255)
 
 FRAMERATE = 100
-TOTALTIME = 10
+TOTALTIME = 5
 
 SCREEN_WIDTH = 800
 SCREEN_HEIGHT = 600
@@ -42,7 +42,7 @@ def main():
 
     # <insert large block of code at bottom if shit goes south>
     showNothing = [False]
-    showIndex = [1] #default showAll
+    showIndex = [-1] #default showAll
 
     numGames = 100 #This is the number of sets of players
     pop = Population(numGames, screen)

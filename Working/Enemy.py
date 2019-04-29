@@ -146,6 +146,16 @@ class Enemy(pygame.sprite.Sprite):
         """
         if freeze:
             return
+        #add some random vairation
+        action = random.randint(0,70)
+        if action == 0:
+            self.go_left()
+        if action == 1:
+            self.go_right()
+        if action == 2:
+            self.jump()
+        if action == 3:
+            self.attack()
 
         if mouseFlag == True:
             if (self.rect.x < mousePoint[0] and self.rect.x + self.width > mousePoint[0]) and (self.rect.y < mousePoint[1] and self.rect.y + self.height > mousePoint[1]):

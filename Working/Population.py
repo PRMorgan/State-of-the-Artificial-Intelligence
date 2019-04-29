@@ -1,6 +1,7 @@
 from Player import *
 from Game import *
 from Species import *
+import math
 
 class Population():
 
@@ -154,13 +155,13 @@ class Population():
         if not showNothing:
             if showIndex == -1: #showAll
                 self.games[0].level.drawBG(self.games[0])
-                self.games[0].player.brain.draw(self.screen)
+                self.games[0].player.brain.draw(self.screen, self.gen)
                 for game in self.games:
                     game.level.draw(game) #draw elements
             else: #use index - show only that game
                 self.games[showIndex].level.drawBG(self.games[showIndex])
                 self.games[showIndex].level.draw(self.games[showIndex])
-                self.games[showIndex].player.brain.draw(self.screen)
+                self.games[showIndex].player.brain.draw(self.screen, self.gen)
 
     def resetFitness(self):
         for game in self.games:

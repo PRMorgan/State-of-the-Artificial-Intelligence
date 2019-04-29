@@ -90,7 +90,7 @@ class Species():
     # gets baby from the players in this species
     def giveMeBaby(self, innovationHistory):
         baby = None
-        if random.uniform(0,1) < 0.25: # 25% of the time there is no crossover and the child is simply a clone of a random(ish) player
+        if random.uniform(0,1) < 0.15: # 25% of the time there is no crossover and the child is simply a clone of a random(ish) player
             baby = self.selectPlayer().clone()
         else: # 75% of the time do crossover 
             # get 2 random(ish) parents 

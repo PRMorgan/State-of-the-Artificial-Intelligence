@@ -324,7 +324,7 @@ class NeuralNet:
             print("Gene Num:" + str(i.innovationNo) + " From node " + str(i.fromNode.number) + " To node " + str(i.toNode.number) +  " is enabled " + str(i.enabled) +  " from layer " + str(i.fromNode.layer) + " to layer " + str(i.toNode.layer) + " weight: " + str(i.weight) + "\n")
         print("\n")
 
-    def draw(self, screen):
+    def draw(self, screen, gen):
         startx = 900
         starty = 100
         y_padding = 40
@@ -332,7 +332,8 @@ class NeuralNet:
 
         x_padding = int(self.displayWidth / self.layers)
 
-        
+        self.displayText(screen, "Gen: " +  str(gen), 800,60, 50, 20, WHITE)
+
         for l in range(self.layers):
             y_pad = 0
             for node in self.network:
@@ -346,15 +347,18 @@ class NeuralNet:
                         self.displayText(screen,node.title, node_x_pos - 50, node_y_pos - 10, 50, 20, WHITE)
                     if node.layer == self.layers - 1 and node.title != None:
                         self.displayText(screen, node.title, node_x_pos + 30, node_y_pos - 10, 50, 20, WHITE)
+                    if node.number == len(self.network) - 1:
+                        self.displayText(screen, "Bias", node_x_pos - 50, node_y_pos - 10, 50, 20, WHITE)
+
 
         for gene in self.genes:
-            # if gene.fromNode.outputValue > .6:
-            #     color = RED
             if gene.weight < 0:
-                    color = RED
+                color = RED
             else:
                 color = BLUE
-            pygame.draw.line(screen, color, gene.fromNode.pos, gene.toNode.pos, int(gene.fromNode.outputValue))
+            if gene.fromNode.outputValue > .7:
+                color = WHITE
+            pygame.draw.line(screen, color, gene.fromNode.pos, gene.toNode.pos, int(gene.weight) + 1)
 
     def displayText(self, screen, msg, x, y, w, h, color):
         font = pygame.font.SysFont('Georgia', 10, True, False)
