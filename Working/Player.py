@@ -368,7 +368,10 @@ class Player(pygame.sprite.Sprite):
     def crossover(self, parent2):
         child = Player(self.screen, self.startPos)
         child.brain = None
-        child.brain = self.brain.crossover(parent2.brain)
+        if len(self.brain.genes) > len(parent2.brain.genes):
+            child.brain = self.brain.crossover(parent2.brain)
+        else:
+            child.brain = parent2.brain.crossover(self.brain)
         child.brain.generateNetwork()
         return child
 

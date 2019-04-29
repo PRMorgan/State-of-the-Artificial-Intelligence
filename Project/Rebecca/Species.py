@@ -14,11 +14,12 @@ class Species():
         self.players.append(p) 
         #since it is the only one in the species it is by default the best
         self.bestFitness = p.fitness
+        self.averageFitness = p.fitness
         self.rep = p.brain.clone()
         self.champ = p.cloneForReplay()
         self.staleness = 0
-        self.bestFitness = 0.0
-        self.averageFitness = 0.0
+        #self.bestFitness = 0.0
+        #self.averageFitness = 0.0
 
 
 #------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------ 
@@ -113,9 +114,9 @@ class Species():
     # gets baby from the players in this species
     def giveMeBaby(self, innovationHistory):
         baby = None
-        if random.uniform(0,1) < 0.25: # 25% of the time there is no crossover and the child is simply a clone of a random(ish) player
+        if random.uniform(0,1) < 0.15: # 15% of the time there is no crossover and the child is simply a clone of a random(ish) player
             baby = self.selectPlayer().clone()
-        else: # 75% of the time do crossover 
+        else: # 85% of the time do crossover 
             # get 2 random(ish) parents 
             parent1 = self.selectPlayer()
             parent2 = self.selectPlayer()
@@ -133,17 +134,18 @@ class Species():
     def selectPlayer(self):
         fitnessSum = 0.0
         for i in range(len(self.players)):
-            fitnessSum += self.players[i].fitness
+            fitnessSum += abs(self.players[i].fitness)
         
         rand = random.uniform(0,fitnessSum)
         runningSum = 0.0
 
         for i in range(len(self.players)):
-            runningSum += self.players[i].fitness 
+            runningSum += abs(self.players[i].fitness)
             if runningSum > rand:
                 return self.players[i]
 
         # unreachable code to make the parser happy
+        print("something went wrong - a random player was not selected")
         return self.players[0]
 
 #------------------------------------------------------------------------------------------------------------------------------------------

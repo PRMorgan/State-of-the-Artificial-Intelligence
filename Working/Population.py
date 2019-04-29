@@ -8,11 +8,11 @@ class Population():
    #construct the population
     def __init__(self,size, screen):
         self.games = []
-        self.bestPlayer = None
-        self.bestScore = 0
+        #self.bestPlayer = None
+        self.bestScore = -1000
         self.gen = 0
         self.innovationHistory = []
-        self.genPlayers = []
+        #self.genPlayers = []
         self.species = []
         self.screen = screen
 
@@ -30,17 +30,17 @@ class Population():
 
     #sets the best player globally and for this gen
     def setBestPlayer(self):
-        if len(self.genPlayers) > 0:
-            tempBest =  self.genPlayers[0]
-            tempBest.gen = self.gen
-            
-            #if best this gen is better than the global best score then set the global best as the best this gen
-            if tempBest.score > self.bestScore:
-                self.genPlayers.append(tempBest.cloneForReplay())
-                print("old best:", self.bestScore,"\n")
-                print("new best:", tempBest.score,"\n")
-                self.bestScore = tempBest.score
-                self.bestPlayer = tempBest.cloneForReplay()
+        # tempBest = self.games[0]
+        # tempBest.gen = self.gen
+        # for game in self.games:
+        #     if game.player.fitness > tempBest.player.fitness:
+        #         tempBest = game
+        # if tempBest.player.fitness > self.bestScore:
+        #     #self.genPlayers.append(tempBest.player.clone())
+        #     print("old best:", self.bestScore,"\n")
+        #     print("new best:", tempBest.player.fitness,"\n")
+        self.bestScore = self.species[0].bestFitness
+            #self.bestPlayer = tempBest.player.clone()
 
     # this function is called when all the players in the population are dead and a new generation needs to be made
     def naturalSelection(self):

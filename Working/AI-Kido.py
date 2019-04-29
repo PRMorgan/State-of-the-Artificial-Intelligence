@@ -21,6 +21,7 @@ os.environ['SDL_VIDEO_CENTERED'] = '1'
 RED = (255, 0, 0)
 BLUE = (0, 0, 255)
 WHITE = (255, 255, 255)
+BLACK = (0, 0, 0)
 
 FRAMERATE = 100
 TOTALTIME = 5
@@ -95,6 +96,16 @@ def main():
                     numGoalsMsg = str(pop.games[showIndex[0]].player.numGoals - pop.games[showIndex[0]].enemy.numGoals)
                     
                 gameUI.displayText(screen, numGoalsMsg, 388, 175, 120, 20, False)
+
+                
+                genMsg = "Gen: " + str(pop.gen)
+                pygame.draw.rect(screen, BLACK,(1200,550,100,50))
+                gameUI.displayText(screen, genMsg, 1200, 550, 100, 25, False)
+
+                if pop.bestScore != -1000:
+                    genMsg = "Hi Score: " + str(int(pop.bestScore))
+                    pygame.draw.rect(screen, BLACK,(810,550,300,50))
+                    gameUI.displayText(screen, genMsg, 810, 550, 100, 25, False)
 
             # Limit to 60 frames per second
             clock.tick(FRAMERATE)

@@ -10,7 +10,7 @@ WHITE = (255, 255, 255)
 
 
 class NeuralNet:
-    def __init__(self, inputs, outputs):
+    def __init__(self, inputs, outputs, crossover=False):
 
         inputTitles = ["x_diff", "y_diff", "vel_diff", "to_goal", "attack","threat"]
         outputTitles = ["move_right","move_left", "jump", "attack"]
@@ -28,24 +28,24 @@ class NeuralNet:
         self.network = [] #list of the nodes in the order that they need to be considered in the NN
         
         self.nextConnectionNo = 0
-
-        #create input nodes
-        for i in range(self.inputs):
-            self.nodes.append(Node(i))
+        if crossover == False:
+            #create input nodes
+            for i in range(self.inputs):
+                self.nodes.append(Node(i))
+                self.nextNode += 1
+                self.nodes[i].layer = 0
+                self.nodes[i].title = inputTitles[i]
+            
+            #create output nodes
+            for i in range(self.outputs):
+                self.nodes.append(Node(i + self.inputs))
+                self.nodes[i + self.inputs].layer = 1
+                self.nextNode += 1
+                self.nodes[i + self.inputs].title = outputTitles[i]
+            self.nodes.append(Node(self.nextNode)) #bias node
+            self.biasNode = self.nextNode
             self.nextNode += 1
-            self.nodes[i].layer = 0
-            self.nodes[i].title = inputTitles[i]
-        
-        #create output nodes
-        for i in range(self.outputs):
-            self.nodes.append(Node(i + self.inputs))
-            self.nodes[i + self.inputs].layer = 1
-            self.nextNode += 1
-            self.nodes[i + self.inputs].title = outputTitles[i]
-        self.nodes.append(Node(self.nextNode)) #bias node
-        self.biasNode = self.nextNode
-        self.nextNode += 1
-        self.nodes[self.biasNode].layer = 0
+            self.nodes[self.biasNode].layer = 0
 
 
 
@@ -244,7 +244,7 @@ class NeuralNet:
 
     #called when this Genome is better that the other parent
     def crossover(self, parent2):
-        child = NeuralNet(self.inputs, self.outputs)
+        child = NeuralNet(self.inputs, self.outputs, True)
         child.genes.clear()
         child.nodes.clear()
         child.layers = self.layers
@@ -263,10 +263,10 @@ class NeuralNet:
                 # print("parent2gene ", parent2gene, " parent2.genes ", len(parent2.genes))
                 if not gene.enabled or not parent2.genes[parent2gene].enabled: 
                     #if either of the matching genes are disabled
-                    if random.uniform(0,1) < 0.75: #75% of the time disable the childs gene
+                    if random.uniform(0,1) < 0.5: #50% of the time disable the childs gene
                         setEnabled = False
                 rand = random.uniform(0,1)
-                if rand<0.5 :
+                if rand < 0.5 :
                     child.genes.append(gene.clone(gene.fromNode, gene.toNode))
                     #get gene
                 else:
@@ -289,8 +289,8 @@ class NeuralNet:
 
     # returns whether or not there is a gene matching the input innovation number  in the input genome
     def matchingGene(self, parent2, innovationNumber):
-        for i in range(len(self.genes)):
-            if self.genes[i].innovationNo == innovationNumber:
+        for i in range(len(parent2.genes)):
+            if parent2.genes[i].innovationNo == innovationNumber:
                 return i
         return -1 #no matching gene found
 
